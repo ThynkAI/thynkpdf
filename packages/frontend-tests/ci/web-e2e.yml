@@ -1,0 +1,59 @@
+# TO ACTIVATE: copy to .github/workflows/web-e2e.yml (the push token lacks the GitHub `workflow` scope, so it could not be added there).
+# Frontend CI: tsc + vitest + full Playwright suite (chromium, firefox, mobile AND webkit) against a throwaway backend.
+# No secrets: the backend runs locally with SQLite and a CI-only JWT secret; the dev account is registered on the fly.
+name: web-e2e
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: web-e2e-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      THYNKPDF_API_URL: http://localhost:8000
+      PW_WEBKIT: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: pnpm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pnpm install --frozen-lockfile
+      - name: Start backend (SQLite, CI-only secret)
+        env:
+          THYNKPDF_DATABASE_URL: sqlite:///./ci.db
+          THYNKPDF_JWT_SECRET: ci-only-not-a-secret-0123456789abcdef0123
+          THYNKPDF_CORS_ORIGINS: http://localhost:3000
+        run: |
+          python -m venv .venv && .venv/bin/pip install -q -r requirements.txt
+          export PYTHONPATH=apps/api:$(ls -d packages/*/ | grep -vE 'frontend|ui/|viewer|editor' | tr '\n' ':')
+          nohup .venv/bin/uvicorn thynkpdf_api.main:app --port 8000 > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 1; done
+          curl -sf -X POST localhost:8000/auth/register -H 'content-type: application/json' \
+            -d '{"email":"dev@thynkpdf.dev","password":"ThynkDev-2026!","org_name":"THYNKPDF Dev"}' > /dev/null
+      - name: Third-party PDF verifiers (pikepdf/qpdf, pypdf)
+        run: python -m venv packages/frontend-tests/.venv && packages/frontend-tests/.venv/bin/pip install -q pikepdf pypdf
+      - name: Typecheck
+        run: cd apps/web && npx tsc --noEmit -p .
+      - name: Unit + live contract tests
+        run: pnpm web:test
+      - name: Playwright browsers (incl. WebKit system deps)
+        run: cd packages/frontend-tests && npx playwright install --with-deps chromium firefox webkit
+      - name: Playwright
+        run: pnpm web:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            packages/frontend-tests/test-results
+            api.log
+          retention-days: 7

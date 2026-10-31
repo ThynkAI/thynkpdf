@@ -132,6 +132,7 @@ export class HttpEditorApi implements EditorApi {
     fd.append("expected_version", String(ref.version));
     return this.req<VersionResult>(`/documents/${this.e(ref.document_id)}/versions`, { method: "POST", body: fd });
   }
+  compress(ref: DocumentRef, preset: "low" | "balanced" | "high" = "balanced") { return this.send<VersionResult>("POST", "/pdf/compress", { ...this.v(ref), preset, strip_metadata: false }); }
   restoreVersion(ref: DocumentRef, versionId: string) { return this.send<VersionResult>("POST", `/documents/${this.e(ref.document_id)}/versions/${this.e(versionId)}/restore`, { expected_version: ref.version }); }
   // annotations
   listAnnotations(id: string, version?: number) { return this.req<AnnotationsOut>(`/pdf/${this.e(id)}/annotations${version ? `?version=${version}` : ""}`); }
@@ -168,6 +169,7 @@ export class HttpEditorApi implements EditorApi {
   deletePermanently(id: string) { return this.send<void>("DELETE", `/documents/${this.e(id)}?permanent=true`); }
   listFolders() { return this.req<Folder[]>("/folders"); }
   createFolder(name: string, parent_id?: string) { return this.send<Folder>("POST", "/folders", { name, ...(parent_id ? { parent_id } : {}) }); }
+  renameFolder(id: string, name: string) { return this.send<Folder>("PATCH", `/folders/${this.e(id)}`, { name }); }
   deleteFolder(id: string) { return this.send<void>("DELETE", `/folders/${this.e(id)}`); }
   listTags() { return this.req<string[]>("/tags"); }
   listShares(id: string) { return this.req<Share[]>(`/documents/${this.e(id)}/shares`); }

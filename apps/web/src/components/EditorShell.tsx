@@ -9,6 +9,7 @@ import { SignatureBox } from "./SignatureBox";
 import { AnnotToolbar } from "./AnnotToolbar";
 import { AnnotOverlay, markupFromSelection } from "./AnnotOverlay";
 import { useAnnot } from "@/lib/annotState";
+import { parseTool, toolAction } from "@/lib/tools";
 import { RightPanel } from "./RightPanel";
 import { StatusBar } from "./StatusBar";
 import { useSession } from "@/lib/session";
@@ -24,7 +25,24 @@ export function EditorShell() {
   const [panel, setPanel] = useState(() => typeof window === "undefined" || window.matchMedia("(min-width: 1024px)").matches);
   const [dark, setDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const [dragging, setDragging] = useState(false);
-  const [organize, setOrganize] = useState(false);
+  const [organize, setOrganize] = useState<false | "pages" | "compress">(false);
+  const [pendingSection, setPendingSection] = useState<string | null>(null);
+  useEffect(() => {
+    const t = parseTool(window.location.search); if (!t) return;
+    const a = toolAction(t);
+    if (a.navigate) { window.location.assign(a.navigate); return; }
+    if (a.organizer) setOrganize(a.organizer);
+    if (a.annotate) useAnnot.getState().set({ open: true });
+    if (a.panelSection) { setPanel(true); setPendingSection(a.panelSection); }
+    const q = new URLSearchParams(window.location.search); q.delete("tool");
+    window.history.replaceState(null, "", window.location.pathname + (q.toString() ? `?${q}` : ""));
+  }, []);
+  // Panel sections render once a document is open; scroll to the requested one when it appears.
+  useEffect(() => {
+    if (!pendingSection) return;
+    const el = document.getElementById(pendingSection);
+    if (el) { el.scrollIntoView({ block: "start" }); el.setAttribute("tabindex", "-1"); el.focus(); setPendingSection(null); }
+  });
   const annotOpen = useAnnot((a) => a.open);
   useEffect(() => {
     const up = () => { if (useAnnot.getState().open) setTimeout(() => void markupFromSelection(), 0); };
@@ -42,7 +60,7 @@ export function EditorShell() {
       const q = new URLSearchParams(window.location.search);
       const doc = q.get("doc");
       void restoreSession(doc ? { doc, version: q.get("version") ?? undefined, n: q.get("n") ? Number(q.get("n")) : undefined } : undefined);
-      if (doc) window.history.replaceState(null, "", "/");
+      if (doc) { const keep = new URLSearchParams(window.location.search).get("tool"); window.history.replaceState(null, "", keep ? `/?tool=${encodeURIComponent(keep)}` : "/"); }
     });
   }, []);
 
@@ -91,7 +109,7 @@ export function EditorShell() {
           <a href="/documents" className="rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">Documents</a>
           <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
-        <Toolbar onAnnotate={() => useAnnot.getState().set({ open: !annotOpen, tool: annotOpen ? "none" : useAnnot.getState().tool })} annotating={annotOpen} onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
+        <Toolbar onAnnotate={() => useAnnot.getState().set({ open: !annotOpen, tool: annotOpen ? "none" : useAnnot.getState().tool })} annotating={annotOpen} onOrganize={() => setOrganize("pages")} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
         {annotOpen && hasDoc && <AnnotToolbar />}
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" hidden data-testid="file-input" onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
         <div className="relative flex min-h-0 flex-1">
@@ -110,7 +128,7 @@ export function EditorShell() {
           {panel && <RightPanel ref={searchRef} onClose={() => setPanel(false)} />}
         </div>
         <StatusBar />
-        {organize && <Organizer onClose={() => setOrganize(false)} />}
+        {organize && <Organizer focus={organize} onClose={() => setOrganize(false)} />}
       </div>
     </TooltipProvider>
   );

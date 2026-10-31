@@ -20,10 +20,11 @@ export function Dashboard() {
   const [q, setQ] = useState(""); const [sort, setSort] = useState<SortKey>("updated_desc");
   const [view, setView] = useState<View>({ kind: "all" });
   const [folders, setFolders] = useState<Folder[]>([]); const [tags, setTags] = useState<string[]>([]);
-  const [open, setOpen] = useState<{ id: string; panel: "versions" | "share" | "tags" | "move" | "delete" } | null>(null);
+  const [open, setOpen] = useState<{ id: string; panel: "versions" | "share" | "tags" | "move" | "delete" | "rename" } | null>(null);
   const [versions, setVersions] = useState<VersionInfo[] | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
   const [newFolder, setNewFolder] = useState(""); const [tagInput, setTagInput] = useState("");
+  const [nameInput, setNameInput] = useState(""); const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const isHttp = s.api.kind === "http";
 
@@ -86,8 +87,13 @@ export function Dashboard() {
           {s.authed && isHttp && (<>
             <p className="mt-2 w-full px-2 text-xs font-semibold text-neutral-500">Folders</p>
             {navBtn("Unfiled", { kind: "folder", id: "root" }, "root")}
-            {folders.map((f) => <span key={f.folder_id} className="flex items-center">{navBtn(f.name, { kind: "folder", id: f.folder_id }, f.folder_id)}
-              <button aria-label={`Delete folder ${f.name}`} title="Delete folder (must be empty)" className="ml-auto px-1 text-xs text-neutral-500" onClick={() => act(`Deleted folder ${f.name}`, () => http().deleteFolder(f.folder_id))}>×</button></span>)}
+            {folders.map((f) => renamingFolder === f.folder_id ? (
+              <form key={f.folder_id} className="flex gap-1 px-1" onSubmit={(e) => { e.preventDefault(); const n = nameInput.trim(); if (n) void act(`Renamed folder to ${n}`, () => http().renameFolder(f.folder_id, n)).then(() => setRenamingFolder(null)); }}>
+                <input aria-label={`New name for folder ${f.name}`} value={nameInput} onChange={(e) => setNameInput(e.target.value)} className="w-28 rounded border px-1 text-xs dark:border-neutral-700 dark:bg-neutral-800" />
+                <button className={btn}>Save</button><button type="button" className="text-xs" aria-label="Cancel rename" onClick={() => setRenamingFolder(null)}>✕</button>
+              </form>) : <span key={f.folder_id} className="flex items-center">{navBtn(f.name, { kind: "folder", id: f.folder_id }, f.folder_id)}
+              <button aria-label={`Rename folder ${f.name}`} title="Rename folder" className="ml-auto px-1 text-xs text-neutral-500" onClick={() => { setRenamingFolder(f.folder_id); setNameInput(f.name); }}>✎</button>
+              <button aria-label={`Delete folder ${f.name}`} title="Delete folder (must be empty)" className="px-1 text-xs text-neutral-500" onClick={() => act(`Deleted folder ${f.name}`, () => http().deleteFolder(f.folder_id))}>×</button></span>)}
             <form className="flex gap-1 px-1" onSubmit={(e) => { e.preventDefault(); if (newFolder.trim()) void act(`Created folder ${newFolder}`, () => http().createFolder(newFolder.trim())).then(() => setNewFolder("")); }}>
               <input aria-label="New folder name" placeholder="New folder" value={newFolder} onChange={(e) => setNewFolder(e.target.value)} className="w-28 rounded border px-1 text-xs dark:border-neutral-700 dark:bg-neutral-800" />
               <button className={btn}>Add</button>
@@ -120,7 +126,7 @@ export function Dashboard() {
                 <tbody>
                   {(docs ?? []).map((d) => {
                     const p = open?.id === d.document_id ? open.panel : null;
-                    const toggle = (panel: NonNullable<typeof open>["panel"]) => { setOpen(p === panel ? null : { id: d.document_id, panel }); setTagInput(d.tags.join(", ")); };
+                    const toggle = (panel: NonNullable<typeof open>["panel"]) => { setOpen(p === panel ? null : { id: d.document_id, panel }); setTagInput(d.tags.join(", ")); setNameInput(d.filename); };
                     return (
                     <tr key={d.document_id} className="border-t align-top dark:border-neutral-800" data-testid="doc-row">
                       <td className="py-2">
@@ -150,6 +156,11 @@ export function Dashboard() {
                             <input aria-label={`Tags for ${d.filename}`} value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="tax, 2026" className="w-48 rounded border px-1 text-xs dark:border-neutral-700 dark:bg-neutral-800" />
                             <button className={btn}>Save tags</button><span className="text-xs text-neutral-500">a–z, 0–9, _ and - only</span>
                           </form>)}
+                        {p === "rename" && (
+                          <form className="mt-2 flex gap-1" onSubmit={(e) => { e.preventDefault(); const n = nameInput.trim(); if (n) void act(`Renamed to ${/\.pdf$/i.test(n) ? n : n + ".pdf"}`, () => http().patchDocument(d.document_id, { filename: /\.pdf$/i.test(n) ? n : `${n}.pdf` })).then(() => setOpen(null)); }}>
+                            <input aria-label={`New name for ${d.filename}`} value={nameInput} onChange={(e) => setNameInput(e.target.value)} className="w-56 rounded border px-1 text-xs dark:border-neutral-700 dark:bg-neutral-800" />
+                            <button className={btn}>Save name</button>
+                          </form>)}
                         {p === "move" && (
                           <div className="mt-2 flex flex-wrap gap-1 text-xs">
                             <span>Move to:</span>
@@ -174,6 +185,7 @@ export function Dashboard() {
                           <button className={btn} aria-expanded={p === "versions"} onClick={() => toggle("versions")}>Versions</button>
                           {isHttp && <>
                             <button className={btn} aria-pressed={d.starred} aria-label={`${d.starred ? "Unstar" : "Star"} ${d.filename}`} onClick={() => act(d.starred ? "Unstarred" : "Starred", () => http().patchDocument(d.document_id, { starred: !d.starred }))}>{d.starred ? "Unstar" : "Star"}</button>
+                            <button className={btn} aria-expanded={p === "rename"} onClick={() => toggle("rename")}>Rename</button>
                             <button className={btn} aria-expanded={p === "tags"} onClick={() => toggle("tags")}>Tags</button>
                             <button className={btn} aria-expanded={p === "move"} onClick={() => toggle("move")}>Move</button>
                             <button className={btn} aria-expanded={p === "share"} onClick={() => toggle("share")}>Share</button>

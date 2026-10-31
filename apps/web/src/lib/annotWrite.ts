@@ -54,10 +54,26 @@ function wrap(font: PDFFont, text: string, size: number, maxW: number): string[]
   return out;
 }
 
-async function getFont(doc: PDFDocument) { return doc.embedFont(StandardFonts.Helvetica); }
+const CP1252_EXTRA = "€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
+/** True when Helvetica (WinAnsi) can encode the text; otherwise a Unicode font is embedded. */
+export function isWinAnsi(t: string) { for (const ch of t) { const c = ch.codePointAt(0)!; if (!((c >= 0x20 && c <= 0x7e) || (c >= 0xa0 && c <= 0xff) || c === 10 || c === 13 || c === 9 || CP1252_EXTRA.includes(ch))) return false; } return true; }
+/** Loads Noto Sans Regular (SIL OFL 1.1, apps/web/public/fonts). Overridable for tests. */
+export const unicodeFont: { load: () => Promise<Uint8Array> } = {
+  load: async () => new Uint8Array(await (await fetch("/fonts/NotoSans-Regular.ttf")).arrayBuffer()),
+};
+async function getFont(doc: PDFDocument, texts: string[] = []) {
+  if (texts.every(isWinAnsi)) return doc.embedFont(StandardFonts.Helvetica);
+  const fontkit = (await import("@pdf-lib/fontkit")).default;
+  doc.registerFontkit(fontkit);
+  return doc.embedFont(await unicodeFont.load(), { subset: true });
+}
+/** Form-XObject matrix that rotates appearance content CCW by the page /Rotate so it reads upright on screen. */
+export function rotMatrix(rot: number): number[] {
+  switch (((rot % 360) + 360) % 360) { case 90: return [0, 1, -1, 0, 0, 0]; case 180: return [-1, 0, 0, -1, 0, 0]; case 270: return [0, -1, 1, 0, 0, 0]; default: return [1, 0, 0, 1, 0, 0]; }
+}
 
-function appearance(doc: PDFDocument, bbox: R, ops: PDFOperator[], resources: Record<string, unknown> = {}) {
-  const stream = doc.context.formXObject(ops, { BBox: [bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height], Resources: resources as never });
+function appearance(doc: PDFDocument, bbox: R, ops: PDFOperator[], resources: Record<string, unknown> = {}, matrix?: number[]) {
+  const stream = doc.context.formXObject(ops, { BBox: [bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height], Resources: resources as never, ...(matrix ? { Matrix: matrix } : {}) });
   return doc.context.register(stream);
 }
 
@@ -74,7 +90,7 @@ function textOps(font: PDFFont, fontName: string, lines: string[], size: number,
 export async function addAnnotations(bytes: Uint8Array, list: NewAnnot[]): Promise<{ bytes: Uint8Array; ids: string[] }> {
   const doc = await PDFDocument.load(bytes);
   const ctx = doc.context;
-  const font = await getFont(doc);
+  const font = await getFont(doc, list.flatMap((a) => [("text" in a ? a.text : "") ?? "", "label" in a ? a.label : ""]));
   const gsAlpha = ctx.register(ctx.obj({ Type: "ExtGState", CA: 0.45, ca: 0.45, BM: "Multiply" }));
   const ids: string[] = [];
   for (const a of list) {
@@ -88,6 +104,7 @@ export async function addAnnotations(bytes: Uint8Array, list: NewAnnot[]): Promi
     };
     let rect: R; let ap: PDFRef | null = null; const fontName = "Helv";
     const fontRes = { Font: { [fontName]: font.ref } };
+    const rot = ((page.getRotation().angle % 360) + 360) % 360;
     switch (a.type) {
       case "highlight": case "underline": case "strikeout": {
         const qp: number[] = [];
@@ -124,7 +141,29 @@ export async function addAnnotations(bytes: Uint8Array, list: NewAnnot[]): Promi
           moveTo(x + 4, y + 15), lineTo(x + 16, y + 15), moveTo(x + 4, y + 11.5), lineTo(x + 13, y + 11.5), stroke(), popGraphicsState()]);
         break;
       }
-      case "freetext": case "callout": {
+      case "freetext": case "stamp": if (rot) {
+        // Rotated page: draw in a visual (upright) frame and rotate it with /Matrix; the viewer fits it into /Rect.
+        rect = a.rect;
+        const vw = rot % 180 ? rect.height : rect.width, vh = rot % 180 ? rect.width : rect.height;
+        const ops: PDFOperator[] = [pushGraphicsState()];
+        if (a.type === "freetext") {
+          const size = a.fontSize ?? 11;
+          dict.Subtype = "FreeText"; dict.Contents = txt(a.contents ?? a.text); dict.DA = PDFString.of(`/${fontName} ${size} Tf 0 g`); dict.Rotate = rot;
+          ops.push(setFillingRgbColor(1, 1, 1), setStrokingRgbColor(r, g, b), setLineWidth(1), rectangle(0, 0, vw, vh), fillAndStroke(), popGraphicsState(),
+            ...textOps(font, fontName, wrap(font, a.text, size, vw - 8), size, 4, vh - 4));
+        } else {
+          dict.Subtype = "Stamp"; dict.Name = a.label.replace(/[^A-Za-z]/g, "") || "Draft"; dict.Contents = txt(a.contents ?? a.label); dict.Rotate = rot;
+          const size = Math.min(vh * 0.5, (vw - 12) / Math.max(1, font.widthOfTextAtSize(a.label, 1)));
+          const tw = font.widthOfTextAtSize(a.label, size);
+          ops.push(setStrokingRgbColor(r, g, b), setLineWidth(2.5), rectangle(2, 2, vw - 4, vh - 4), stroke(),
+            beginText(), setFontAndSize(fontName, size), setFillingRgbColor(r, g, b), moveText((vw - tw) / 2, (vh - size * 0.7) / 2), showText(font.encodeText(a.label)), endText(), popGraphicsState());
+        }
+        ap = appearance(doc, { x: 0, y: 0, width: vw, height: vh }, ops, fontRes, rotMatrix(rot));
+        break;
+      } if (a.type === "stamp") { stampUpright(); break; }
+      // falls through
+      case "callout": {
+        if (a.type !== "freetext" && a.type !== "callout") break;
         const size = a.fontSize ?? 11;
         const box = a.rect;
         const lines = wrap(font, a.text, size, box.width - 8);
@@ -169,15 +208,16 @@ export async function addAnnotations(bytes: Uint8Array, list: NewAnnot[]): Promi
         ap = appearance(doc, rect, ops);
         break;
       }
-      case "stamp": {
-        rect = a.rect;
-        dict.Subtype = "Stamp"; dict.Name = a.label.replace(/[^A-Za-z]/g, "") || "Draft"; dict.Contents = txt(a.contents ?? a.label);
+      default: break;
+    }
+    function stampUpright() {
+      if (a.type !== "stamp") return;
+      rect = a.rect;
+      dict.Subtype = "Stamp"; dict.Name = a.label.replace(/[^A-Za-z]/g, "") || "Draft"; dict.Contents = txt(a.contents ?? a.label);
         const size = Math.min(rect.height * 0.5, (rect.width - 12) / Math.max(1, font.widthOfTextAtSize(a.label, 1)));
         const tw = font.widthOfTextAtSize(a.label, size);
         ap = appearance(doc, rect, [pushGraphicsState(), setStrokingRgbColor(r, g, b), setLineWidth(2.5), rectangle(rect.x + 2, rect.y + 2, rect.width - 4, rect.height - 4), stroke(),
           beginText(), setFontAndSize(fontName, size), setFillingRgbColor(r, g, b), moveText(rect.x + (rect.width - tw) / 2, rect.y + (rect.height - size * 0.7) / 2), showText(font.encodeText(a.label)), endText(), popGraphicsState()], fontRes);
-        break;
-      }
     }
     dict.Rect = [rect!.x, rect!.y, rect!.x + rect!.width, rect!.y + rect!.height];
     if (ap) dict.AP = { N: ap };
@@ -211,7 +251,7 @@ const name = (d: PDFDict, k: string) => { const v = d.lookup(PDFName.of(k)); ret
 
 export interface ParsedAnnot {
   id: string; page: number; subtype: string; author: string; contents: string; modified: Date | null; created: Date | null;
-  rect: R; inReplyTo: string | null; stateModel?: string; state?: string; ref: PDFRef;
+  rect: R; inReplyTo: string | null; stateModel?: string; state?: string; ref?: PDFRef; server?: boolean; supported?: boolean;
 }
 export async function readAnnotations(bytes: Uint8Array): Promise<ParsedAnnot[]> {
   return parse(await PDFDocument.load(bytes));
@@ -263,7 +303,7 @@ async function addChild(bytes: Uint8Array, parentId: string, author: string, ext
   const now = pdfDate(date), id = newId();
   const r = parent.rect;
   const ref = doc.context.register(doc.context.obj({ Type: "Annot", Subtype: "Text", NM: PDFString.of(id), T: txt(author), M: PDFString.of(now), CreationDate: PDFString.of(now),
-    Contents: txt(contents), IRT: parent.ref, Rect: [r.x, r.y, r.x + r.width, r.y + r.height], F: 4 | 2 /* hidden: shown in thread, not on page */, P: doc.getPage(parent.page).ref, ...extra } as never));
+    Contents: txt(contents), IRT: parent.ref!, Rect: [r.x, r.y, r.x + r.width, r.y + r.height], F: 4 | 2 /* hidden: shown in thread, not on page */, P: doc.getPage(parent.page).ref, ...extra } as never));
   annotsOf(doc, parent.page).push(ref);
   return { bytes: await doc.save(), id };
 }
@@ -279,7 +319,7 @@ export async function deleteAnnotation(bytes: Uint8Array, id: string): Promise<U
   const kill = new Set([id]);
   let grew = true;
   while (grew) { grew = false; for (const a of all) if (a.inReplyTo && kill.has(a.inReplyTo) && !kill.has(a.id)) { kill.add(a.id); grew = true; } }
-  const refs = new Set(all.filter((a) => kill.has(a.id)).map((a) => a.ref.toString()));
+  const refs = new Set(all.filter((a) => kill.has(a.id)).map((a) => a.ref!.toString()));
   if (!refs.size) throw new Error("Annotation not found");
   doc.getPages().forEach((pg) => {
     const annots = pg.node.lookupMaybe(PDFName.of("Annots"), PDFArray);
