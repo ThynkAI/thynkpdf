@@ -67,8 +67,14 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         try: yield s
         finally: s.close()
 
-    def audit(s, org, user, action, target=None):
-        s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target))
+    def audit(s, org, user, action, target=None, document_id=None, actor_email=None, version=None, request=None, details=None):
+        if actor_email is None and user:
+            u = s.get(User, user); actor_email = u.email if u else None
+        ip = ua = None
+        if request is not None:
+            ip = request.client.host if request.client else None; ua = (request.headers.get("user-agent") or "")[:300]
+        s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target, document_id=document_id, actor_email=actor_email,
+                         version=version, ip=ip, user_agent=ua, details=json.dumps(details or {}, sort_keys=True)))
 
     # ---------------- auth ----------------
     REFRESH_COOKIE = "thynkpdf_rt"
@@ -226,7 +232,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         v = DocumentVersion(id=vid, org_id=p.org_id, document_id=d.id, number=number, sha256=sha, size=len(data),
                             storage_key=key, operation=op, operation_params=json.dumps(params or {}), parent_version_id=parent,
                             created_by=p.user_id)
-        s.add(v); audit(s, p.org_id, p.user_id, f"document.{op}", d.id); return v
+        s.add(v); audit(s, p.org_id, p.user_id, f"document.{op}", d.id, document_id=d.id, version=number); return v
 
     def new_version(s, p, d: Document, expected: int, data: bytes, op, params) -> DocumentVersion:
         """Optimistic concurrency: compare-and-swap on documents.current_version + unique(document_id, number)."""
@@ -303,11 +309,15 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/documents/{doc_id}/versions/{version_id}/file", tags=["documents"],
              responses={200: {"content": {"application/pdf": {}}}, 206: {"content": {"application/pdf": {}}}})
     def download_version(doc_id: str, version_id: str, request: Request, p: Principal = Depends(principal), s=Depends(db)):
-        d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d, version_id=version_id))
+        d = get_doc(s, p, doc_id); v = get_ver(s, d, version_id=version_id)
+        audit(s, p.org_id, p.user_id, "document.view", d.id, document_id=d.id, version=v.number, request=request); s.commit()
+        return stream_file(request, d, v)
 
     @app.get("/documents/{doc_id}/download", tags=["documents"], responses={200: {"content": {"application/pdf": {}}}})
     def download_current(doc_id: str, request: Request, p: Principal = Depends(principal), s=Depends(db)):
-        d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d))
+        d = get_doc(s, p, doc_id); v = get_ver(s, d)
+        audit(s, p.org_id, p.user_id, "document.view", d.id, document_id=d.id, version=v.number, request=request); s.commit()
+        return stream_file(request, d, v)
 
     # ---------------- pdf ----------------
     @app.get("/pdf/{doc_id}/metadata", response_model=S.MetadataOut, tags=["pdf"])
