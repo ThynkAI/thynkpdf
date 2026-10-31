@@ -28,3 +28,24 @@ Updated 2026-10-31. Evidence: `python -m pytest` (11 passed), live uvicorn+curl 
 | Infra | docker-compose (Postgres/Redis/MinIO/api/worker), .env.example | IMPLEMENTED | docker unavailable; never run |
 | Conversion, Forms, Signatures, Redaction, AI, Billing | — | NOT STARTED | |
 | Audit | audit_events written on auth/doc ops | IMPLEMENTED | no read API |
+
+
+## Phase 2 update (2026-10-31, branches feat/backend-phase2 → -annotations-forms → -signing-audit → -docmgmt → -ai)
+| Area | Feature | Status | Evidence |
+|---|---|---|---|
+| Auth | httpOnly refresh cookie `thynkpdf_rt`, rotation (replay → TOKEN_REVOKED), logout | TESTED | test_refresh_cookie_rotation_logout |
+| Docs | POST /documents/{id}/versions (client bytes, same validation) | TESTED | test_upload_new_version_multipart |
+| Edit | text_insert / text_delete / text_move (content-stream ops) | TESTED | pdftotext + pypdf positions |
+| Pages | delete / duplicate / insert-blank / insert-from | TESTED | |
+| Annotations | 11 types with /AP, batch add/update/delete, threads (/IRT, state) | TESTED | pypdf reopen |
+| Forms | create/delete fields, fill (JSON/CSV), flatten, export | TESTED | pypdf get_fields, pdftotext after flatten |
+| Signatures | visual assets + versioned placement | TESTED | image XObject present after reopen |
+| Signatures | e-sign requests, order, consent, hash-chained events, auto-finalize | TESTED | chain tamper test |
+| Signatures | pyHanko sign/verify (dev cert untrusted) | TESTED | byte-tamper → intact=false |
+| Signatures | email notifications / reminders | BLOCKED | no email provider configured |
+| Signatures | TSA timestamps, trusted CA cert | BLOCKED | needs approved TSA + CA-issued cert |
+| Audit | org audit + per-document audit trail | TESTED | |
+| DocMgmt | folders, tags, star, trash/restore/purge, shares (user+link), restore version | TESTED | |
+| AI | ask/summarize with page citations (stub extractive), opt-in external provider, rate limit | TESTED (stub only) | real LLM provider untested |
+| OCR | ocrmypdf/tesseract | BLOCKED | apt mirrors unreachable on box |
+| Billing | — | DROPPED | THYNKPDF is free |

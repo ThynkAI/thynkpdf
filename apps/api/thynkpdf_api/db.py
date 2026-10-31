@@ -213,3 +213,11 @@ class DocumentStar(Base):
     org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
     document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+
+class OrgAISettings(Base):
+    __tablename__ = "org_ai_settings"
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), primary_key=True)
+    external_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    provider: Mapped[str] = mapped_column(String(32), default="stub")
+    updated_by: Mapped[str] = mapped_column(String(36))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
