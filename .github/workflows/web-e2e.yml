@@ -1,4 +1,3 @@
-# TO ACTIVATE: copy to .github/workflows/web-e2e.yml (the push token lacks the GitHub `workflow` scope, so it could not be added there).
 # Frontend CI: tsc + vitest + full Playwright suite (chromium, firefox, mobile AND webkit) against a throwaway backend.
 # No secrets: the backend runs locally with SQLite and a CI-only JWT secret; the dev account is registered on the fly.
 name: web-e2e
@@ -21,7 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 10 }
       - uses: actions/setup-node@v4
         with: { node-version: 24, cache: pnpm }
       - uses: actions/setup-python@v5
