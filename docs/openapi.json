@@ -1,179 +1,20 @@
 {
  "components": {
   "schemas": {
-   "AnnotIn": {
+   "Annotation": {
     "properties": {
-     "color": {
+     "author": {
       "anyOf": [
        {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Color"
-     },
-     "contents": {
-      "anyOf": [
-       {
-        "maxLength": 10000,
         "type": "string"
        },
        {
         "type": "null"
        }
       ],
-      "title": "Contents"
+      "title": "Author"
      },
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "ink": {
-      "anyOf": [
-       {
-        "items": {
-         "items": {
-          "type": "number"
-         },
-         "type": "array"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "description": "ink strokes [[x1,y1,x2,y2,...],...]",
-      "title": "Ink"
-     },
-     "page": {
-      "minimum": 1.0,
-      "title": "Page",
-      "type": "integer"
-     },
-     "rect": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "description": "[x0,y0,x1,y1]; for line: endpoints [x0,y0,x1,y1]",
-      "title": "Rect"
-     },
-     "type": {
-      "enum": [
-       "highlight",
-       "note",
-       "ink",
-       "rectangle",
-       "ellipse",
-       "line"
-      ],
-      "title": "Type",
-      "type": "string"
-     },
-     "width": {
-      "default": 1.5,
-      "exclusiveMinimum": 0.0,
-      "maximum": 50.0,
-      "title": "Width",
-      "type": "number"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version",
-     "type",
-     "page"
-    ],
-    "title": "AnnotIn",
-    "type": "object"
-   },
-   "AnnotPatch": {
-    "properties": {
-     "color": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Color"
-     },
-     "contents": {
-      "anyOf": [
-       {
-        "maxLength": 10000,
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Contents"
-     },
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "ink": {
-      "anyOf": [
-       {
-        "items": {
-         "items": {
-          "type": "number"
-         },
-         "type": "array"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Ink"
-     },
-     "rect": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Rect"
-     },
-     "width": {
+     "border_width": {
       "anyOf": [
        {
         "type": "number"
@@ -182,65 +23,7 @@
         "type": "null"
        }
       ],
-      "title": "Width"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version"
-    ],
-    "title": "AnnotPatch",
-    "type": "object"
-   },
-   "AnnotResult": {
-    "properties": {
-     "annotation_id": {
-      "title": "Annotation Id",
-      "type": "string"
-     },
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "report": {
-      "additionalProperties": true,
-      "default": {},
-      "title": "Report",
-      "type": "object"
-     },
-     "sha256": {
-      "title": "Sha256",
-      "type": "string"
-     },
-     "size": {
-      "title": "Size",
-      "type": "integer"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     },
-     "version_id": {
-      "title": "Version Id",
-      "type": "string"
-     }
-    },
-    "required": [
-     "document_id",
-     "version_id",
-     "version",
-     "sha256",
-     "size",
-     "annotation_id"
-    ],
-    "title": "AnnotResult",
-    "type": "object"
-   },
-   "Annotation": {
-    "properties": {
-     "author": {
-      "title": "Author",
-      "type": "string"
+      "title": "Border Width"
      },
      "color": {
       "items": {
@@ -250,23 +33,51 @@
       "type": "array"
      },
      "contents": {
-      "title": "Contents",
-      "type": "string"
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contents"
      },
-     "editable": {
-      "title": "Editable",
-      "type": "boolean"
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
      },
      "id": {
       "title": "Id",
       "type": "string"
      },
-     "ink": {
+     "in_reply_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "In Reply To"
+     },
+     "ink_list": {
       "anyOf": [
        {
         "items": {
          "items": {
-          "type": "number"
+          "items": {
+           "type": "number"
+          },
+          "type": "array"
          },
          "type": "array"
         },
@@ -276,11 +87,61 @@
         "type": "null"
        }
       ],
-      "title": "Ink"
+      "title": "Ink List"
+     },
+     "line": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Line"
+     },
+     "modified_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Modified At"
+     },
+     "opacity": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opacity"
      },
      "page": {
       "title": "Page",
       "type": "integer"
+     },
+     "quad_points": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quad Points"
      },
      "rect": {
       "items": {
@@ -289,9 +150,37 @@
       "title": "Rect",
       "type": "array"
      },
-     "subtype": {
-      "title": "Subtype",
-      "type": "string"
+     "stamp_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stamp Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "enum": [
+         "open",
+         "resolved"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "supported": {
+      "default": true,
+      "description": "false = foreign subtype (Link, Popup...) listed read-only",
+      "title": "Supported",
+      "type": "boolean"
      },
      "type": {
       "title": "Type",
@@ -302,14 +191,325 @@
      "id",
      "page",
      "type",
-     "subtype",
      "rect",
-     "contents",
-     "author",
-     "color",
-     "editable"
+     "color"
     ],
     "title": "Annotation",
+    "type": "object"
+   },
+   "AnnotationIn": {
+    "properties": {
+     "author": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Author"
+     },
+     "border_width": {
+      "anyOf": [
+       {
+        "maximum": 50.0,
+        "minimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Border Width"
+     },
+     "color": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Color"
+     },
+     "contents": {
+      "anyOf": [
+       {
+        "maxLength": 20000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contents"
+     },
+     "font_size": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "maximum": 200.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Font Size"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "required for update, omitted for add",
+      "title": "Id"
+     },
+     "in_reply_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "In Reply To"
+     },
+     "ink_list": {
+      "anyOf": [
+       {
+        "items": {
+         "items": {
+          "items": {
+           "type": "number"
+          },
+          "type": "array"
+         },
+         "type": "array"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ink List"
+     },
+     "line": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Line"
+     },
+     "opacity": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "maximum": 1.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opacity"
+     },
+     "page": {
+      "anyOf": [
+       {
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Page"
+     },
+     "quad_points": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quad Points"
+     },
+     "rect": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rect"
+     },
+     "stamp_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stamp Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "enum": [
+         "open",
+         "resolved"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "type": {
+      "anyOf": [
+       {
+        "enum": [
+         "highlight",
+         "underline",
+         "strikeout",
+         "ink",
+         "text",
+         "freetext",
+         "square",
+         "circle",
+         "line",
+         "arrow",
+         "stamp"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Type"
+     }
+    },
+    "title": "AnnotationIn",
+    "type": "object"
+   },
+   "AnnotationsOut": {
+    "properties": {
+     "annotations": {
+      "items": {
+       "$ref": "#/components/schemas/Annotation"
+      },
+      "title": "Annotations",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "annotations"
+    ],
+    "title": "AnnotationsOut",
+    "type": "object"
+   },
+   "AssetOut": {
+    "properties": {
+     "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+     },
+     "created_at": {
+      "title": "Created At",
+      "type": "string"
+     },
+     "font": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Font"
+     },
+     "height": {
+      "title": "Height",
+      "type": "integer"
+     },
+     "kind": {
+      "enum": [
+       "image",
+       "typed"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     },
+     "width": {
+      "title": "Width",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "asset_id",
+     "kind",
+     "width",
+     "height",
+     "created_at"
+    ],
+    "title": "AssetOut",
     "type": "object"
    },
    "AuditOut": {
@@ -359,6 +559,52 @@
     "title": "AuditOut",
     "type": "object"
    },
+   "BatchIn": {
+    "properties": {
+     "add": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/AnnotationIn"
+      },
+      "maxItems": 500,
+      "title": "Add",
+      "type": "array"
+     },
+     "delete": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Delete",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "update": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/AnnotationIn"
+      },
+      "maxItems": 500,
+      "title": "Update",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "BatchIn",
+    "type": "object"
+   },
    "Body_upload_documents_upload_post": {
     "properties": {
      "file": {
@@ -371,6 +617,26 @@
      "file"
     ],
     "title": "Body_upload_documents_upload_post",
+    "type": "object"
+   },
+   "Body_upload_version_documents__doc_id__versions_post": {
+    "properties": {
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "file": {
+      "contentMediaType": "application/octet-stream",
+      "title": "File",
+      "type": "string"
+     }
+    },
+    "required": [
+     "file",
+     "expected_version"
+    ],
+    "title": "Body_upload_version_documents__doc_id__versions_post",
     "type": "object"
    },
    "CapabilitiesOut": {
@@ -491,6 +757,35 @@
     "title": "CertOut",
     "type": "object"
    },
+   "CompleteIn": {
+    "properties": {
+     "consent": {
+      "description": "Must be true (consent_text_version v1)",
+      "title": "Consent",
+      "type": "boolean"
+     },
+     "consent_text_version": {
+      "default": "v1",
+      "title": "Consent Text Version",
+      "type": "string"
+     },
+     "placements": {
+      "items": {
+       "$ref": "#/components/schemas/SignerPlacement"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Placements",
+      "type": "array"
+     }
+    },
+    "required": [
+     "consent",
+     "placements"
+    ],
+    "title": "CompleteIn",
+    "type": "object"
+   },
    "CompressIn": {
     "properties": {
      "document_id": {
@@ -525,95 +820,89 @@
     "title": "CompressIn",
     "type": "object"
    },
-   "ConsentIn": {
+   "CreateReqIn": {
     "properties": {
-     "accept": {
-      "title": "Accept",
-      "type": "boolean"
-     },
-     "consent_text_version": {
-      "default": "v1",
-      "title": "Consent Text Version",
-      "type": "string"
-     }
-    },
-    "required": [
-     "accept"
-    ],
-    "title": "ConsentIn",
-    "type": "object"
-   },
-   "CreatedOut": {
-    "properties": {
-     "created_at": {
-      "title": "Created At",
-      "type": "string"
-     },
      "document_id": {
       "title": "Document Id",
       "type": "string"
      },
-     "final_version_id": {
+     "fields": {
+      "items": {
+       "$ref": "#/components/schemas/ReqField"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Fields",
+      "type": "array"
+     },
+     "message": {
+      "default": "",
+      "maxLength": 2000,
+      "title": "Message",
+      "type": "string"
+     },
+     "signers": {
+      "items": {
+       "$ref": "#/components/schemas/ReqSigner"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Signers",
+      "type": "array"
+     },
+     "title": {
       "anyOf": [
        {
+        "maxLength": 200,
         "type": "string"
        },
        {
         "type": "null"
        }
       ],
-      "title": "Final Version Id"
+      "title": "Title"
      },
-     "message": {
-      "title": "Message",
-      "type": "string"
-     },
+     "version": {
+      "minimum": 1.0,
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "signers",
+     "fields"
+    ],
+    "title": "CreateReqIn",
+    "type": "object"
+   },
+   "CreatedReqOut": {
+    "properties": {
      "request_id": {
       "title": "Request Id",
       "type": "string"
      },
-     "sequential": {
-      "title": "Sequential",
-      "type": "boolean"
-     },
-     "signers": {
+     "signer_links": {
+      "description": "[{signer_index,email,token}] returned ONCE \u2014 email delivery is not configured; deliver out-of-band",
       "items": {
-       "$ref": "#/components/schemas/SignerWithToken"
+       "additionalProperties": true,
+       "type": "object"
       },
-      "title": "Signers",
+      "title": "Signer Links",
       "type": "array"
-     },
-     "source_sha256": {
-      "title": "Source Sha256",
-      "type": "string"
-     },
-     "source_version": {
-      "title": "Source Version",
-      "type": "integer"
      },
      "status": {
       "title": "Status",
-      "type": "string"
-     },
-     "title": {
-      "title": "Title",
       "type": "string"
      }
     },
     "required": [
      "request_id",
-     "document_id",
-     "source_version",
-     "source_sha256",
-     "title",
-     "message",
-     "sequential",
      "status",
-     "final_version_id",
-     "created_at",
-     "signers"
+     "signer_links"
     ],
-    "title": "CreatedOut",
+    "title": "CreatedReqOut",
     "type": "object"
    },
    "CryptoSignIn": {
@@ -733,6 +1022,76 @@
     "title": "DeleteIn",
     "type": "object"
    },
+   "DocAuditOut": {
+    "properties": {
+     "action": {
+      "title": "Action",
+      "type": "string"
+     },
+     "actor_email": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Actor Email"
+     },
+     "at": {
+      "title": "At",
+      "type": "string"
+     },
+     "details": {
+      "additionalProperties": true,
+      "title": "Details",
+      "type": "object"
+     },
+     "ip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ip"
+     },
+     "user_agent": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User Agent"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     }
+    },
+    "required": [
+     "at",
+     "actor_email",
+     "action",
+     "version",
+     "details"
+    ],
+    "title": "DocAuditOut",
+    "type": "object"
+   },
    "DocumentOut": {
     "properties": {
      "created_at": {
@@ -768,13 +1127,6 @@
    },
    "DuplicateIn": {
     "properties": {
-     "count": {
-      "default": 1,
-      "maximum": 100.0,
-      "minimum": 1.0,
-      "title": "Count",
-      "type": "integer"
-     },
      "document_id": {
       "title": "Document Id",
       "type": "string"
@@ -784,16 +1136,33 @@
       "title": "Expected Version",
       "type": "integer"
      },
-     "page": {
-      "minimum": 1.0,
-      "title": "Page",
-      "type": "integer"
+     "pages": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+     },
+     "position": {
+      "anyOf": [
+       {
+        "const": "after_each",
+        "type": "string"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "default": "after_each",
+      "title": "Position"
      }
     },
     "required": [
      "document_id",
      "expected_version",
-     "page"
+     "pages"
     ],
     "title": "DuplicateIn",
     "type": "object"
@@ -1192,6 +1561,47 @@
     "title": "ExtractIn",
     "type": "object"
    },
+   "FieldOut": {
+    "properties": {
+     "completed": {
+      "title": "Completed",
+      "type": "boolean"
+     },
+     "field_id": {
+      "title": "Field Id",
+      "type": "string"
+     },
+     "page": {
+      "title": "Page",
+      "type": "integer"
+     },
+     "rect": {
+      "items": {
+       "type": "number"
+      },
+      "title": "Rect",
+      "type": "array"
+     },
+     "signer_index": {
+      "title": "Signer Index",
+      "type": "integer"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "field_id",
+     "signer_index",
+     "page",
+     "rect",
+     "type",
+     "completed"
+    ],
+    "title": "FieldOut",
+    "type": "object"
+   },
    "FieldSpec": {
     "properties": {
      "default": {
@@ -1213,6 +1623,11 @@
        }
       ],
       "title": "Max Length"
+     },
+     "multiline": {
+      "default": false,
+      "title": "Multiline",
+      "type": "boolean"
      },
      "name": {
       "pattern": "^[A-Za-z0-9_\\-]{1,100}$",
@@ -1299,6 +1714,43 @@
      "page"
     ],
     "title": "FieldSpec",
+    "type": "object"
+   },
+   "FieldsIn": {
+    "properties": {
+     "add": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/FieldSpec"
+      },
+      "maxItems": 500,
+      "title": "Add",
+      "type": "array"
+     },
+     "delete": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Delete",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "FieldsIn",
     "type": "object"
    },
    "FillIn": {
@@ -1440,6 +1892,11 @@
       ],
       "title": "Max Length"
      },
+     "multiline": {
+      "default": false,
+      "title": "Multiline",
+      "type": "boolean"
+     },
      "name": {
       "title": "Name",
       "type": "string"
@@ -1485,6 +1942,16 @@
       "type": "boolean"
      },
      "type": {
+      "enum": [
+       "text",
+       "checkbox",
+       "radio",
+       "dropdown",
+       "listbox",
+       "signature",
+       "pushbutton",
+       "unknown"
+      ],
       "title": "Type",
       "type": "string"
      },
@@ -1504,13 +1971,39 @@
     "title": "FormField",
     "type": "object"
    },
+   "FormsOut": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "fields": {
+      "items": {
+       "$ref": "#/components/schemas/FormField"
+      },
+      "title": "Fields",
+      "type": "array"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "fields"
+    ],
+    "title": "FormsOut",
+    "type": "object"
+   },
    "InsertBlankIn": {
     "properties": {
-     "after": {
+     "after_page": {
       "default": 0,
       "description": "Insert after this page (0 = at start)",
       "minimum": 0.0,
-      "title": "After",
+      "title": "After Page",
       "type": "integer"
      },
      "count": {
@@ -1532,6 +2025,7 @@
      "height": {
       "anyOf": [
        {
+        "exclusiveMinimum": 0.0,
         "type": "number"
        },
        {
@@ -1543,6 +2037,7 @@
      "width": {
       "anyOf": [
        {
+        "exclusiveMinimum": 0.0,
         "type": "number"
        },
        {
@@ -1557,6 +2052,50 @@
      "expected_version"
     ],
     "title": "InsertBlankIn",
+    "type": "object"
+   },
+   "InsertFromIn": {
+    "properties": {
+     "after_page": {
+      "minimum": 0.0,
+      "title": "After Page",
+      "type": "integer"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "source_document_id": {
+      "title": "Source Document Id",
+      "type": "string"
+     },
+     "source_pages": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Pages"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "source_document_id",
+     "after_page"
+    ],
+    "title": "InsertFromIn",
     "type": "object"
    },
    "Limitation": {
@@ -1907,6 +2446,75 @@
     "title": "PageOps",
     "type": "object"
    },
+   "PlaceIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "placements": {
+      "items": {
+       "$ref": "#/components/schemas/Placement"
+      },
+      "maxItems": 50,
+      "minItems": 1,
+      "title": "Placements",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "placements"
+    ],
+    "title": "PlaceIn",
+    "type": "object"
+   },
+   "Placement": {
+    "properties": {
+     "asset_id": {
+      "title": "Asset Id",
+      "type": "string"
+     },
+     "field_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Field Name"
+     },
+     "page": {
+      "minimum": 1.0,
+      "title": "Page",
+      "type": "integer"
+     },
+     "rect": {
+      "items": {
+       "type": "number"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "title": "Rect",
+      "type": "array"
+     }
+    },
+    "required": [
+     "asset_id",
+     "page",
+     "rect"
+    ],
+    "title": "Placement",
+    "type": "object"
+   },
    "RefreshIn": {
     "properties": {
      "refresh_token": {
@@ -1952,6 +2560,32 @@
     "title": "RegisterIn",
     "type": "object"
    },
+   "RemindOut": {
+    "properties": {
+     "delivered": {
+      "title": "Delivered",
+      "type": "boolean"
+     },
+     "note": {
+      "title": "Note",
+      "type": "string"
+     },
+     "queued": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Queued",
+      "type": "array"
+     }
+    },
+    "required": [
+     "queued",
+     "delivered",
+     "note"
+    ],
+    "title": "RemindOut",
+    "type": "object"
+   },
    "ReorderIn": {
     "properties": {
      "document_id": {
@@ -1979,8 +2613,53 @@
     "title": "ReorderIn",
     "type": "object"
    },
-   "RequestOut": {
+   "ReqField": {
     "properties": {
+     "page": {
+      "minimum": 1.0,
+      "title": "Page",
+      "type": "integer"
+     },
+     "rect": {
+      "items": {
+       "type": "number"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "title": "Rect",
+      "type": "array"
+     },
+     "signer_index": {
+      "minimum": 0.0,
+      "title": "Signer Index",
+      "type": "integer"
+     },
+     "type": {
+      "enum": [
+       "signature",
+       "initials",
+       "date",
+       "text"
+      ],
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "signer_index",
+     "page",
+     "rect",
+     "type"
+    ],
+    "title": "ReqField",
+    "type": "object"
+   },
+   "ReqOut": {
+    "properties": {
+     "chain_valid": {
+      "title": "Chain Valid",
+      "type": "boolean"
+     },
      "created_at": {
       "title": "Created At",
       "type": "string"
@@ -1988,6 +2667,13 @@
      "document_id": {
       "title": "Document Id",
       "type": "string"
+     },
+     "fields": {
+      "items": {
+       "$ref": "#/components/schemas/FieldOut"
+      },
+      "title": "Fields",
+      "type": "array"
      },
      "final_version_id": {
       "anyOf": [
@@ -2000,6 +2686,17 @@
       ],
       "title": "Final Version Id"
      },
+     "head_hash": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Head Hash"
+     },
      "message": {
       "title": "Message",
       "type": "string"
@@ -2008,24 +2705,12 @@
       "title": "Request Id",
       "type": "string"
      },
-     "sequential": {
-      "title": "Sequential",
-      "type": "boolean"
-     },
      "signers": {
       "items": {
        "$ref": "#/components/schemas/SignerOut"
       },
       "title": "Signers",
       "type": "array"
-     },
-     "source_sha256": {
-      "title": "Source Sha256",
-      "type": "string"
-     },
-     "source_version": {
-      "title": "Source Version",
-      "type": "integer"
      },
      "status": {
       "title": "Status",
@@ -2034,22 +2719,61 @@
      "title": {
       "title": "Title",
       "type": "string"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
      }
     },
     "required": [
      "request_id",
      "document_id",
-     "source_version",
-     "source_sha256",
-     "title",
-     "message",
-     "sequential",
+     "version",
      "status",
-     "final_version_id",
+     "message",
+     "title",
      "created_at",
-     "signers"
+     "final_version_id",
+     "signers",
+     "fields",
+     "chain_valid",
+     "head_hash"
     ],
-    "title": "RequestOut",
+    "title": "ReqOut",
+    "type": "object"
+   },
+   "ReqSigner": {
+    "properties": {
+     "email": {
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+     },
+     "name": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+     },
+     "order": {
+      "anyOf": [
+       {
+        "maximum": 100.0,
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Order"
+     }
+    },
+    "required": [
+     "email",
+     "name"
+    ],
+    "title": "ReqSigner",
     "type": "object"
    },
    "RotateIn": {
@@ -2094,75 +2818,6 @@
      "angle"
     ],
     "title": "RotateIn",
-    "type": "object"
-   },
-   "SessionOut": {
-    "properties": {
-     "blocked_reason": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Blocked Reason"
-     },
-     "can_sign": {
-      "title": "Can Sign",
-      "type": "boolean"
-     },
-     "consent_text": {
-      "title": "Consent Text",
-      "type": "string"
-     },
-     "consent_text_version": {
-      "title": "Consent Text Version",
-      "type": "string"
-     },
-     "document_sha256": {
-      "title": "Document Sha256",
-      "type": "string"
-     },
-     "message": {
-      "title": "Message",
-      "type": "string"
-     },
-     "page_count": {
-      "title": "Page Count",
-      "type": "integer"
-     },
-     "request_id": {
-      "title": "Request Id",
-      "type": "string"
-     },
-     "request_status": {
-      "title": "Request Status",
-      "type": "string"
-     },
-     "signer": {
-      "$ref": "#/components/schemas/SignerOut"
-     },
-     "title": {
-      "title": "Title",
-      "type": "string"
-     }
-    },
-    "required": [
-     "request_id",
-     "title",
-     "message",
-     "signer",
-     "request_status",
-     "can_sign",
-     "blocked_reason",
-     "consent_text",
-     "consent_text_version",
-     "document_sha256",
-     "page_count"
-    ],
-    "title": "SessionOut",
     "type": "object"
    },
    "SigStatus": {
@@ -2271,65 +2926,97 @@
     "title": "SigStatus",
     "type": "object"
    },
-   "SignIn": {
+   "SignSessionOut": {
     "properties": {
-     "signature_text": {
-      "description": "Typed signature (e.g. full name)",
-      "maxLength": 100,
-      "minLength": 1,
-      "title": "Signature Text",
-      "type": "string"
-     }
-    },
-    "required": [
-     "signature_text"
-    ],
-    "title": "SignIn",
-    "type": "object"
-   },
-   "SignerIn": {
-    "properties": {
-     "email": {
-      "format": "email",
-      "title": "Email",
+     "blocked_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Blocked Reason"
+     },
+     "can_sign": {
+      "title": "Can Sign",
+      "type": "boolean"
+     },
+     "consent_text": {
+      "title": "Consent Text",
       "type": "string"
      },
-     "name": {
-      "maxLength": 200,
-      "minLength": 1,
-      "title": "Name",
+     "consent_text_version": {
+      "title": "Consent Text Version",
       "type": "string"
      },
-     "order": {
-      "default": 1,
-      "maximum": 100.0,
-      "minimum": 1.0,
-      "title": "Order",
-      "type": "integer"
+     "document_path": {
+      "title": "Document Path",
+      "type": "string"
      },
-     "page": {
-      "minimum": 1.0,
-      "title": "Page",
-      "type": "integer"
+     "document_sha256": {
+      "title": "Document Sha256",
+      "type": "string"
      },
-     "rect": {
-      "description": "signature box [x0,y0,x1,y1]",
+     "fields": {
       "items": {
-       "type": "number"
+       "$ref": "#/components/schemas/FieldOut"
       },
-      "maxItems": 4,
-      "minItems": 4,
-      "title": "Rect",
+      "title": "Fields",
       "type": "array"
+     },
+     "message": {
+      "title": "Message",
+      "type": "string"
+     },
+     "page_count": {
+      "title": "Page Count",
+      "type": "integer"
+     },
+     "request_id": {
+      "title": "Request Id",
+      "type": "string"
+     },
+     "signer_email": {
+      "title": "Signer Email",
+      "type": "string"
+     },
+     "signer_index": {
+      "title": "Signer Index",
+      "type": "integer"
+     },
+     "signer_name": {
+      "title": "Signer Name",
+      "type": "string"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
      }
     },
     "required": [
-     "email",
-     "name",
-     "page",
-     "rect"
+     "request_id",
+     "title",
+     "message",
+     "signer_index",
+     "signer_name",
+     "signer_email",
+     "status",
+     "can_sign",
+     "blocked_reason",
+     "consent_text",
+     "consent_text_version",
+     "document_sha256",
+     "page_count",
+     "document_path",
+     "fields"
     ],
-    "title": "SignerIn",
+    "title": "SignSessionOut",
     "type": "object"
    },
    "SignerOut": {
@@ -2357,17 +3044,6 @@
       "title": "Order",
       "type": "integer"
      },
-     "page": {
-      "title": "Page",
-      "type": "integer"
-     },
-     "rect": {
-      "items": {
-       "type": "number"
-      },
-      "title": "Rect",
-      "type": "array"
-     },
      "signed_at": {
       "anyOf": [
        {
@@ -2379,9 +3055,9 @@
       ],
       "title": "Signed At"
      },
-     "signer_id": {
-      "title": "Signer Id",
-      "type": "string"
+     "signer_index": {
+      "title": "Signer Index",
+      "type": "integer"
      },
      "status": {
       "title": "Status",
@@ -2389,22 +3065,24 @@
      }
     },
     "required": [
-     "signer_id",
+     "signer_index",
      "email",
      "name",
      "order",
      "status",
-     "page",
-     "rect",
      "consent_at",
      "signed_at"
     ],
     "title": "SignerOut",
     "type": "object"
    },
-   "SignerWithToken": {
+   "SignerPlacement": {
     "properties": {
-     "consent_at": {
+     "field_id": {
+      "title": "Field Id",
+      "type": "string"
+     },
+     "font": {
       "anyOf": [
        {
         "type": "string"
@@ -2413,32 +3091,9 @@
         "type": "null"
        }
       ],
-      "title": "Consent At"
+      "title": "Font"
      },
-     "email": {
-      "title": "Email",
-      "type": "string"
-     },
-     "name": {
-      "title": "Name",
-      "type": "string"
-     },
-     "order": {
-      "title": "Order",
-      "type": "integer"
-     },
-     "page": {
-      "title": "Page",
-      "type": "integer"
-     },
-     "rect": {
-      "items": {
-       "type": "number"
-      },
-      "title": "Rect",
-      "type": "array"
-     },
-     "signed_at": {
+     "image_base64": {
       "anyOf": [
        {
         "type": "string"
@@ -2447,35 +3102,27 @@
         "type": "null"
        }
       ],
-      "title": "Signed At"
+      "description": "PNG \u22641 MB, base64, for signature/initials",
+      "title": "Image Base64"
      },
-     "signer_id": {
-      "title": "Signer Id",
-      "type": "string"
-     },
-     "signing_token": {
-      "description": "Returned ONCE. Deliver to the signer out-of-band; send as X-Signer-Token.",
-      "title": "Signing Token",
-      "type": "string"
-     },
-     "status": {
-      "title": "Status",
-      "type": "string"
+     "text": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "typed signature/initials, or value for text/date",
+      "title": "Text"
      }
     },
     "required": [
-     "signer_id",
-     "email",
-     "name",
-     "order",
-     "status",
-     "page",
-     "rect",
-     "consent_at",
-     "signed_at",
-     "signing_token"
+     "field_id"
     ],
-    "title": "SignerWithToken",
+    "title": "SignerPlacement",
     "type": "object"
    },
    "SplitIn": {
@@ -2665,6 +3312,10 @@
       "title": "Document Id",
       "type": "string"
      },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
      "report": {
       "additionalProperties": true,
       "default": {},
@@ -2693,85 +3344,10 @@
      "version_id",
      "version",
      "sha256",
-     "size"
+     "size",
+     "filename"
     ],
     "title": "VersionResult",
-    "type": "object"
-   },
-   "thynkpdf_api__features__forms__register___locals___CreateIn": {
-    "properties": {
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "fields": {
-      "items": {
-       "$ref": "#/components/schemas/FieldSpec"
-      },
-      "maxItems": 500,
-      "minItems": 1,
-      "title": "Fields",
-      "type": "array"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version",
-     "fields"
-    ],
-    "title": "CreateIn",
-    "type": "object"
-   },
-   "thynkpdf_api__features__signing__register___locals___CreateIn": {
-    "properties": {
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "message": {
-      "default": "",
-      "maxLength": 2000,
-      "title": "Message",
-      "type": "string"
-     },
-     "sequential": {
-      "default": true,
-      "title": "Sequential",
-      "type": "boolean"
-     },
-     "signers": {
-      "items": {
-       "$ref": "#/components/schemas/SignerIn"
-      },
-      "maxItems": 50,
-      "minItems": 1,
-      "title": "Signers",
-      "type": "array"
-     },
-     "title": {
-      "maxLength": 200,
-      "minLength": 1,
-      "title": "Title",
-      "type": "string"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version",
-     "title",
-     "signers"
-    ],
-    "title": "CreateIn",
     "type": "object"
    }
   },
@@ -3121,7 +3697,7 @@
     "parameters": [
      {
       "in": "cookie",
-      "name": "thynkpdf_refresh",
+      "name": "thynkpdf_rt",
       "required": false,
       "schema": {
        "anyOf": [
@@ -3132,7 +3708,7 @@
          "type": "null"
         }
        ],
-       "title": "Thynkpdf Refresh"
+       "title": "Thynkpdf Rt"
       }
      }
     ],
@@ -3355,7 +3931,7 @@
     "parameters": [
      {
       "in": "cookie",
-      "name": "thynkpdf_refresh",
+      "name": "thynkpdf_rt",
       "required": false,
       "schema": {
        "anyOf": [
@@ -3366,7 +3942,7 @@
          "type": "null"
         }
        ],
-       "title": "Thynkpdf Refresh"
+       "title": "Thynkpdf Rt"
       }
      }
     ],
@@ -3961,6 +4537,137 @@
     ]
    }
   },
+  "/documents/{doc_id}/audit": {
+   "get": {
+    "operationId": "doc_audit_documents__doc_id__audit_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 200,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/DocAuditOut"
+         },
+         "title": "Response Doc Audit Documents  Doc Id  Audit Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Doc Audit",
+    "tags": [
+     "audit"
+    ]
+   }
+  },
   "/documents/{doc_id}/download": {
    "get": {
     "operationId": "download_current_documents__doc_id__download_get",
@@ -4193,6 +4900,132 @@
      }
     ],
     "summary": "Versions",
+    "tags": [
+     "documents"
+    ]
+   },
+   "post": {
+    "description": "Save client-modified bytes as a new immutable version (same validation as upload). 409 VERSION_CONFLICT if stale.",
+    "operationId": "upload_version_documents__doc_id__versions_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_version_documents__doc_id__versions_post"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Upload Version",
     "tags": [
      "documents"
     ]
@@ -4660,12 +5493,13 @@
   },
   "/pdf/annotations": {
    "post": {
-    "operationId": "create_pdf_annotations_post",
+    "description": "Atomic add/update/delete \u2192 one new version. report.ids = new ids in add order.\nReplies: type \"text\" + in_reply_to (/IRT). Resolve: state \"resolved\". Deleting a parent deletes its replies.",
+    "operationId": "batch_pdf_annotations_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/AnnotIn"
+        "$ref": "#/components/schemas/BatchIn"
        }
       }
      },
@@ -4676,7 +5510,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/AnnotResult"
+         "$ref": "#/components/schemas/VersionResult"
         }
        }
       },
@@ -4768,268 +5602,7 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Create",
-    "tags": [
-     "annotations"
-    ]
-   }
-  },
-  "/pdf/annotations/{annotation_id}": {
-   "delete": {
-    "operationId": "delete_pdf_annotations__annotation_id__delete",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "annotation_id",
-      "required": true,
-      "schema": {
-       "title": "Annotation Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "query",
-      "name": "document_id",
-      "required": true,
-      "schema": {
-       "title": "Document Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "query",
-      "name": "expected_version",
-      "required": true,
-      "schema": {
-       "minimum": 1,
-       "title": "Expected Version",
-       "type": "integer"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/AnnotResult"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Delete",
-    "tags": [
-     "annotations"
-    ]
-   },
-   "patch": {
-    "operationId": "update_pdf_annotations__annotation_id__patch",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "annotation_id",
-      "required": true,
-      "schema": {
-       "title": "Annotation Id",
-       "type": "string"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/AnnotPatch"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/AnnotResult"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Update",
+    "summary": "Batch",
     "tags": [
      "annotations"
     ]
@@ -5267,14 +5840,15 @@
     ]
    }
   },
-  "/pdf/forms": {
+  "/pdf/forms/fields": {
    "post": {
-    "operationId": "create_pdf_forms_post",
+    "description": "Atomic: delete listed fields (and their widgets), then add new ones. One new version.",
+    "operationId": "edit_fields_pdf_forms_fields_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/thynkpdf_api__features__forms__register___locals___CreateIn"
+        "$ref": "#/components/schemas/FieldsIn"
        }
       }
      },
@@ -5377,7 +5951,7 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Create",
+    "summary": "Edit Fields",
     "tags": [
      "forms"
     ]
@@ -5733,7 +6307,7 @@
   },
   "/pdf/pages/delete": {
    "post": {
-    "description": "Destructive within the new version only; previous versions remain downloadable (recovery = rollback).",
+    "description": "Previous versions remain downloadable (recovery = restore version). 400 CANNOT_DELETE_ALL_PAGES.",
     "operationId": "delete_pdf_pages_delete_post",
     "requestBody": {
      "content": {
@@ -6197,6 +6771,123 @@
     ]
    }
   },
+  "/pdf/pages/insert-from": {
+   "post": {
+    "description": "Inserts pages of another document in the same organization (source is read, never modified).",
+    "operationId": "insert_from_pdf_pages_insert_from_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InsertFromIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Insert From",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
   "/pdf/pages/reorder": {
    "post": {
     "operationId": "reorder_pdf_pages_reorder_post",
@@ -6536,6 +7227,123 @@
     ]
    }
   },
+  "/pdf/signatures/place": {
+   "post": {
+    "description": "Draws the caller's signature assets into page content (visual signature, not cryptographic).",
+    "operationId": "place_pdf_signatures_place_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PlaceIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Place",
+    "tags": [
+     "signatures"
+    ]
+   }
+  },
   "/pdf/signatures/sign": {
    "post": {
     "operationId": "crypto_sign_pdf_signatures_sign_post",
@@ -6787,6 +7595,22 @@
      },
      {
       "in": "query",
+      "name": "version",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Version"
+      }
+     },
+     {
+      "in": "query",
       "name": "page",
       "required": false,
       "schema": {
@@ -6807,11 +7631,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "items": {
-          "$ref": "#/components/schemas/Annotation"
-         },
-         "title": "Response List  Pdf  Doc Id  Annotations Get",
-         "type": "array"
+         "$ref": "#/components/schemas/AnnotationsOut"
         }
        }
       },
@@ -7038,6 +7858,22 @@
        "title": "Doc Id",
        "type": "string"
       }
+     },
+     {
+      "in": "query",
+      "name": "version",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Version"
+      }
      }
     ],
     "responses": {
@@ -7045,11 +7881,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "items": {
-          "$ref": "#/components/schemas/FormField"
-         },
-         "title": "Response Fields Pdf  Doc Id  Forms Get",
-         "type": "array"
+         "$ref": "#/components/schemas/FormsOut"
         }
        }
       },
@@ -7543,18 +8375,503 @@
     ]
    }
   },
-  "/signing-requests": {
+  "/sign/{token}": {
    "get": {
-    "operationId": "list__signing_requests_get",
+    "operationId": "sign_session_sign__token__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SignSessionOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Sign Session",
+    "tags": [
+     "signing-signer"
+    ]
+   }
+  },
+  "/sign/{token}/complete": {
+   "post": {
+    "operationId": "sign_complete_sign__token__complete_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CompleteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReqOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Sign Complete",
+    "tags": [
+     "signing-signer"
+    ]
+   }
+  },
+  "/sign/{token}/decline": {
+   "post": {
+    "operationId": "sign_decline_sign__token__decline_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DeclineIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReqOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Sign Decline",
+    "tags": [
+     "signing-signer"
+    ]
+   }
+  },
+  "/sign/{token}/document": {
+   "get": {
+    "operationId": "sign_doc_sign__token__document_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "token",
+      "required": true,
+      "schema": {
+       "title": "Token",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       },
+       "application/pdf": {}
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Sign Doc",
+    "tags": [
+     "signing-signer"
+    ]
+   }
+  },
+  "/signature-requests": {
+   "get": {
+    "operationId": "list_req_signature_requests_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "document_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Document Id"
+      }
+     }
+    ],
     "responses": {
      "200": {
       "content": {
        "application/json": {
         "schema": {
          "items": {
-          "$ref": "#/components/schemas/RequestOut"
+          "$ref": "#/components/schemas/ReqOut"
          },
-         "title": "Response List  Signing Requests Get",
+         "title": "Response List Req Signature Requests Get",
          "type": "array"
         }
        }
@@ -7647,18 +8964,18 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "List ",
+    "summary": "List Req",
     "tags": [
      "signing"
     ]
    },
    "post": {
-    "operationId": "create_signing_requests_post",
+    "operationId": "create_req_signature_requests_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/thynkpdf_api__features__signing__register___locals___CreateIn"
+        "$ref": "#/components/schemas/CreateReqIn"
        }
       }
      },
@@ -7669,7 +8986,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/CreatedOut"
+         "$ref": "#/components/schemas/CreatedReqOut"
         }
        }
       },
@@ -7761,15 +9078,15 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Create",
+    "summary": "Create Req",
     "tags": [
      "signing"
     ]
    }
   },
-  "/signing-requests/{rid}": {
+  "/signature-requests/{rid}": {
    "get": {
-    "operationId": "get_signing_requests__rid__get",
+    "operationId": "get_one_signature_requests__rid__get",
     "parameters": [
      {
       "in": "path",
@@ -7786,7 +9103,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/RequestOut"
+         "$ref": "#/components/schemas/ReqOut"
         }
        }
       },
@@ -7878,15 +9195,15 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Get",
+    "summary": "Get One",
     "tags": [
      "signing"
     ]
    }
   },
-  "/signing-requests/{rid}/cancel": {
+  "/signature-requests/{rid}/cancel": {
    "post": {
-    "operationId": "cancel_signing_requests__rid__cancel_post",
+    "operationId": "cancel_signature_requests__rid__cancel_post",
     "parameters": [
      {
       "in": "path",
@@ -7903,7 +9220,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/RequestOut"
+         "$ref": "#/components/schemas/ReqOut"
         }
        }
       },
@@ -8001,127 +9318,9 @@
     ]
    }
   },
-  "/signing-requests/{rid}/complete": {
-   "post": {
-    "description": "Builds the final PDF: stamps each typed signature into page content, appends a certificate page with the\nevent hash chain, then applies a server cryptographic signature (pyHanko) so later changes are detectable.",
-    "operationId": "complete_signing_requests__rid__complete_post",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "rid",
-      "required": true,
-      "schema": {
-       "title": "Rid",
-       "type": "string"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/RequestOut"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Complete",
-    "tags": [
-     "signing"
-    ]
-   }
-  },
-  "/signing-requests/{rid}/events": {
+  "/signature-requests/{rid}/events": {
    "get": {
-    "operationId": "events_signing_requests__rid__events_get",
+    "operationId": "events_signature_requests__rid__events_get",
     "parameters": [
      {
       "in": "path",
@@ -8236,24 +9435,17 @@
     ]
    }
   },
-  "/signing/session": {
-   "get": {
-    "operationId": "sess_signing_session_get",
+  "/signature-requests/{rid}/remind": {
+   "post": {
+    "operationId": "remind_signature_requests__rid__remind_post",
     "parameters": [
      {
-      "in": "header",
-      "name": "x-signer-token",
-      "required": false,
+      "in": "path",
+      "name": "rid",
+      "required": true,
       "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "X-Signer-Token"
+       "title": "Rid",
+       "type": "string"
       }
      }
     ],
@@ -8262,7 +9454,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/SessionOut"
+         "$ref": "#/components/schemas/RemindOut"
         }
        }
       },
@@ -8349,49 +9541,181 @@
       "description": "Unprocessable Content"
      }
     },
-    "summary": "Sess",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Remind",
     "tags": [
-     "signing-signer"
+     "signing"
     ]
    }
   },
-  "/signing/session/consent": {
-   "post": {
-    "operationId": "consent_signing_session_consent_post",
-    "parameters": [
-     {
-      "in": "header",
-      "name": "x-signer-token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
+  "/signatures/assets": {
+   "get": {
+    "operationId": "list_assets_signatures_assets_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AssetOut"
+         },
+         "title": "Response List Assets Signatures Assets Get",
+         "type": "array"
         }
-       ],
-       "title": "X-Signer-Token"
-      }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
      }
     ],
+    "summary": "List Assets",
+    "tags": [
+     "signatures"
+    ]
+   },
+   "post": {
+    "description": "PNG (\u22641 MB) via multipart `file`, or JSON `{kind:\"typed\", text, font}`. SVG is rejected (SVG_NOT_SUPPORTED: scripting/external refs risk).",
+    "operationId": "create_asset_signatures_assets_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/ConsentIn"
+        "properties": {
+         "font": {
+          "enum": [
+           "Courier-Oblique",
+           "Helvetica",
+           "Helvetica-Oblique",
+           "Times-BoldItalic",
+           "Times-Italic"
+          ],
+          "type": "string"
+         },
+         "kind": {
+          "const": "typed"
+         },
+         "text": {
+          "maxLength": 100,
+          "type": "string"
+         }
+        },
+        "required": [
+         "kind",
+         "text"
+        ],
+        "type": "object"
+       }
+      },
+      "multipart/form-data": {
+       "schema": {
+        "properties": {
+         "file": {
+          "format": "binary",
+          "type": "string"
+         }
+        },
+        "required": [
+         "file"
+        ],
+        "type": "object"
        }
       }
-     },
-     "required": true
+     }
     },
     "responses": {
-     "200": {
+     "201": {
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/SignerOut"
+         "$ref": "#/components/schemas/AssetOut"
         }
        }
       },
@@ -8478,52 +9802,33 @@
       "description": "Unprocessable Content"
      }
     },
-    "summary": "Consent",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Create Asset",
     "tags": [
-     "signing-signer"
+     "signatures"
     ]
    }
   },
-  "/signing/session/decline": {
-   "post": {
-    "operationId": "decline_signing_session_decline_post",
+  "/signatures/assets/{asset_id}": {
+   "delete": {
+    "operationId": "delete_asset_signatures_assets__asset_id__delete",
     "parameters": [
      {
-      "in": "header",
-      "name": "x-signer-token",
-      "required": false,
+      "in": "path",
+      "name": "asset_id",
+      "required": true,
       "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "X-Signer-Token"
+       "title": "Asset Id",
+       "type": "string"
       }
      }
     ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/DeclineIn"
-       }
-      }
-     },
-     "required": true
-    },
     "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/SignerOut"
-        }
-       }
-      },
+     "204": {
       "description": "Successful Response"
      },
      "400": {
@@ -8607,30 +9912,29 @@
       "description": "Unprocessable Content"
      }
     },
-    "summary": "Decline",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Delete Asset",
     "tags": [
-     "signing-signer"
+     "signatures"
     ]
    }
   },
-  "/signing/session/document": {
+  "/signatures/assets/{asset_id}/image": {
    "get": {
-    "operationId": "sess_doc_signing_session_document_get",
+    "description": "PNG preview. Typed assets get a low-fidelity preview; the PDF uses the real standard font.",
+    "operationId": "asset_image_signatures_assets__asset_id__image_get",
     "parameters": [
      {
-      "in": "header",
-      "name": "x-signer-token",
-      "required": false,
+      "in": "path",
+      "name": "asset_id",
+      "required": true,
       "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "X-Signer-Token"
+       "title": "Asset Id",
+       "type": "string"
       }
      }
     ],
@@ -8640,7 +9944,7 @@
        "application/json": {
         "schema": {}
        },
-       "application/pdf": {}
+       "image/png": {}
       },
       "description": "Successful Response"
      },
@@ -8725,138 +10029,14 @@
       "description": "Unprocessable Content"
      }
     },
-    "summary": "Sess Doc",
-    "tags": [
-     "signing-signer"
-    ]
-   }
-  },
-  "/signing/session/sign": {
-   "post": {
-    "operationId": "sign_signing_session_sign_post",
-    "parameters": [
+    "security": [
      {
-      "in": "header",
-      "name": "x-signer-token",
-      "required": false,
-      "schema": {
-       "anyOf": [
-        {
-         "type": "string"
-        },
-        {
-         "type": "null"
-        }
-       ],
-       "title": "X-Signer-Token"
-      }
+      "HTTPBearer": []
      }
     ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/SignIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/SignerOut"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    },
-    "summary": "Sign",
+    "summary": "Asset Image",
     "tags": [
-     "signing-signer"
+     "signatures"
     ]
    }
   }

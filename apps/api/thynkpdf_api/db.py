@@ -66,6 +66,12 @@ class AuditEvent(Base):
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     action: Mapped[str] = mapped_column(String(64))
     target: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    document_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    actor_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    details: Mapped[str] = mapped_column(Text, default="{}", server_default="{}")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 class Job(Base):
@@ -102,7 +108,7 @@ class SigningRequest(Base):
     title: Mapped[str] = mapped_column(String(200))
     message: Mapped[str] = mapped_column(Text, default="")
     sequential: Mapped[bool] = mapped_column(Boolean, default=True)
-    status: Mapped[str] = mapped_column(String(16), default="in_progress")  # in_progress|completed|declined|cancelled
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending|completed|declined|cancelled|needs_attention
     final_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
@@ -113,16 +119,45 @@ class SigningSigner(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
     request_id: Mapped[str] = mapped_column(ForeignKey("signing_requests.id"), index=True)
+    idx: Mapped[int] = mapped_column(Integer)
     email: Mapped[str] = mapped_column(String(320))
     name: Mapped[str] = mapped_column(String(200))
     order: Mapped[int] = mapped_column(Integer)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)
-    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending|consented|signed|declined
-    page: Mapped[int] = mapped_column(Integer)
-    rect: Mapped[str] = mapped_column(String(200))
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending|signed|declined
     consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     signed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    signature_text: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)
+
+class SigningField(Base):
+    __tablename__ = "signing_fields"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    request_id: Mapped[str] = mapped_column(ForeignKey("signing_requests.id"), index=True)
+    signer_id: Mapped[str] = mapped_column(ForeignKey("signing_signers.id"), index=True)
+    page: Mapped[int] = mapped_column(Integer)
+    rect: Mapped[str] = mapped_column(String(200))
+    type: Mapped[str] = mapped_column(String(16))  # signature|initials|date|text
+    value_kind: Mapped[str | None] = mapped_column(String(8), nullable=True)  # text|image
+    value_text: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    value_font: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    value_image_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
+
+class SignatureAsset(Base):
+    __tablename__ = "signature_assets"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    kind: Mapped[str] = mapped_column(String(8))  # image|typed
+    text: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    font: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    storage_key: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    width: Mapped[int] = mapped_column(Integer)
+    height: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 class SigningEvent(Base):
     __tablename__ = "signing_events"
