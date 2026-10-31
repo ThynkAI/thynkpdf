@@ -15,3 +15,8 @@ settings.signing_key = os.getenv("THYNKPDF_SIGNING_KEY", "")
 settings.signing_key_pass = os.getenv("THYNKPDF_SIGNING_KEY_PASSPHRASE", "")
 settings.signing_cert_trusted = os.getenv("THYNKPDF_SIGNING_CERT_TRUSTED", "false").lower() == "true"
 settings.cookie_samesite = os.getenv("THYNKPDF_COOKIE_SAMESITE", "strict").lower()
+settings.ai_rate_per_min = int(os.getenv("THYNKPDF_AI_RATE_PER_MIN", "20"))
+settings.ai_external_base_url = os.getenv("THYNKPDF_AI_EXTERNAL_BASE_URL", "")
+settings.ai_external_api_key = os.getenv("THYNKPDF_AI_EXTERNAL_API_KEY", "")
+settings.ai_external_model = os.getenv("THYNKPDF_AI_EXTERNAL_MODEL", "")
+settings.ai_max_context_chars = int(os.getenv("THYNKPDF_AI_MAX_CONTEXT_CHARS", "12000"))
