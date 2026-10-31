@@ -87,3 +87,50 @@ class RevokedToken(Base):
     __tablename__ = "revoked_tokens"
     jti: Mapped[str] = mapped_column(String(36), primary_key=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+class SigningRequest(Base):
+    __tablename__ = "signing_requests"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
+    source_version_id: Mapped[str] = mapped_column(ForeignKey("document_versions.id"))
+    source_version: Mapped[int] = mapped_column(Integer)
+    source_sha256: Mapped[str] = mapped_column(String(64))
+    title: Mapped[str] = mapped_column(String(200))
+    message: Mapped[str] = mapped_column(Text, default="")
+    sequential: Mapped[bool] = mapped_column(Boolean, default=True)
+    status: Mapped[str] = mapped_column(String(16), default="in_progress")  # in_progress|completed|declined|cancelled
+    final_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class SigningSigner(Base):
+    __tablename__ = "signing_signers"
+    __table_args__ = (UniqueConstraint("request_id", "email"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    request_id: Mapped[str] = mapped_column(ForeignKey("signing_requests.id"), index=True)
+    email: Mapped[str] = mapped_column(String(320))
+    name: Mapped[str] = mapped_column(String(200))
+    order: Mapped[int] = mapped_column(Integer)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    status: Mapped[str] = mapped_column(String(16), default="pending")  # pending|consented|signed|declined
+    page: Mapped[int] = mapped_column(Integer)
+    rect: Mapped[str] = mapped_column(String(200))
+    consent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    signed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    signature_text: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
+class SigningEvent(Base):
+    __tablename__ = "signing_events"
+    __table_args__ = (UniqueConstraint("request_id", "seq"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    request_id: Mapped[str] = mapped_column(ForeignKey("signing_requests.id"), index=True)
+    seq: Mapped[int] = mapped_column(Integer)
+    type: Mapped[str] = mapped_column(String(32))
+    actor: Mapped[str] = mapped_column(String(320))
+    data: Mapped[str] = mapped_column(Text, default="{}")
+    at: Mapped[str] = mapped_column(String(40))
+    prev_hash: Mapped[str] = mapped_column(String(64))
+    hash: Mapped[str] = mapped_column(String(64))

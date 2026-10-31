@@ -128,3 +128,26 @@ Delete/move/replace require the font to be listed in `pages[n].editable_fonts`. 
 - `POST /pdf/forms/fill {document_id, expected_version, values:{name:value} | csv:"name,value\n...", flatten?}` → report `{filled, missing_required, flattened?}`. checkbox=bool, radio=option name, listbox=list. Invalid values → 422 `VALIDATION_ERROR` with `details.fields{name: max_length|invalid_option|expected_boolean|read_only}`; unknown → `FORM_FIELD_NOT_FOUND`.
 - `POST /pdf/forms/flatten {document_id, expected_version, confirm:true}` → burns widgets AND all annotations into content, removes AcroForm. `confirm:false` → `CONFIRMATION_REQUIRED`. Recover via earlier version.
 - `GET /pdf/{id}/forms/export?format=json|csv` (CSV cells starting with = + - @ are prefixed with `'`).
+
+## PR-3: e-sign workflow, cryptographic signatures, audit
+Legal note: no claim of legal enforceability in any jurisdiction; pending legal review.
+### TYPE A — e-sign workflow
+Owner side (Bearer auth, member+):
+- `POST /signing-requests {document_id, expected_version, title, message?, sequential(default true), signers:[{email,name,order,page,rect}]}` → 201 `CreatedOut`; each signer includes `signing_token` **only in this response** (stored hashed). No email provider is configured: deliver the link/token out-of-band (event `notification_queued` with `delivered:false`).
+- `GET /signing-requests`, `GET /signing-requests/{id}` (status `in_progress|completed|declined|cancelled`; signer status `pending|consented|signed|declined`)
+- `GET /signing-requests/{id}/events` → `{chain_valid, first_invalid_seq, head_hash, events[{seq,type,actor,data,at,prev_hash,hash}]}`; `hash = sha256(prev_hash || canonical_json(event))`, genesis = 64×"0". Types: request_created, signer_invited, notification_queued, document_viewed, consent_given, signer_signed, signer_declined, request_cancelled, document_finalizing, request_completed.
+- `POST /signing-requests/{id}/cancel`
+- `POST /signing-requests/{id}/complete` → requires all signed and document still at the source version (else `SIGNING_INCOMPLETE` / `VERSION_CONFLICT`). Produces a NEW VERSION of the document: typed signatures stamped as real text in each signer's rect, an appended "Electronic Signature Certificate" page (signers, consent times, event hashes, chain head), then a server pyHanko signature over everything.
+Signer side (no account; header `X-Signer-Token: <token>`; suggested web route `/sign?token=`):
+- `GET /signing/session` → `{title, message, signer, can_sign, blocked_reason(waiting_for_previous_signers|already_signed|request_cancelled...), consent_text, consent_text_version:"v1", document_sha256, page_count}`
+- `GET /signing/session/document` → source PDF
+- `POST /signing/session/consent {accept:true, consent_text_version:"v1"}` → then `POST /signing/session/sign {signature_text}` (Latin/WinAnsi) or `POST /signing/session/decline {reason}`.
+Errors: SIGNER_TOKEN_REQUIRED/INVALID (401), CONSENT_REQUIRED, SIGNING_NOT_ALLOWED, SIGNING_INVALID_STATE, SIGNING_INCOMPLETE (409), SIGNING_REQUEST_NOT_FOUND (404).
+### TYPE B — cryptographic signatures (pyHanko)
+- `GET /pdf/signatures/certificate` → `{subject, issuer, serial, not_after, trusted_identity, dev_untrusted, sha256_fingerprint}`. Private keys are never returned. In dev the server auto-generates a self-signed cert with CN "THYNKPDF DEV TEST CERTIFICATE - UNTRUSTED - NOT AN IDENTITY"; it is always reported `trusted:false`. Production: set `THYNKPDF_SIGNING_CERT`, `THYNKPDF_SIGNING_KEY`, `THYNKPDF_SIGNING_KEY_PASSPHRASE`, `THYNKPDF_SIGNING_CERT_TRUSTED=true` (CA-issued only).
+- `POST /pdf/signatures/sign {document_id, expected_version, field_name?, reason?, location?, page?, rect?}` → new version, incremental signature (earlier signatures stay intact). `report.warnings` flags untrusted dev cert. The signing identity is the server certificate, not the end user.
+- `GET /pdf/{id}/signatures?version=` → `signatures[{field, intact, crypto_valid, trusted, coverage, modification_level, docmdp_ok, signing_time, signer_subject, modified_after_signing}]`. Show "Signed, identity not verified" when `trusted:false`.
+- Signed documents: rotate/reorder/edit/annotations/forms/compress/page ops → 409 `DOCUMENT_SIGNED` (extract/merge/split into a new document still allowed). Capabilities report `SIGNED_DOCUMENT`.
+- No timestamp authority (TSA) configured → signing_time is signer-reported.
+### Audit
+- `GET /audit?action=<prefix>&target=&user_id=&since=&until=&limit=&offset=` (admin+, org-scoped) → `[{id, action, user_id, target, created_at}]`.

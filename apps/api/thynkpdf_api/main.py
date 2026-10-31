@@ -353,8 +353,14 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
 
     def vres(d, v, report=None): return VersionResult(document_id=d.id, version_id=v.id, version=v.number, sha256=v.sha256, size=v.size, report=report or {})
 
-    def writable(s, p, doc_id):
-        need(p, "member"); d = get_doc(s, p, doc_id); return d, load(d, get_ver(s, d))
+    def writable(s, p, doc_id, allow_signed=False):
+        need(p, "member"); d = get_doc(s, p, doc_id); data = load(d, get_ver(s, d))
+        if not allow_signed:
+            m = eng.inspect(data)
+            if m["has_signatures"]:
+                raise ApiError(409, "DOCUMENT_SIGNED", "Document carries digital signatures; modifying it would invalidate them",
+                               {"safe_options": ["extract pages to a new document", "roll back to an unsigned version"]})
+        return d, data
 
     @app.post("/pdf/pages/rotate", response_model=VersionResult, tags=["pdf"])
     def rotate(b: RotateIn, p: Principal = Depends(principal), s=Depends(db)):
@@ -368,19 +374,19 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
 
     @app.post("/pdf/pages/extract", response_model=UploadOut, status_code=201, tags=["pdf"])
     def extract(b: ExtractIn, p: Principal = Depends(principal), s=Depends(db)):
-        d, data = writable(s, p, b.document_id); out = eng.extract(data, b.pages)
+        d, data = writable(s, p, b.document_id, allow_signed=True); out = eng.extract(data, b.pages)
         nd, v = new_document(s, p, b.filename or f"extract-{d.filename}", out, "extract", b.model_dump())
         return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=len(b.pages))
 
     @app.post("/pdf/merge", response_model=UploadOut, status_code=201, tags=["pdf"])
     def merge(b: MergeIn, p: Principal = Depends(principal), s=Depends(db)):
-        datas = [writable(s, p, i)[1] for i in b.document_ids]; out = eng.merge(datas)
+        datas = [writable(s, p, i, allow_signed=True)[1] for i in b.document_ids]; out = eng.merge(datas)
         nd, v = new_document(s, p, b.filename, out, "merge", b.model_dump())
         return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=len(eng.open_pdf(out).pages))
 
     @app.post("/pdf/split", response_model=list[UploadOut], status_code=201, tags=["pdf"])
     def split(b: SplitIn, p: Principal = Depends(principal), s=Depends(db)):
-        d, data = writable(s, p, b.document_id); res = []
+        d, data = writable(s, p, b.document_id, allow_signed=True); res = []
         for i, part in enumerate(eng.split(data, b.ranges)):
             nd, v = new_document(s, p, f"part{i + 1}-{d.filename}", part, "split", {"range": b.ranges[i]})
             res.append(UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=b.ranges[i][1] - b.ranges[i][0] + 1))
