@@ -4,3 +4,6 @@ packages:
   - packages/pdf-viewer
   - packages/editor-client
   - packages/frontend-tests
+
+# Allow installing the committed lockfile with pnpm >= 10.16 / 11 / 12 (avoids ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION).
+minimumReleaseAge: 0
