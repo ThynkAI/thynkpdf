@@ -63,6 +63,17 @@ test.describe("documents dashboard (live backend)", () => {
     await page.getByRole("navigation").getByRole("button", { name: "Starred" }).click();
     await page.getByLabel("Search documents").fill(name);
     await expect(page.getByTestId("doc-row")).toHaveCount(1);
+    // rename document and folder
+    const renamed = `renamed-${Date.now()}`;
+    await page.getByTestId("doc-row").getByRole("button", { name: "Rename" }).click();
+    await page.getByLabel(`New name for ${name}`).fill(renamed);
+    await page.getByRole("button", { name: "Save name" }).click();
+    await page.getByLabel("Search documents").fill(renamed);
+    await expect(page.getByTestId("doc-row")).toContainText(`${renamed}.pdf`);
+    await page.getByRole("button", { name: `Rename folder ${folder}` }).click();
+    await page.getByLabel(`New name for folder ${folder}`).fill(`${folder}x`);
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByRole("navigation").getByRole("button", { name: `${folder}x`, exact: true })).toBeVisible();
     // public link is view-only
     await page.getByTestId("doc-row").getByRole("button", { name: "Share" }).click();
     await page.getByRole("button", { name: "Create public view-only link" }).click();
@@ -76,20 +87,20 @@ test.describe("documents dashboard (live backend)", () => {
     await expect(pub.getByRole("button", { name: /Rotate|Annotate|Organize/ })).toHaveCount(0);
     await pub.close();
     // trash → restore → trash → delete forever
-    await page.getByTestId("doc-row").getByRole("button", { name: `Move ${name} to trash` }).click();
+    await page.getByTestId("doc-row").getByRole("button", { name: /Move .* to trash/ }).click();
     await expect(page.getByTestId("doc-row")).toHaveCount(0);
     await page.getByRole("navigation").getByRole("button", { name: "Trash" }).click();
     await expect(page.getByTestId("doc-row")).toHaveCount(1);
     await page.getByTestId("doc-row").getByRole("button", { name: "Restore" }).click();
     await expect(page.getByTestId("doc-row")).toHaveCount(0);
     await page.getByRole("navigation").getByRole("button", { name: "All documents" }).click();
-    await page.getByTestId("doc-row").getByRole("button", { name: `Move ${name} to trash` }).click();
+    await page.getByTestId("doc-row").getByRole("button", { name: /Move .* to trash/ }).click();
     await page.getByRole("navigation").getByRole("button", { name: "Trash" }).click();
     await page.getByTestId("doc-row").getByRole("button", { name: "Delete forever" }).click();
     await expect(page.getByRole("alertdialog")).toContainText("cannot be undone");
     await page.getByRole("alertdialog").getByRole("button", { name: "Delete forever" }).click();
     await expect(page.getByTestId("doc-row")).toHaveCount(0);
-    await page.getByRole("button", { name: `Delete folder ${folder}` }).click();
-    await expect(page.getByRole("navigation").getByRole("button", { name: folder, exact: true })).toHaveCount(0);
+    await page.getByRole("button", { name: `Delete folder ${folder}x` }).click();
+    await expect(page.getByRole("navigation").getByRole("button", { name: `${folder}x`, exact: true })).toHaveCount(0);
   });
 });

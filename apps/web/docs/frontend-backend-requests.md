@@ -75,3 +75,24 @@ New requests:
 - **R5.6** `signer_links[]` items are untyped in openapi (`{[key]: unknown}`); please add a `SignerLink` schema `{signer_index,email,token,path}`.
 - **R0.3** Several input schemas mark defaulted fields as required in openapi (e.g. `FieldSpec.font_size`, `EditOp.font`), which forces casts
   in the generated client. Please mark them optional (`required` only for fields without defaults).
+
+## Status 2026-10-31 (late afternoon, EDT) — branch feat/web-phase3
+- The annotation tools now call `POST /pdf/annotations` / `GET /pdf/{id}/annotations` for server documents. Each change is one versioned
+  write, replies use `in_reply_to`, and resolve/reopen use `state`. Rename for documents (`PATCH /documents/{id} {filename}`) and folders
+  (`PATCH /folders/{id} {name}`) is wired. `?tool=compress` uses the existing `POST /pdf/compress`, so no request is needed.
+- **R2.4** The server writes FreeText/stamp text in WinAnsi/Helvetica only. Please embed a Unicode font (for example Noto Sans, OFL) so
+  non-Latin-1 comments can be written by the server. Today the frontend writes those in the browser with Noto Sans and saves them through
+  `POST /documents/{id}/versions`.
+- **R2.5** Server FreeText/stamp appearances aren't counter-rotated on /Rotate pages, and there's no callout (`FreeTextCallout`) type.
+  The frontend writes those in the browser (rotated `/Matrix`) as a fallback.
+- R4.5 (rotated signature stamps) and R5.6 (typed SignerLink) are addressed by open backend PR #16. Once that PR is merged, remove the
+  client-side rotated-signature path in SignPanel and the `signer_links` casts.
+- **WebKit locally:** `npx playwright install-deps webkit` and plain apt both fail on this box. The Debian mirror (deb.debian.org via
+  198.18.0.1) returns 500 for trixie, trixie-updates and trixie-security, so the WebKit system libraries can't be installed. WebKit runs in
+  CI instead: workflow at `packages/frontend-tests/ci/web-e2e.yml`, to be copied to `.github/workflows/` by someone whose token has the `workflow` scope (push was rejected without it).
+
+## Update after #15/#16 merged into main
+- R4.5 (rotated-page signatures): frontend workaround removed; server documents always use `POST /pdf/signatures/place`. Covered by e2e "signature on a rotated page".
+- R5.6 (typed SignerLink): casts removed; signer links are built from `token`.
+- R0.3 (optional defaulted fields): the client is now generated with `--default-non-nullable false`, so the `FieldSpec`/`EditOp` loosening is gone.
+- Static export / apps/desktop: public pages are `/sign/?token=` and `/shared/?token=`. The sidecar serves `/sign/{token}` and `/shared/{token}` as API routes, so those can't be pages. The launcher ids `merge` and `annotate` are accepted as aliases. **Backend request R6.1:** have `CreatedReqOut.signer_links[].path` and `ShareOut.url` return the query form, or return only the token, so clients don't need to rebuild the URLs.

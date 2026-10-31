@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { tokenFromSearch } from "@/lib/publicLinks";
 import { Wordmark } from "@thynkpdf/ui";
 import { HttpEditorApi, type SignSession, type SignerPlacement } from "@thynkpdf/editor-client";
 import { describeError } from "@/lib/documents";
@@ -13,7 +13,7 @@ const FONTS = ["Times-Italic", "Helvetica-Oblique", "Courier-Oblique", "Times-Bo
 
 /** Account-free signer page for /sign/{token}: consent → fill own fields → POST /sign/{token}/complete (or decline). */
 export function SignerPage() {
-  const { token } = useParams<{ token: string }>();
+  const [token] = useState(() => tokenFromSearch(window.location.search));
   const api = useMemo(() => new HttpEditorApi({ baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000" }), []);
   const [sess, setSess] = useState<SignSession | null>(null);
   const [err, setErr] = useState<string | null>(null);

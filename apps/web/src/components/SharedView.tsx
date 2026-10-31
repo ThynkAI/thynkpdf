@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
+import { tokenFromSearch } from "@/lib/publicLinks";
 import { Wordmark } from "@thynkpdf/ui";
 import { HttpEditorApi } from "@thynkpdf/editor-client";
 import { describeError } from "@/lib/documents";
@@ -8,7 +8,7 @@ import { PdfPages } from "./PdfPages";
 
 /** Public share link: VIEW-ONLY (no editing tools are offered; the backend rejects editor links). */
 export function SharedView() {
-  const { token } = useParams<{ token: string }>();
+  const [token] = useState(() => tokenFromSearch(window.location.search));
   const api = useMemo(() => new HttpEditorApi({ baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000" }), []);
   const [info, setInfo] = useState<Awaited<ReturnType<HttpEditorApi["sharedInfo"]>> | null>(null);
   const [err, setErr] = useState<string | null>(null);

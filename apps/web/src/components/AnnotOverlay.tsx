@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useAnnot, MARKUP } from "@/lib/annotState";
-import { applyEdit, authorName } from "@/lib/annotActions";
-import { addAnnotations, deleteAnnotation, type NewAnnot } from "@/lib/annotWrite";
+import { authorName, annotate, eraseAnnotation } from "@/lib/annotActions";
+import type { NewAnnot } from "@/lib/annotWrite";
 import { displayToPdf, displayBoxToPdfRect, pdfToDisplay, type PageGeom } from "@/lib/geometry";
 import { getGeom } from "@/lib/pageGeom";
 
@@ -22,7 +22,7 @@ export function AnnotOverlay({ pageIndex, scale }: { pageIndex: number; scale: n
   const local = (e: React.PointerEvent): P => { const r = ref.current!.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
   const toPdf = (p: P) => displayToPdf(p[0], p[1], geom, scale);
   const base = () => ({ page: pageIndex, author: authorName(), color, contents: text.trim() || undefined });
-  const commit = (a: NewAnnot) => applyEdit("Annotate", async (b) => (await addAnnotations(b, [a])).bytes);
+  const commit = (a: NewAnnot) => annotate([a]);
   const box = (c: P, w: number, h: number) => displayBoxToPdfRect(c[0], c[1], w * scale, h * scale, geom, scale);
 
   const onDown = (e: React.PointerEvent) => {
@@ -34,7 +34,7 @@ export function AnnotOverlay({ pageIndex, scale }: { pageIndex: number; scale: n
     else if (tool === "eraser") {
       const [x, y] = toPdf(p);
       const hit = [...all].reverse().find((a) => a.page === pageIndex && !a.inReplyTo && x >= a.rect.x && x <= a.rect.x + a.rect.width && y >= a.rect.y && y <= a.rect.y + a.rect.height);
-      if (hit) void applyEdit("Erase", (b) => deleteAnnotation(b, hit.id));
+      if (hit) void eraseAnnotation(hit.id);
     }
   };
   const onMove = (e: React.PointerEvent) => {
@@ -91,5 +91,5 @@ export async function markupFromSelection(): Promise<boolean> {
   if (!byPage.size) return false;
   const list: NewAnnot[] = [...byPage].map(([page, quads]) => ({ page, quads, type: tool as "highlight", author: authorName(), color, contents: text.trim() || sel.toString().slice(0, 200) }));
   sel.removeAllRanges();
-  return applyEdit("Annotate", async (b) => (await addAnnotations(b, list)).bytes);
+  return annotate(list);
 }

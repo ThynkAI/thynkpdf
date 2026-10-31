@@ -13,6 +13,7 @@ const TOOLS: { t: Tool; label: string; icon: string }[] = [
 
 export function AnnotToolbar() {
   const a = useAnnot(); const busy = useSession((s) => s.busy);
+  const sessionServer = useSession((s) => s.api.kind === "http" && !!s.ref);
   return (
     <div role="toolbar" aria-label="Annotation tools" className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-800 dark:bg-neutral-950">
       {TOOLS.map(({ t, label, icon }) => (
@@ -33,6 +34,7 @@ export function AnnotToolbar() {
       <input aria-label="Author name" placeholder="Your name" value={a.author} onChange={(e) => { a.set({ author: e.target.value }); try { localStorage.setItem("tp-author", e.target.value); } catch { /* */ } }}
         className="w-32 rounded border px-1.5 py-0.5 dark:border-neutral-700 dark:bg-neutral-800" />
       <div className="ml-auto flex items-center gap-1" data-testid="annot-save-bar">
+        {!a.working && sessionServer && <span className="text-neutral-500" data-testid="annot-server-mode">Each change is saved to the server as a new version</span>}
         {a.working?.dirty && <span className="text-amber-700">Unsaved annotations</span>}
         {a.working && <>
           <button className="rounded bg-brand-600 px-2 py-1 text-white disabled:opacity-40" disabled={!!busy} onClick={() => void saveAnnotations()}>{a.working.originRef ? "Save as new version" : "Save"}</button>

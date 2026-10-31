@@ -13,6 +13,6 @@
     "typescript": "~5.9.3"
   },
   "scripts": {
-    "gen": "openapi-typescript ../../docs/openapi.json -o src/generated/schema.d.ts"
+    "gen": "openapi-typescript ../../docs/openapi.json --default-non-nullable false -o src/generated/schema.d.ts"
   }
 }

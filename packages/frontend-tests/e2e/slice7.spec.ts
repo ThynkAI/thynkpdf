@@ -125,21 +125,55 @@ test("signature images persist in IndexedDB across reloads", async ({ page }) =>
 test.describe("live backend", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
-  test("annotate a server document and save as a new version", async ({ page }) => {
+  test("server annotations: each change is a versioned server write; reply, resolve/reopen, erase", async ({ page, request }) => {
     await signInAndUpload(page);
     await page.getByRole("button", { name: "Annotate" }).click();
+    await expect(page.getByTestId("annot-server-mode")).toBeVisible();
     await page.getByLabel("Comment text").fill("Server note");
-    await tool(page, "Sticky note"); const b = await layer(page);
+    await tool(page, "Sticky note"); let b = await layer(page);
     await page.mouse.click(b.x + 300, b.y + 150);
-    await expect(page.getByTestId("error")).toHaveCount(0);
-    await expect(count(page)).toHaveText("(1)");
-    await expect(page.getByText("Unsaved annotations")).toBeVisible();
-    await page.getByRole("button", { name: "Save as new version" }).click();
     await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
-    await expect(page.getByTestId("doc-title")).toHaveText("simple-3page.pdf");
-    await expect(page.getByText("Source: backend")).toBeVisible();
     await expect(count(page)).toHaveText("(1)");
-    await expect(page.getByTestId("thread").getByTestId("author")).toHaveText("dev@thynkpdf.dev");
+    await expect(page.getByText("Unsaved annotations")).toHaveCount(0);
+    await page.getByLabel("Comment text").fill("Box");
+    await tool(page, "Rectangle"); b = await layer(page);
+    await drag(page, b.x + 60, b.y + 250, b.x + 160, b.y + 320);
+    await expect(page.getByTestId("version-id")).toHaveText(/^v3 /);
+    await expect(count(page)).toHaveText("(2)");
+    const note = page.getByTestId("thread").filter({ hasText: "Server note" });
+    await expect(note.getByTestId("author")).toHaveText("dev@thynkpdf.dev");
+    await note.getByRole("textbox", { name: /^Reply to Note/ }).fill("Server reply");
+    await note.getByRole("button", { name: "Reply", exact: true }).click();
+    await expect(page.getByTestId("version-id")).toHaveText(/^v4 /);
+    await expect(note.getByTestId("reply")).toContainText("Server reply");
+    await note.getByRole("button", { name: "Resolve" }).click();
+    await expect(page.getByTestId("version-id")).toHaveText(/^v5 /);
+    await expect(note.getByTestId("resolved-badge")).toBeVisible();
+    await note.getByRole("button", { name: "Reopen" }).click();
+    await expect(page.getByTestId("version-id")).toHaveText(/^v6 /);
+    await expect(note.getByTestId("resolved-badge")).toHaveCount(0);
+    // the server really has them (independent read)
+    const tok = await (await request.post(`${process.env.THYNKPDF_API_URL ?? "http://localhost:8000"}/auth/login`, { data: { email: "dev@thynkpdf.dev", password: "ThynkDev-2026!" } })).json();
+    const docId = await page.evaluate(() => JSON.parse(sessionStorage.getItem("tp-session-v2")!).lastDocumentId as string);
+    const list = await (await request.get(`${process.env.THYNKPDF_API_URL ?? "http://localhost:8000"}/pdf/${docId}/annotations`, { headers: { Authorization: `Bearer ${tok.access_token}` } })).json();
+    expect(list.version).toBe(6);
+    expect(list.annotations.map((x: { type: string }) => x.type).sort()).toEqual(["square", "text", "text"]);
+    // erase the rectangle
+    await tool(page, /^Eraser/); b = await layer(page);
+    await page.mouse.click(b.x + 61, b.y + 285);
+    await expect(page.getByTestId("version-id")).toHaveText(/^v7 /);
+    await expect(count(page)).toHaveText("(1)");
+  });
+
+  test("server: Unicode comment is written in the browser with Noto Sans and saved as a version", async ({ page }) => {
+    await signInAndUpload(page);
+    await page.getByRole("button", { name: "Annotate" }).click();
+    await page.getByLabel("Comment text").fill("Привет — Ελλάδα");
+    await tool(page, "Text comment"); const b = await layer(page);
+    await page.mouse.click(b.x + 60, b.y + 400);
+    await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
+    await expect(page.getByTestId("thread").getByTestId("contents")).toHaveText("Привет — Ελλάδα");
+    await expect(page.getByTestId("error")).toHaveCount(0);
   });
 
   test("signature on a rotated page", async ({ page }) => {

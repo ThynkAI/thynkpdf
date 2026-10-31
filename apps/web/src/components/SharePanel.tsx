@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import type { DocumentInfo, Share } from "@thynkpdf/editor-client";
 import { describeError, http } from "@/lib/documents";
+import { sharedPageUrl } from "@/lib/publicLinks";
 
 const btn = "rounded border px-2 py-1 text-xs dark:border-neutral-700";
 
@@ -22,7 +23,7 @@ export function SharePanel({ doc, onError }: { doc: DocumentInfo; onError: (m: s
         <span className="text-neutral-500">Members of your organization only.</span>
       </form>
       <div className="flex flex-wrap items-center gap-1">
-        <button className={btn} onClick={() => run(async () => { const sh = await http().createShare(doc.document_id, { email: null, role: "viewer" }); setLink(sh.url ? new URL(sh.url, window.location.origin).href : null); })}>Create public view-only link</button>
+        <button className={btn} onClick={() => run(async () => { const sh = await http().createShare(doc.document_id, { email: null, role: "viewer" }); setLink(sh.url ? sharedPageUrl(sh.url, window.location.origin) : null); })}>Create public view-only link</button>
         <span className="text-neutral-500">Anyone with the link can view and download; links never allow editing.</span>
       </div>
       {link && (

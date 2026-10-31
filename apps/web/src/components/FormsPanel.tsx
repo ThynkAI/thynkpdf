@@ -41,7 +41,7 @@ export function FormsPanel() {
           e.preventDefault();
           if (server) {
             let rep: Record<string, unknown> | null = null;
-            const ok = await runVersionedOp("Fill form", async (r) => { const v = await http().fillForm(r, vals); rep = v.report; return v; });
+            const ok = await runVersionedOp("Fill form", async (r) => { const v = await http().fillForm(r, vals); rep = v.report ?? null; return v; });
             if (ok) { setMissing(((rep as { missing_required?: string[] } | null)?.missing_required) ?? []); setVals({}); }
             return;
           }

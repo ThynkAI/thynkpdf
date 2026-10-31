@@ -5,12 +5,12 @@ import { PageView } from "@thynkpdf/pdf-viewer/client";
 import type { DocumentInfo, UploadResponse } from "@thynkpdf/editor-client";
 import { useSession } from "@/lib/session";
 import { editGate } from "@/lib/gates";
-import { rotatePages, reorderTo, newDocOp, openLatest, deletePages, duplicatePages, insertBlankAfter, insertFromDoc } from "@/lib/documents";
+import { runVersionedOp, http, rotatePages, reorderTo, newDocOp, openLatest, deletePages, duplicatePages, insertBlankAfter, insertFromDoc } from "@/lib/documents";
 import { parseRanges } from "@/lib/ranges";
 
 const TILE = 110;
 
-export function Organizer({ onClose }: { onClose(): void }) {
+export function Organizer({ onClose, focus: initialFocus = "pages" }: { onClose(): void; focus?: "pages" | "compress" }) {
   const { doc, docKey, pageSizes } = useViewerStore();
   const s = useSession();
   const [sel, setSel] = useState<Set<number>>(new Set());
@@ -29,6 +29,11 @@ export function Organizer({ onClose }: { onClose(): void }) {
   const ins = editGate("insert_blank", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
   const [confirmDel, setConfirmDel] = useState(false);
   const [insSrc, setInsSrc] = useState("");
+  const [preset, setPreset] = useState<"low" | "balanced" | "high">("balanced");
+  const [compressMsg, setCompressMsg] = useState<string | null>(null);
+  const compressRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (initialFocus === "compress") compressRef.current?.scrollIntoView({ block: "nearest" }); }, [initialFocus]);
+  const compressGate = !s.ref ? "Compression runs on the server: sign in and open a server document." : s.busy ? "Another operation is in progress." : null;
   const newOps = s.ref && s.caps?.page_ops.extract ? null : (s.ref ? "Checking capabilities…" : "Requires a server document.");
   const selected = [...sel].sort((a, b) => a - b).map((i) => i + 1);
 
@@ -99,6 +104,22 @@ export function Organizer({ onClose }: { onClose(): void }) {
               </div>
             );
           })}
+        </div>
+        <div ref={compressRef} data-testid="compress-section" className={`flex flex-wrap items-center gap-2 border-t p-2 text-xs dark:border-neutral-800 ${initialFocus === "compress" ? "bg-brand-500/10" : ""}`}>
+          <span className="font-semibold">Compress</span>
+          <select aria-label="Compression level" value={preset} onChange={(e) => setPreset(e.target.value as typeof preset)} className="rounded border dark:border-neutral-700 dark:bg-neutral-800">
+            <option value="low">Light (best quality)</option><option value="balanced">Balanced</option><option value="high">Strong (smallest)</option>
+          </select>
+          <button className={btn} disabled={!!compressGate} title={compressGate ?? "Creates a new version if it gets smaller"} onClick={async () => {
+            setCompressMsg(null);
+            let rep: Record<string, unknown> | null = null;
+            const before = s.ref?.version;
+            const ok = await runVersionedOp("Compress", async (r) => { const v = await http().compress(r, preset); rep = v.report ?? null; return v; });
+            if (ok && rep) { const r = rep as { new_version_created?: boolean; original_size?: number; final_size?: number };
+              setCompressMsg(r.new_version_created ? `Compressed${r.original_size && r.final_size ? `: ${Math.round(r.original_size / 1024)} KB → ${Math.round(r.final_size / 1024)} KB` : ""} (now v${useSession.getState().ref?.version}).` : `Already compact — no smaller version could be made (still v${before}).`); }
+          }}>Compress</button>
+          {compressGate && <span className="text-neutral-500">{compressGate}</span>}
+          {compressMsg && <span role="status" data-testid="compress-result">{compressMsg}</span>}
         </div>
         <footer className="grid gap-3 border-t p-3 text-xs sm:grid-cols-3 dark:border-neutral-800">
           <form onSubmit={async (e) => {
