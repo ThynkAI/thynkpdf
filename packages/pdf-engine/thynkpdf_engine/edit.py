@@ -53,8 +53,9 @@ def move_text(data: bytes, page: int, find: str, dx: float, dy: float) -> tuple[
     return _save(pdf), moved
 
 
-def insert_text(data: bytes, page: int, text: str, x: float, y: float, size: float = 12, font: str = "Helvetica") -> bytes:
-    """Appends a real text object (BT .. Tj ET) using an unembedded standard-14 font in WinAnsi."""
+def insert_text(data: bytes, page: int, text: str, x: float, y: float, size: float = 12, font: str = "Helvetica", rotate: int = 0) -> bytes:
+    """Appends a real text object (BT .. Tj ET) using an unembedded standard-14 font in WinAnsi.
+    `rotate` (0/90/180/270, counter-clockwise in user space) sets the baseline direction via Tm."""
     if font not in STANDARD_14 or font in ("Symbol", "ZapfDingbats"):
         raise EngineError("EDIT_UNSUPPORTED_FONT", "Insert supports standard-14 Latin fonts only", {"allowed": sorted(STANDARD_14 - {"Symbol", "ZapfDingbats"})})
     if not text: raise EngineError("INVALID_REQUEST", "text must be non-empty")
@@ -77,10 +78,16 @@ def insert_text(data: bytes, page: int, text: str, x: float, y: float, size: flo
         key = f"/TPF{i}"
         fonts[key] = pdf.make_indirect(Dictionary(Type=Name.Font, Subtype=Name.Type1, BaseFont=Name("/" + font), Encoding=Name.WinAnsiEncoding))
     content = pikepdf.unparse_content_stream([([], Operator("q")), ([], Operator("BT")), ([Name(key), size], Operator("Tf")),
-                                              ([x, y], Operator("Td")), ([String(tb)], Operator("Tj")), ([], Operator("ET")), ([], Operator("Q"))])
+                                              ((([x, y], Operator("Td")) if not rotate % 360 else (_rot_tm(rotate, x, y), Operator("Tm")))),
+                                              ([String(tb)], Operator("Tj")), ([], Operator("ET")), ([], Operator("Q"))])
     pg.contents_add(pdf.make_stream(b"q\n"), prepend=True)  # isolate existing graphics state
     pg.contents_add(pdf.make_stream(b"Q\n" + content))
     return _save(pdf)
+
+
+def _rot_tm(deg: int, x: float, y: float) -> list:
+    c, s_ = {0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1)}[deg % 360]
+    return [c, s_, -s_, c, x, y]
 
 
 def insert_blank(data: bytes, after: int, count: int = 1, width: float | None = None, height: float | None = None) -> bytes:

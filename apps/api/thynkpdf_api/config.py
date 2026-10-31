@@ -1,3 +1,19 @@
+import os as _os
+from pathlib import Path as _Path
+
+
+def _load_env_file():
+    """Load KEY=VALUE lines from THYNKPDF_ENV_FILE or <repo>/.env without overriding real env vars (used by the one-click installers)."""
+    f = _Path(_os.getenv("THYNKPDF_ENV_FILE") or _Path(__file__).resolve().parents[3] / ".env")
+    if not f.is_file(): return
+    for line in f.read_text(encoding="utf-8-sig").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line: continue
+        k, v = line.split("=", 1); k, v = k.strip(), v.strip().strip('"').strip("'")
+        if k and k not in _os.environ: _os.environ[k] = v
+
+
+_load_env_file()
 import os, secrets
 class Settings:
     database_url = os.getenv("THYNKPDF_DATABASE_URL", "sqlite:///./thynkpdf.db")

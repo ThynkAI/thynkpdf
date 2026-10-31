@@ -1,0 +1,34 @@
+{
+  "name": "thynkpdf-desktop",
+  "productName": "THYNKPDF",
+  "version": "0.1.0",
+  "description": "THYNKPDF desktop app",
+  "author": "ThynkAI",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --publish never",
+    "dist:linux": "electron-builder --linux AppImage --publish never",
+    "dist:win": "electron-builder --win nsis --publish never",
+    "dist:mac": "electron-builder --mac dmg --publish never"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "ai.thynk.thynkpdf",
+    "productName": "THYNKPDF",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["electron/**", "package.json"],
+    "extraResources": [{ "from": "sidecar/thynkpdf-server", "to": "thynkpdf-server", "filter": ["**/*"] }],
+    "asar": true,
+    "linux": { "target": ["AppImage"], "category": "Office", "icon": "build/icon.png" },
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "build/icon.png" },
+    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "shortcutName": "THYNKPDF" },
+    "mac": { "target": ["dmg"], "category": "public.app-category.productivity", "icon": "build/icon.png", "identity": null },
+    "dmg": { "title": "THYNKPDF" }
+  }
+}

@@ -1056,10 +1056,9 @@
       "type": "string"
      },
      "signer_links": {
-      "description": "[{signer_index,email,token}] returned ONCE \u2014 email delivery is not configured; deliver out-of-band",
+      "description": "Returned ONCE \u2014 email delivery is not configured; deliver out-of-band",
       "items": {
-       "additionalProperties": true,
-       "type": "object"
+       "$ref": "#/components/schemas/SignerLink"
       },
       "title": "Signer Links",
       "type": "array"
@@ -3645,6 +3644,36 @@
      "fields"
     ],
     "title": "SignSessionOut",
+    "type": "object"
+   },
+   "SignerLink": {
+    "properties": {
+     "email": {
+      "title": "Email",
+      "type": "string"
+     },
+     "path": {
+      "description": "Relative signer URL, e.g. /sign/{token}",
+      "title": "Path",
+      "type": "string"
+     },
+     "signer_index": {
+      "title": "Signer Index",
+      "type": "integer"
+     },
+     "token": {
+      "description": "Secret signer token (shown once; stored only as a hash)",
+      "title": "Token",
+      "type": "string"
+     }
+    },
+    "required": [
+     "signer_index",
+     "email",
+     "token",
+     "path"
+    ],
+    "title": "SignerLink",
     "type": "object"
    },
    "SignerOut": {
