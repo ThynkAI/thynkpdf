@@ -162,9 +162,13 @@ def register(app, c):
         document_id: str; version: int = Field(ge=1); signers: list[ReqSigner] = Field(min_length=1, max_length=50)
         message: str = Field("", max_length=2000); title: str | None = Field(None, max_length=200)
         fields: list[ReqField] = Field(min_length=1, max_length=500)
+    class SignerLink(BaseModel):
+        signer_index: int; email: str
+        token: str = Field(description="Secret signer token (shown once; stored only as a hash)")
+        path: str = Field(description="Relative signer URL, e.g. /sign/{token}")
     class CreatedReqOut(BaseModel):
         request_id: str; status: str
-        signer_links: list[dict] = Field(description="[{signer_index,email,token}] returned ONCE — email delivery is not configured; deliver out-of-band")
+        signer_links: list[SignerLink] = Field(description="Returned ONCE — email delivery is not configured; deliver out-of-band")
     class FieldOut(BaseModel):
         field_id: str; signer_index: int; page: int; rect: list[float]; type: str; completed: bool
     class SignerOut(BaseModel):

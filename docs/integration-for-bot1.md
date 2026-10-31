@@ -168,3 +168,9 @@ Visual signatures are NOT cryptographic/PAdES. No claim of legal enforceability;
 - Rate limit (free tier): per org, `THYNKPDF_AI_RATE_PER_MIN` (default 20) → 429 `RATE_LIMITED` with `details.retry_after` (seconds) and `details.limit_per_minute`.
 - External LLM processing requires explicit opt-in: `PUT /ai/settings {external_enabled:true, provider:"openai_compatible", acknowledge_external_processing:true}` (admin+; else 422 `AI_OPT_IN_REQUIRED`), plus server env `THYNKPDF_AI_EXTERNAL_BASE_URL/_API_KEY/_MODEL` (else 503 `AI_PROVIDER_NOT_CONFIGURED`). `GET /ai/settings` → `{external_enabled, provider, external_configured, rate_limit_per_minute}`.
 - Document text is treated as untrusted data (fenced in the prompt; instructions inside documents are not followed). Scanned PDFs → 422 `NO_TEXT_LAYER` (OCR is BLOCKED on this server). Every call is audited (`ai.ask` / `ai.summarize`).
+
+## Frontend requests R4.5 / R5.6 / R0.3
+- **R4.5** `/pdf/signatures/place` and signer completion now counter-rotate stamps by the page's effective `/Rotate` (inherited, 90/180/270), so they appear upright as displayed. `rect` stays in **unrotated PDF user space** (same as before). Images keep their aspect ratio within the rect's displayed orientation. Typed text is real text drawn with a rotated `Tm`. The browser workaround can be removed.
+- **R5.6** `CreatedReqOut.signer_links` is now `SignerLink[]` = `{signer_index, email, token, path}` (`path` = `/sign/{token}`).
+- **R0.3** In `openapi.json`, no schema marks a defaulted field as `required`; a test enforces this. `FieldSpec.font_size` and `EditOp.font` are optional.
+- Text-edit report field stays `count`.
