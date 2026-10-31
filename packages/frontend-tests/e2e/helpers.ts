@@ -22,3 +22,15 @@ export async function signInAndUpload(page: Page, file = BACKEND_FIXTURE, pages 
   await expect(page.getByTestId("version-id")).toHaveText(/^v1 /);
   await expect(page.getByRole("button", { name: "Rotate page clockwise" })).toBeEnabled();
 }
+
+/** Bounding box once layout has settled (page canvases resize as PDF.js renders; CI is slower than dev boxes). */
+export async function stableBox(loc: import("@playwright/test").Locator) {
+  let prev = await loc.boundingBox();
+  for (let i = 0; i < 40; i++) {
+    await loc.page().waitForTimeout(100);
+    const cur = await loc.boundingBox();
+    if (prev && cur && Math.abs(prev.x - cur.x) < 0.5 && Math.abs(prev.y - cur.y) < 0.5 && Math.abs(prev.width - cur.width) < 0.5) return cur;
+    prev = cur;
+  }
+  return prev!;
+}
