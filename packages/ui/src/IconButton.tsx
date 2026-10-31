@@ -8,7 +8,7 @@ export function IconButton({ label, shortcut, children, active, className, ...re
     <Tooltip.Root delayDuration={400}>
       <Tooltip.Trigger asChild>
         <button type="button" aria-label={label} aria-pressed={active} {...rest}
-          className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-sm hover:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-transparent dark:hover:bg-neutral-700 ${active ? "bg-neutral-200 dark:bg-neutral-700" : ""} ${className ?? ""}`}>
+          className={`inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-md px-1.5 text-sm hover:bg-neutral-200 disabled:opacity-40 disabled:hover:bg-transparent dark:hover:bg-neutral-700 ${active ? "bg-neutral-200 dark:bg-neutral-700" : ""} ${className ?? ""}`}>
           {children}
         </button>
       </Tooltip.Trigger>

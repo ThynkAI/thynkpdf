@@ -17,11 +17,17 @@ describe("pdfWrite", () => {
     expect(xo.keys().length).toBeGreaterThan(0);
     expect(pdf.getPageCount()).toBe(12);
   });
-  it("refuses rotated pages", async () => {
+  it("stamps upright on rotated pages (rotation matrix in content stream)", async () => {
     const pdf = await PDFDocument.load(fx("sample-12p.pdf")); pdf.getPage(0).setRotation({ type: "degrees", angle: 90 } as never);
     const b = await pdf.save();
     expect((await pageInfo(b, 0)).rotation).toBe(90);
-    await expect(stampImage(b, 0, { x: 0, y: 0, width: 1, height: 1 }, PNG, "image/png")).rejects.toThrow(/rotated/);
+    const out = await stampImage(b, 0, { x: 300, y: 100, width: 100, height: 40, rotate: 90 }, PNG, "image/png");
+    const { inflateSync } = await import("node:zlib");
+    const p0 = (await PDFDocument.load(out)).getPage(0);
+    const contents = p0.node.Contents()!;
+    const streams = "asArray" in contents ? (contents as any).asArray().map((r: any) => p0.doc.context.lookup(r)) : [contents];
+    const text = streams.map((st: any) => { const raw = st.getContents(); try { return inflateSync(raw).toString("latin1"); } catch { return Buffer.from(raw).toString("latin1"); } }).join("\n");
+    expect(text).toMatch(/1 0 0 1 300 100 cm\s+0\.0+6\d* 1 -1 0\.0+6\d* 0 0 cm\s+100 0 0 40 0 0 cm/);
   });
   it("lists, fills and adds AcroForm fields", async () => {
     const f = await listFields(fx("form-fields.pdf"));

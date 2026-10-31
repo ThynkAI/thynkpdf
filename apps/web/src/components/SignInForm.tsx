@@ -9,7 +9,7 @@ export function SignInForm() {
   return (
     <form className="mt-2 space-y-1" onSubmit={async (e) => {
       e.preventDefault(); setErr(null);
-      try { await s.api.login(user, pw); s.set({ error: null, notice: null }); } catch (x) { setErr(describeError(x)); }
+      try { await s.api.login(user, pw); s.set({ error: null, notice: null, userEmail: user }); try { sessionStorage.setItem("tp-user", user); } catch { /* */ } } catch (x) { setErr(describeError(x)); }
     }}>
       <input aria-label="Username" placeholder="Email" autoComplete="username" value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded border px-2 py-1 dark:bg-neutral-800" />
       <input aria-label="Password" type="password" autoComplete="current-password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded border px-2 py-1 dark:bg-neutral-800" />
