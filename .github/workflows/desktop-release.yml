@@ -37,7 +37,7 @@ jobs:
           npx --yes pnpm@10.34.6 install --frozen-lockfile
           npx --yes pnpm@10.34.6 --filter @thynkpdf/web build
           test -f apps/web/out/index.html
-      - name: qpdf headers (Intel Mac; pikepdf 10 ships no macOS x86_64 wheels)
+      - name: Native deps for Intel Mac (pikepdf 10 / cryptography 50 ship no macOS x86_64 wheels)
         if: matrix.os == 'macos-15-intel'
         shell: bash
         run: |
@@ -45,6 +45,10 @@ jobs:
           echo "CPATH=$(brew --prefix qpdf)/include" >> "$GITHUB_ENV"
           echo "LIBRARY_PATH=$(brew --prefix qpdf)/lib" >> "$GITHUB_ENV"
           echo "MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d. -f1).0" >> "$GITHUB_ENV"
+          # cryptography 50 has no x86_64 macOS wheel either: build it with OpenSSL linked statically, so PyInstaller's bundled libssl can't shadow it
+          brew list openssl@3 >/dev/null 2>&1 || brew install openssl@3
+          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "OPENSSL_STATIC=1" >> "$GITHUB_ENV"
       - name: Backend sidecar (PyInstaller)
         shell: bash
         run: |
