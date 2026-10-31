@@ -26,7 +26,7 @@ export class MockEditorApi implements EditorApi {
     const pdf = await PDFDocument.load(bytes);
     const document_id = id("doc"), version_id = id("ver");
     this.docs.set(document_id, { filename, versions: [{ id: version_id, bytes }] });
-    return { document_id, version_id, version: 1, sha256: "", size: bytes.length, page_count: pdf.getPageCount() };
+    return { document_id, version_id, version: 1, filename, sha256: "", size: bytes.length, page_count: pdf.getPageCount() };
   }
   private bump(ref: DocumentRef, mutate: (pdf: PDFDocument) => PDFDocument | void | Promise<PDFDocument | void>) {
     return (async () => {
@@ -36,7 +36,7 @@ export class MockEditorApi implements EditorApi {
       const out = (await mutate(src)) ?? src;
       const bytes = await out.save(), version_id = id("ver");
       d.versions.push({ id: version_id, bytes });
-      return { document_id: ref.document_id, version_id, version: d.versions.length, sha256: "", size: bytes.length, report: {} };
+      return { document_id: ref.document_id, version_id, version: d.versions.length, filename: d.filename, sha256: "", size: bytes.length, report: {} };
     })();
   }
   reorderPages(ref: DocumentRef, order: number[]) {
@@ -50,13 +50,14 @@ export class MockEditorApi implements EditorApi {
     const d = await this.getDocument(docId);
     const n = (await PDFDocument.load(this.doc(docId).versions[d.current_version - 1].bytes)).getPageCount();
     return { document_id: docId, version: d.current_version, version_id: d.version_id,
-      page_ops: { rotate: true, reorder: true, extract: true, split: true, merge: true }, compress: true, text_replace: false,
-      document_limitations: [], pages: Array.from({ length: n }, (_, i) => ({ number: i + 1, text_replace: false, editable_fonts: [], limitations: [] })), safe_alternatives: [] };
+      page_ops: { rotate: true, reorder: true, extract: true, split: true, merge: true, delete: false, duplicate: false, insert_blank: false }, compress: true, text_replace: false,
+      edit_ops: { text_replace: false, text_delete: false, text_move: false, text_insert: false }, annotations: false, forms: false,
+      document_limitations: [], pages: Array.from({ length: n }, (_, i) => ({ number: i + 1, text_replace: false, text_delete: false, text_move: false, text_insert: false, editable_fonts: [], limitations: [] })), safe_alternatives: [] };
   }
   private doc(docId: string) { const d = this.docs.get(docId); if (!d) throw new Error("DOCUMENT_NOT_FOUND"); return d; }
   async getDocument(docId: string) {
     const d = this.doc(docId), v = d.versions.length;
-    return { document_id: docId, filename: d.filename, current_version: v, version_id: d.versions[v - 1].id, created_at: new Date(0).toISOString() };
+    return { document_id: docId, filename: d.filename, current_version: v, version_id: d.versions[v - 1].id, created_at: new Date(0).toISOString(), starred: false, tags: [] as string[], visibility: "org" };
   }
   async fileSource(ref: Pick<DocumentRef, "document_id" | "version_id">) {
     const v = this.doc(ref.document_id).versions.find((x) => x.id === ref.version_id);
@@ -70,7 +71,7 @@ export class MockEditorApi implements EditorApi {
     for (const n of pages) { const p = pdf.getPage(n - 1); p.setRotation(pdfDegrees((p.getRotation().angle + angle + 360) % 360)); }
     const bytes = await pdf.save(), version_id = id("ver");
     d.versions.push({ id: version_id, bytes });
-    return { document_id: ref.document_id, version_id, version: d.versions.length, sha256: "", size: bytes.length, report: {} };
+    return { document_id: ref.document_id, version_id, version: d.versions.length, filename: d.filename, sha256: "", size: bytes.length, report: {} };
   }
   private latest(docId: string) { const d = this.doc(docId); return d.versions[d.versions.length - 1].bytes; }
   private async newDoc(pdf: PDFDocument, filename: string): Promise<UploadResponse> {
@@ -83,8 +84,8 @@ export class MockEditorApi implements EditorApi {
   }
   async getMetadata(docId: string): Promise<PdfMetadata> {
     const d = await this.getDocument(docId); const pdf = await PDFDocument.load(this.latest(docId));
-    return { document_id: docId, version: d.current_version, version_id: d.version_id, page_count: pdf.getPageCount(), has_acroform: false, form_field_count: 0, has_signatures: false,
-      pages: pdf.getPages().map((p, i) => ({ number: i + 1, width: p.getWidth(), height: p.getHeight(), rotation: p.getRotation().angle, annotations: 0 })) };
+    return { document_id: docId, version: d.current_version, version_id: d.version_id, page_count: pdf.getPageCount(), has_acroform: false, form_field_count: 0, has_signatures: false, attachments: [], has_javascript: false, has_outlines: false, info: {}, is_encrypted: false, is_linearized: false, pdf_version: "1.7",
+      pages: pdf.getPages().map((p, i) => ({ number: i + 1, width: p.getWidth(), height: p.getHeight(), rotation: p.getRotation().angle, annotations: 0, fonts: [], images: 0 })) };
   }
   async editText(_ref: DocumentRef, _ops: EditOp[]): Promise<never> {
     throw new ApiError(422, "EDIT_NOT_SUPPORTED", "Text editing is not available in the mock backend");
@@ -100,7 +101,7 @@ export class MockEditorApi implements EditorApi {
     for (const id of ids) { const src = await PDFDocument.load(this.latest(id)); (await out.copyPages(src, src.getPageIndices())).forEach((p) => out.addPage(p)); }
     return this.newDoc(out, filename);
   }
-  async listDocuments() { return Promise.all([...this.docs.keys()].map((k) => this.getDocument(k))); }
+  async listDocuments() { return { items: await Promise.all([...this.docs.keys()].map((k) => this.getDocument(k))), next_cursor: null }; }
   async listVersions(docId: string): Promise<VersionInfo[]> {
     return this.doc(docId).versions.map((v, i, a) => ({ version_id: v.id, number: i + 1, sha256: "", size: v.bytes.length, operation: i ? "edit" : "upload", parent_version_id: i ? a[i - 1].id : null, created_at: new Date(0).toISOString() }));
   }

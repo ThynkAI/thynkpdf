@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useSignature, typedSignature } from "@/lib/signature";
+import { toPngBlob } from "@/lib/png";
 
 type Tab = "draw" | "type" | "upload";
 export function SignatureDialog({ onClose }: { onClose(): void }) {
@@ -37,10 +38,11 @@ export function SignatureDialog({ onClose }: { onClose(): void }) {
   };
   const onUpload = (f: File | undefined) => {
     if (!f) return;
-    if (!/^image\/(png|jpeg)$/.test(f.type)) return setErr("Use a PNG or JPEG image.");
+    if (!/^image\/(png|jpeg|svg\+xml)$/.test(f.type)) return setErr("Use a PNG, JPEG or SVG image.");
     if (f.size > 1_000_000) return setErr("Image must be under 1 MB.");
     const r = new FileReader();
-    r.onload = () => { const img = new Image(); img.onload = () => { set({ image: { dataUrl: String(r.result), mime: f.type as "image/png" | "image/jpeg", aspect: img.width / img.height } }); onClose(); }; img.src = String(r.result); };
+    // Always store as PNG: SVG is rasterized (the server rejects SVG), JPEG is converted so the server accepts it.
+    r.onload = () => { toPngBlob(String(r.result)).then((p) => { set({ image: { dataUrl: p.dataUrl, mime: "image/png", aspect: p.aspect } }); onClose(); }, (e) => setErr((e as Error).message)); };
     r.readAsDataURL(f);
   };
   const tabBtn = (t: Tab, l: string) => <button role="tab" aria-selected={tab === t} onClick={() => setTab(t)} className={`rounded px-3 py-1 text-sm ${tab === t ? "bg-brand-600 text-white" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}>{l}</button>;
@@ -59,7 +61,7 @@ export function SignatureDialog({ onClose }: { onClose(): void }) {
               <label><input type="radio" checked={style === "serif-italic"} onChange={() => setStyle("serif-italic")} /> <span className="italic" style={{ fontFamily: "Georgia, serif" }}>Serif italic</span></label>
             </div>
           </div>)}
-        {tab === "upload" && <input type="file" accept="image/png,image/jpeg" aria-label="Upload signature image" onChange={(e) => onUpload(e.target.files?.[0])} />}
+        {tab === "upload" && <input type="file" accept="image/png,image/jpeg,image/svg+xml" aria-label="Upload signature image" onChange={(e) => onUpload(e.target.files?.[0])} />}
         {err && <p role="alert" className="mt-2 text-xs text-red-600">{err}</p>}
         <div className="mt-3 flex justify-end gap-2">
           {tab === "draw" && <button className="mr-auto text-sm underline" onClick={() => { const c = canvas.current!; c.getContext("2d")!.clearRect(0, 0, c.width, c.height); drawn.current = false; }}>Clear</button>}

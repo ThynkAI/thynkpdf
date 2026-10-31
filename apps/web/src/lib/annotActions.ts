@@ -3,7 +3,7 @@ import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "./session";
 import { useAnnot } from "./annotState";
 import { currentBytes } from "./copies";
-import { loadLocalBytes, openLatest, describeError } from "./documents";
+import { loadLocalBytes, openLatest, runVersionedOp, http, describeError } from "./documents";
 import { readAnnotations, buildThreads } from "./annotWrite";
 
 export function authorName() {
@@ -45,7 +45,7 @@ function makeDownload(bytes: Uint8Array, name: string) {
   a.set({ downloadUrl: URL.createObjectURL(new Blob([bytes as BlobPart], { type: "application/pdf" })), downloadName: name });
 }
 
-/** Save annotations: server-origin docs are uploaded as a NEW document (no versioned annotation endpoint on main yet). */
+/** Save annotations: server-origin docs become a NEW VERSION of the same document (POST /documents/{id}/versions, expected_version = the version the edits started from). */
 export async function saveAnnotations() {
   const s = useSession.getState(); const w = useAnnot.getState().working;
   if (!w) return;
@@ -53,15 +53,15 @@ export async function saveAnnotations() {
   const name = `${w.baseName.replace(/\.pdf$/i, "")}-annotated.pdf`;
   makeDownload(bytes, name);
   if (!w.originRef) { useAnnot.getState().set({ working: { ...w, dirty: false } }); s.set({ notice: `“${name}” is ready to download.` }); return; }
-  s.set({ busy: "Saving…", error: null });
-  try {
-    const up = await s.api.upload(new Blob([bytes as BlobPart], { type: "application/pdf" }), name);
-    await openLatest(up.document_id);
+  const ok = await runVersionedOp("Save annotations", (r) => http().uploadVersion(r, bytes, w.baseName), w.originRef);
+  if (ok) {
     useAnnot.getState().set({ working: null });
-    s.set({ notice: `Saved as new document “${name}”.` });
-    await refreshThreads();
-  } catch (e) { s.set({ error: `Save failed: ${describeError(e)}` }); }
-  finally { s.set({ busy: null }); }
+    s.set({ notice: `Annotations saved as version ${useSession.getState().ref?.version ?? ""}.` });
+  } else if (useSession.getState().ref) {
+    // conflict/signed: runVersionedOp reloaded the server copy, so the working copy is gone; the download link keeps the edits.
+    useAnnot.getState().set({ working: null });
+  }
+  await refreshThreads();
 }
 
 export async function discardAnnotations() {

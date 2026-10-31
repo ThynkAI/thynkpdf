@@ -1,6 +1,6 @@
 import type { Capabilities, DocumentRef } from "@thynkpdf/editor-client";
 
-export type EditAction = "rotate" | "reorder";
+export type EditAction = "rotate" | "reorder" | "delete" | "duplicate" | "insert_blank";
 export interface Gate { enabled: boolean; reason: string | null }
 
 /** Decide whether an edit action is available, with a human reason when it is not. Pure; unit-tested. */
@@ -12,7 +12,7 @@ export function editGate(action: EditAction, ref: DocumentRef | null, caps: Capa
   if (!caps || caps.document_id !== ref.document_id || caps.version !== ref.version) return no("Checking what can be edited…");
   if (!caps.page_ops[action]) {
     const why = caps.document_limitations.map((l) => l.message).join(" ");
-    return no(why || `This document does not allow ${action}.`);
+    return no(why || `This document does not allow ${action.replace("_", " ")}.`);
   }
   return { enabled: true, reason: null };
 }

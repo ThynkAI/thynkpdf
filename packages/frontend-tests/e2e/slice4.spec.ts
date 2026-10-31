@@ -4,7 +4,7 @@ import { apiUp, EMAIL, PASSWORD, BACKEND_FIXTURE } from "./helpers";
 test.describe("documents dashboard (live backend)", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
-  test("sign in, upload, filter, open, edit, view old version read-only", async ({ page }) => {
+  test("sign in, upload, search, open, edit, view old version read-only, restore", async ({ page }) => {
     await page.goto("/documents");
     await page.getByLabel("Username").fill(EMAIL);
     await page.getByLabel("Password").fill(PASSWORD);
@@ -13,23 +13,83 @@ test.describe("documents dashboard (live backend)", () => {
     const name = `dash-${Date.now()}.pdf`;
     const { readFileSync } = await import("node:fs");
     await page.getByTestId("dash-file-input").setInputFiles({ name, mimeType: "application/pdf", buffer: readFileSync(BACKEND_FIXTURE) });
-    await page.getByLabel("Filter documents by name").fill(name);
-    await expect(page.getByTestId("doc-table").locator("tbody tr")).toHaveCount(1);
-    await expect(page.getByRole("status")).toContainText(/^1 of \d+ documents/);
-    // blocked features are visibly disabled, not fake
-    await expect(page.getByRole("button", { name: `Star ${name} (unavailable)` })).toBeDisabled();
+    await page.getByLabel("Search documents").fill(name);
+    await expect(page.getByTestId("doc-row")).toHaveCount(1);
     await page.getByRole("link", { name }).click();
     await expect(page.getByTestId("doc-title")).toHaveText(name);
     await expect(page.getByTestId("version-id")).toHaveText(/^v1 /);
     await page.getByRole("button", { name: "Rotate page clockwise" }).click();
     await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
     await page.getByRole("link", { name: "Documents" }).click();
-    await page.getByLabel("Filter documents by name").fill(name);
+    await page.getByLabel("Search documents").fill(name);
+    await expect(page.getByTestId("doc-row")).toHaveCount(1);
     await page.getByRole("button", { name: "Versions" }).click();
     await expect(page.getByTestId("versions").locator("li")).toHaveCount(2);
-    await page.getByRole("link", { name: "View (read-only)" }).click();
-    await expect(page.getByTestId("notice")).toContainText("Viewing v1");
+    await page.getByRole("button", { name: "Restore as new version" }).click();
+    await expect(page.getByRole("status")).toContainText("Restored v1 as a new version");
+    await expect(page.getByTestId("doc-row").getByRole("cell").nth(1)).toHaveText("v3");
+    await page.getByRole("button", { name: "Versions" }).click();
+    await page.getByRole("link", { name: "View (read-only)" }).first().click();
+    await expect(page.getByTestId("notice")).toContainText(/Viewing v\d/);
     await expect(page.getByTestId("version-id")).toHaveText("local only");
     await expect(page.getByRole("button", { name: /Rotate page — unavailable/ })).toBeDisabled();
+  });
+
+  test("star, tag, folder, share link (view-only), trash, restore, delete forever", async ({ page, context }) => {
+    await page.goto("/documents");
+    await page.getByLabel("Username").fill(EMAIL);
+    await page.getByLabel("Password").fill(PASSWORD);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    const name = `mgmt-${Date.now()}.pdf`; const folder = `F${Date.now() % 100000}`;
+    const { readFileSync } = await import("node:fs");
+    await page.getByTestId("dash-file-input").setInputFiles({ name, mimeType: "application/pdf", buffer: readFileSync(BACKEND_FIXTURE) });
+    await page.getByLabel("Search documents").fill(name);
+    const row = page.getByTestId("doc-row");
+    await expect(row).toHaveCount(1);
+    await row.getByRole("button", { name: `Star ${name}` }).click();
+    await expect(row.getByLabel("starred")).toBeVisible();
+    await row.getByRole("button", { name: "Tags" }).click();
+    await row.getByLabel(`Tags for ${name}`).fill("e2e, Q1");
+    await row.getByRole("button", { name: "Save tags" }).click();
+    await expect(row).toContainText("#e2e");
+    await expect(row).toContainText("#q1");
+    await page.getByLabel("New folder name").fill(folder);
+    await page.getByRole("button", { name: "Add", exact: true }).click();
+    await row.getByRole("button", { name: "Move", exact: true }).click();
+    await row.getByRole("button", { name: folder }).click();
+    await page.getByLabel("Search documents").fill("");
+    await page.getByRole("navigation").getByRole("button", { name: folder, exact: true }).click();
+    await expect(page.getByTestId("doc-row")).toHaveCount(1);
+    await page.getByRole("navigation").getByRole("button", { name: "Starred" }).click();
+    await page.getByLabel("Search documents").fill(name);
+    await expect(page.getByTestId("doc-row")).toHaveCount(1);
+    // public link is view-only
+    await page.getByTestId("doc-row").getByRole("button", { name: "Share" }).click();
+    await page.getByRole("button", { name: "Create public view-only link" }).click();
+    const link = await page.getByTestId("share-link").textContent();
+    expect(link).toMatch(/\/shared\//);
+    await expect(page.getByText("This link is shown only once")).toBeVisible();
+    const pub = await context.browser()!.newPage();
+    await pub.goto(link!);
+    await expect(pub.getByTestId("view-only")).toBeVisible();
+    await expect(pub.getByLabel("Page 1")).toBeVisible();
+    await expect(pub.getByRole("button", { name: /Rotate|Annotate|Organize/ })).toHaveCount(0);
+    await pub.close();
+    // trash → restore → trash → delete forever
+    await page.getByTestId("doc-row").getByRole("button", { name: `Move ${name} to trash` }).click();
+    await expect(page.getByTestId("doc-row")).toHaveCount(0);
+    await page.getByRole("navigation").getByRole("button", { name: "Trash" }).click();
+    await expect(page.getByTestId("doc-row")).toHaveCount(1);
+    await page.getByTestId("doc-row").getByRole("button", { name: "Restore" }).click();
+    await expect(page.getByTestId("doc-row")).toHaveCount(0);
+    await page.getByRole("navigation").getByRole("button", { name: "All documents" }).click();
+    await page.getByTestId("doc-row").getByRole("button", { name: `Move ${name} to trash` }).click();
+    await page.getByRole("navigation").getByRole("button", { name: "Trash" }).click();
+    await page.getByTestId("doc-row").getByRole("button", { name: "Delete forever" }).click();
+    await expect(page.getByRole("alertdialog")).toContainText("cannot be undone");
+    await page.getByRole("alertdialog").getByRole("button", { name: "Delete forever" }).click();
+    await expect(page.getByTestId("doc-row")).toHaveCount(0);
+    await page.getByRole("button", { name: `Delete folder ${folder}` }).click();
+    await expect(page.getByRole("navigation").getByRole("button", { name: folder, exact: true })).toHaveCount(0);
   });
 });

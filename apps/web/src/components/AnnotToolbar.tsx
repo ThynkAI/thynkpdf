@@ -35,7 +35,7 @@ export function AnnotToolbar() {
       <div className="ml-auto flex items-center gap-1" data-testid="annot-save-bar">
         {a.working?.dirty && <span className="text-amber-700">Unsaved annotations</span>}
         {a.working && <>
-          <button className="rounded bg-brand-600 px-2 py-1 text-white disabled:opacity-40" disabled={!!busy} onClick={() => void saveAnnotations()}>{a.working.originRef ? "Save as new document" : "Save"}</button>
+          <button className="rounded bg-brand-600 px-2 py-1 text-white disabled:opacity-40" disabled={!!busy} onClick={() => void saveAnnotations()}>{a.working.originRef ? "Save as new version" : "Save"}</button>
           <button className="rounded border px-2 py-1 dark:border-neutral-700" disabled={!!busy} onClick={() => void discardAnnotations()}>Discard</button>
         </>}
         {a.downloadUrl && <a className="underline" href={a.downloadUrl} download={a.downloadName ?? "annotated.pdf"} data-testid="download-annotated">Download</a>}

@@ -28,7 +28,7 @@ export async function stampImage(bytes: Uint8Array, pageIndex: number, rect: Pdf
 }
 
 export type FieldType = "text" | "checkbox" | "dropdown" | "radio" | "other";
-export interface FieldInfo { name: string; type: FieldType; value: string | boolean; options?: string[]; readOnly: boolean }
+export interface FieldInfo { name: string; type: FieldType; value: string | boolean; options?: string[]; readOnly: boolean; required?: boolean; hasActions?: boolean }
 
 export async function listFields(bytes: Uint8Array): Promise<FieldInfo[]> {
   const pdf = await PDFDocument.load(bytes);

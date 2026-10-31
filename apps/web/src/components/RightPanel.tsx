@@ -9,6 +9,7 @@ import { SignInForm } from "./SignInForm";
 import { SignPanel } from "./SignPanel";
 import { CommentsPanel } from "./CommentsPanel";
 import { FormsPanel } from "./FormsPanel";
+import { AiPanel } from "./AiPanel";
 
 export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void }>(function RightPanel({ onClose }, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
@@ -42,6 +43,7 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void }>
       <TextEditPanel />
       <SignPanel />
       <FormsPanel />
+      {s.api.kind === "http" && <AiPanel />}
       <section>
         <h2 className="mb-2 font-semibold">Document</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
@@ -53,8 +55,8 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void }>
       <section>
         <h2 className="mb-2 font-semibold">Editing</h2>
         <ul className="space-y-1 text-xs" data-testid="edit-gates">
-          {(["rotate", "reorder"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError }); return (
-            <li key={a}><span className={g.enabled ? "text-green-700 dark:text-green-400" : "text-neutral-500"}>{a === "rotate" ? "Rotate pages" : "Reorder pages (drag thumbnails)"}: {g.enabled ? "available" : g.reason}</span></li>); })}
+          {(["rotate", "reorder", "delete", "duplicate", "insert_blank"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError }); return (
+            <li key={a}><span className={g.enabled ? "text-green-700 dark:text-green-400" : "text-neutral-500"}>{({ rotate: "Rotate pages", reorder: "Reorder pages (drag thumbnails)", delete: "Delete pages", duplicate: "Duplicate pages", insert_blank: "Insert pages" } as const)[a]}: {g.enabled ? "available" : g.reason}</span></li>); })}
           {s.caps?.document_limitations.map((l) => <li key={l.code} className="text-amber-700">{l.code}: {l.message}</li>)}
         </ul>
       </section>

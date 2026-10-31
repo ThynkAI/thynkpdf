@@ -1,7 +1,6 @@
 "use client";
 import { create } from "zustand";
 import { createEditorApi, type EditorApi, type DocumentRef, type Capabilities } from "@thynkpdf/editor-client";
-import { savePersisted } from "./persist";
 
 export type BackendStatus = "unknown" | "online" | "offline";
 export interface SessionState {
@@ -25,6 +24,5 @@ export const useSession = create<SessionState>((set) => ({
   set: (p) => set(p),
 }));
 api.onTokensChanged = (t) => {
-  if (!mock) savePersisted({ tokens: t });
   useSession.setState({ authed: mock || !!t });
 };

@@ -5,10 +5,9 @@ import { PageView } from "@thynkpdf/pdf-viewer/client";
 import type { DocumentInfo, UploadResponse } from "@thynkpdf/editor-client";
 import { useSession } from "@/lib/session";
 import { editGate } from "@/lib/gates";
-import { rotatePages, reorderTo, newDocOp, openLatest } from "@/lib/documents";
+import { rotatePages, reorderTo, newDocOp, openLatest, deletePages, duplicatePages, insertBlankAfter, insertFromDoc } from "@/lib/documents";
 import { parseRanges } from "@/lib/ranges";
 
-const BLOCKED = "Needs a backend endpoint that is not available yet (see apps/web/docs/frontend-backend-requests.md).";
 const TILE = 110;
 
 export function Organizer({ onClose }: { onClose(): void }) {
@@ -25,6 +24,11 @@ export function Organizer({ onClose }: { onClose(): void }) {
   const dialog = useRef<HTMLDivElement>(null);
   const rot = editGate("rotate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
   const ro = editGate("reorder", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
+  const del = editGate("delete", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
+  const dup = editGate("duplicate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
+  const ins = editGate("insert_blank", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
+  const [confirmDel, setConfirmDel] = useState(false);
+  const [insSrc, setInsSrc] = useState("");
   const newOps = s.ref && s.caps?.page_ops.extract ? null : (s.ref ? "Checking capabilities…" : "Requires a server document.");
   const selected = [...sel].sort((a, b) => a - b).map((i) => i + 1);
 
@@ -34,7 +38,7 @@ export function Organizer({ onClose }: { onClose(): void }) {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  useEffect(() => { if (s.ref) s.api.listDocuments().then(setDocs, () => setDocs([])); }, [s.ref, s.api]);
+  useEffect(() => { if (s.ref) s.api.listDocuments({ limit: 100 }).then((p) => setDocs(p.items), () => setDocs([])); }, [s.ref, s.api]);
 
   const move = async (from: number, to: number) => {
     if (!ro.enabled || to < 0 || to >= pageSizes.length) return;
@@ -59,9 +63,22 @@ export function Organizer({ onClose }: { onClose(): void }) {
           <button className={btn} disabled={!ro.enabled || selected.length !== 1} title={ro.reason ?? "Select one page"} onClick={() => move(selected[0] - 1, selected[0]).then(() => setSel(new Set([selected[0]])))}>Move later</button>
           <button className={btn} disabled={!!newOps || !selected.length} title={newOps ?? "Creates a new document"} onClick={async () => addCreated(await newDocOp("Extract", () => s.api.extractPages(s.ref!.document_id, selected)))}>Extract to new PDF</button>
           <span className="mx-1 h-4 w-px bg-neutral-300" />
-          {["Delete", "Duplicate", "Insert blank page", "Insert from PDF"].map((l) => (
-            <button key={l} className={btn} disabled title={BLOCKED} aria-label={`${l} (unavailable: backend endpoint missing)`}>{l}</button>
-          ))}
+          {!confirmDel ? (
+            <button className={btn} disabled={!del.enabled || !selected.length || selected.length >= pageSizes.length} title={del.reason ?? (selected.length >= pageSizes.length ? "Cannot delete every page" : "Delete the selected pages (creates a new version)")} onClick={() => setConfirmDel(true)}>Delete</button>
+          ) : (
+            <span role="group" aria-label="Confirm delete" className="flex items-center gap-1 text-xs">
+              Delete {selected.length} page{selected.length === 1 ? "" : "s"}? (Earlier versions keep them.)
+              <button className={`${btn} border-red-400 text-red-700`} onClick={async () => { setConfirmDel(false); if (await deletePages(selected)) setSel(new Set()); }}>Confirm delete</button>
+              <button className={btn} onClick={() => setConfirmDel(false)}>Cancel</button>
+            </span>
+          )}
+          <button className={btn} disabled={!dup.enabled || !selected.length} title={dup.reason ?? "Duplicate each selected page after itself (annotations are not copied)"} onClick={async () => { if (await duplicatePages(selected)) setSel(new Set()); }}>Duplicate</button>
+          <button className={btn} disabled={!ins.enabled} title={ins.reason ?? "Insert a blank page after the focused page"} onClick={async () => { if (await insertBlankAfter(focus + 1)) setFocus(focus + 1); }}>Insert blank page</button>
+          <select aria-label="Insert pages from document" className="rounded border px-1 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800" value={insSrc} onChange={(e) => setInsSrc(e.target.value)} disabled={!ins.enabled}>
+            <option value="">Insert from PDF…</option>
+            {(docs ?? []).filter((d) => d.document_id !== s.ref?.document_id).slice(0, 50).map((d) => <option key={d.document_id} value={d.document_id}>{d.filename}</option>)}
+          </select>
+          <button className={btn} disabled={!ins.enabled || !insSrc} title={ins.reason ?? "Insert all pages of the chosen document after the focused page"} onClick={async () => { if (await insertFromDoc(insSrc, focus + 1)) setInsSrc(""); }}>Insert</button>
         </div>
         <div className="grid min-h-0 flex-1 grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-3 overflow-auto p-3" role="listbox" aria-label="Pages" aria-multiselectable="true">
           {doc && pageSizes.map((sz, i) => {
