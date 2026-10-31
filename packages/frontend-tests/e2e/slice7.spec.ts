@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import AxeBuilder from "@axe-core/playwright";
-import { apiUp, signIn, signInAndUpload, LOCAL_FIXTURE } from "./helpers";
+import { apiUp, signIn, signInAndUpload, LOCAL_FIXTURE, stableBox } from "./helpers";
 const here = path.dirname(new URL(import.meta.url).pathname);
 const PY = path.join(here, "..", ".venv", "bin", "python");
 const VERIFY = path.join(here, "..", "scripts", "verify_pdf.py");
@@ -12,7 +12,7 @@ const VERIFY = path.join(here, "..", "scripts", "verify_pdf.py");
 async function tool(page: Page, label: RegExp | string) { await page.getByRole("toolbar", { name: "Annotation tools" }).getByRole("button", { name: label }).click(); }
 const count = (page: Page) => page.getByTestId("thread-count");
 async function layer(page: Page) {
-  const l = page.getByTestId("annot-layer-1"); await expect(l).toBeVisible(); return (await l.boundingBox())!;
+  const l = page.getByTestId("annot-layer-1"); await expect(l).toBeVisible(); return stableBox(l);
 }
 async function drag(page: Page, x1: number, y1: number, x2: number, y2: number) {
   await page.mouse.move(x1, y1); await page.mouse.down(); await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 }); await page.mouse.move(x2, y2, { steps: 4 }); await page.mouse.up();
