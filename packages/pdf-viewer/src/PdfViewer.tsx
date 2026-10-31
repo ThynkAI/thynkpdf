@@ -8,7 +8,8 @@ import { PageView } from "./PageView";
 export const PAGE_GAP = 16;
 
 export function PdfViewer({ className }: { className?: string }) {
-  const { doc, docKey, pageSizes, zoomMode, customScale, scrollRequest, query, currentPage } = useViewerStore();
+  const { doc, docKey, pageSizes, zoomMode, customScale, scrollRequest, query, currentPage, matches, activeMatch } = useViewerStore();
+  const am = activeMatch >= 0 ? matches[activeMatch] : undefined;
   const setEffectiveScale = useViewerStore((s) => s.setEffectiveScale);
   const setCurrentPage = useViewerStore((s) => s.setCurrentPage);
   const ref = useRef<HTMLDivElement>(null);
@@ -62,7 +63,7 @@ export function PdfViewer({ className }: { className?: string }) {
             const w = Math.round(s.width * scale), h = Math.round(s.height * scale);
             return (
               <div key={`${docKey}-${it.index}`} style={{ position: "absolute", top: it.start, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
-                <PageView doc={doc} pageIndex={it.index} scale={scale} width={w} height={h} query={query} />
+                <PageView doc={doc} pageIndex={it.index} scale={scale} width={w} height={h} query={query} activeHit={am && am.page === it.index ? am.index : -1} />
               </div>
             );
           })}

@@ -36,4 +36,22 @@ describe("HttpEditorApi", () => {
     expect(err.currentVersion).toBe(4);
     expect(body).toEqual({ document_id: "d", expected_version: 2, pages: [1], angle: 90 });
   });
+  it("reorder sends 1-based order with expected_version; refresh failure clears tokens", async () => {
+    const seen: any[] = []; const changes: unknown[] = [];
+    const f = async (url: string, init?: RequestInit) => {
+      seen.push([url, init?.body && JSON.parse(String(init.body))]);
+      if (url.endsWith("/auth/login")) return json(tok("a1"));
+      if (url.endsWith("/auth/refresh")) return json({ error: { code: "TOKEN_INVALID", message: "bad" } }, 401);
+      if (url.endsWith("/pdf/pages/reorder")) return json({ document_id: "d", version_id: "v3", version: 3, sha256: "", size: 1, report: {} });
+      return json({ error: { code: "TOKEN_EXPIRED", message: "exp" } }, 401);
+    };
+    const api = new HttpEditorApi({ baseUrl: "http://x", fetchImpl: f as unknown as typeof fetch });
+    api.onTokensChanged = (t) => changes.push(t);
+    await api.login("u", "p");
+    expect((await api.reorderPages({ document_id: "d", version_id: "v", version: 2 }, [2, 1])).version).toBe(3);
+    expect(seen[1]).toEqual(["http://x/pdf/pages/reorder", { document_id: "d", expected_version: 2, order: [2, 1] }]);
+    await expect(api.getCapabilities("d")).rejects.toBeInstanceOf(ApiError);
+    expect(api.getTokens()).toBeNull();
+    expect(changes.at(-1)).toBeNull();
+  });
 });

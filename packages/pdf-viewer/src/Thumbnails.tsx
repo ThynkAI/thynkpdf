@@ -1,11 +1,20 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useViewerStore } from "./store";
 import { PageView } from "./PageView";
 
 const THUMB_W = 120;
-export function Thumbnails() {
+export interface ThumbnailsProps {
+  /** Called with 0-based from/to when the user drops a thumbnail. Omit to disable drag. */
+  onReorder?: (from: number, to: number) => void;
+  /** When set, drag is disabled and this reason is shown as the tooltip. */
+  reorderDisabledReason?: string | null;
+}
+export function Thumbnails({ onReorder, reorderDisabledReason }: ThumbnailsProps = {}) {
+  const [drag, setDrag] = useState<number | null>(null);
+  const [over, setOver] = useState<number | null>(null);
+  const canDrag = !!onReorder && !reorderDisabledReason;
   const { doc, docKey, pageSizes, currentPage, goToPage, matches } = useViewerStore();
   const ref = useRef<HTMLDivElement>(null);
   const v = useVirtualizer({
@@ -25,7 +34,13 @@ export function Thumbnails() {
             return (
               <button key={`${docKey}-${it.index}`} type="button" onClick={() => goToPage(it.index)} aria-current={active ? "page" : undefined}
                 aria-label={`Go to page ${it.index + 1}`}
-                className={`absolute left-0 right-0 mx-auto flex flex-col items-center gap-1 rounded p-1 text-xs ${active ? "bg-brand-500/20 ring-2 ring-brand-500" : "hover:bg-neutral-200 dark:hover:bg-neutral-800"}`}
+                title={onReorder ? (reorderDisabledReason ?? "Drag to reorder") : undefined}
+                draggable={canDrag} data-testid={`thumb-${it.index + 1}`}
+                onDragStart={(e) => { if (!canDrag) return; e.stopPropagation(); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("application/x-thynkpdf-page", String(it.index)); setDrag(it.index); }}
+                onDragOver={(e) => { if (drag === null) return; e.preventDefault(); e.stopPropagation(); setOver(it.index); }}
+                onDrop={(e) => { if (drag === null) return; e.preventDefault(); e.stopPropagation(); const from = drag; setDrag(null); setOver(null); if (from !== it.index) onReorder?.(from, it.index); }}
+                onDragEnd={() => { setDrag(null); setOver(null); }}
+                className={`absolute left-0 right-0 mx-auto flex flex-col items-center gap-1 rounded p-1 text-xs ${over === it.index && drag !== it.index ? "outline outline-2 outline-dashed outline-brand-500 " : ""}${drag === it.index ? "opacity-50 " : ""}${active ? "bg-brand-500/20 ring-2 ring-brand-500" : "hover:bg-neutral-200 dark:hover:bg-neutral-800"}`}
                 style={{ top: it.start, width: THUMB_W + 12 }}>
                 <PageView doc={doc} pageIndex={it.index} scale={scale} width={THUMB_W} height={Math.round(s.height * scale)} textLayer={false} label={`Thumbnail ${it.index + 1}`} />
                 <span className={hitPages.has(it.index) ? "font-semibold text-amber-600" : ""}>{it.index + 1}</span>

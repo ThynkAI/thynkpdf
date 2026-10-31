@@ -7,7 +7,8 @@ import { Toolbar } from "./Toolbar";
 import { RightPanel } from "./RightPanel";
 import { StatusBar } from "./StatusBar";
 import { useSession } from "@/lib/session";
-import { openFile, rotateCurrentPage } from "@/lib/documents";
+import { openFile, rotateCurrentPage, reorderPage, restoreSession } from "@/lib/documents";
+import { editGate } from "@/lib/gates";
 import { resolveShortcut } from "@/lib/shortcuts";
 
 export function EditorShell() {
@@ -17,11 +18,14 @@ export function EditorShell() {
   const [panel, setPanel] = useState(true);
   const [dark, setDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const [dragging, setDragging] = useState(false);
+  const fileName = useViewerStore((s) => s.fileName);
   const hasDoc = useViewerStore((s) => s.pageSizes.length > 0);
+  const { ref, caps, capsError, busy } = useSession();
+  const reorderGate = editGate("reorder", ref, caps, { busy: !!busy, capsError });
 
   useEffect(() => {
     const { api, set } = useSession.getState();
-    api.health().then((ok) => set({ backend: ok ? "online" : "offline" }));
+    api.health().then((ok) => { set({ backend: ok ? "online" : "offline" }); if (ok) void restoreSession(); });
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -44,7 +48,7 @@ export function EditorShell() {
         case "prevPage": v.goToPage(v.currentPage - 1); break;
         case "firstPage": v.goToPage(0); break;
         case "lastPage": v.goToPage(v.pageSizes.length - 1); break;
-        case "rotate": void rotateCurrentPage(90); break;
+        case "rotate": { const ss = useSession.getState(); if (editGate("rotate", ss.ref, ss.caps, { busy: !!ss.busy, capsError: ss.capsError }).enabled) void rotateCurrentPage(90); break; }
         case "toggleTheme": toggleTheme(); break;
       }
     };
@@ -66,12 +70,12 @@ export function EditorShell() {
         onDrop={(e) => { e.preventDefault(); setDragging(false); onFiles(e.dataTransfer.files); }}>
         <header className="flex h-11 items-center gap-3 border-b border-neutral-200 px-3 dark:border-neutral-800">
           <Wordmark />
-          <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{useViewerStore.getState().fileName ?? ""}</span>
+          <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
         <Toolbar onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel(true); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" hidden data-testid="file-input" onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
         <div className="flex min-h-0 flex-1">
-          {sidebar && <nav aria-label="Left sidebar" className="w-40 shrink-0 border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails /></nav>}
+          {sidebar && <nav aria-label="Left sidebar" className="w-40 shrink-0 border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
           <main className="relative min-w-0 flex-1">
             <PdfViewer />
             {!hasDoc && (

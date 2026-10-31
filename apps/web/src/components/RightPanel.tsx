@@ -2,6 +2,8 @@
 import { forwardRef, useState } from "react";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
+import { editGate } from "@/lib/gates";
+import { signOut } from "@/lib/documents";
 
 export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
@@ -40,10 +42,19 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
         </dl>
       </section>
       <section>
+        <h2 className="mb-2 font-semibold">Editing</h2>
+        <ul className="space-y-1 text-xs" data-testid="edit-gates">
+          {(["rotate", "reorder"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError }); return (
+            <li key={a}><span className={g.enabled ? "text-green-700 dark:text-green-400" : "text-neutral-500"}>{a === "rotate" ? "Rotate pages" : "Reorder pages (drag thumbnails)"}: {g.enabled ? "available" : g.reason}</span></li>); })}
+          {s.caps?.document_limitations.map((l) => <li key={l.code} className="text-amber-700">{l.code}: {l.message}</li>)}
+        </ul>
+      </section>
+      <section>
         <h2 className="mb-2 font-semibold">Backend</h2>
         <p className="text-xs" data-testid="backend-status">{s.api.kind === "mock" ? "Mock API (in-browser, not persisted)" : s.backend === "online" ? (s.authed ? "Connected" : "Online — sign in to upload") : s.backend === "offline" ? "Offline — files open locally" : "Checking…"}</p>
+        {s.api.kind === "http" && s.authed && <button className="mt-1 text-xs underline" onClick={() => void signOut()}>Sign out</button>}
         {s.api.kind === "http" && s.backend === "online" && !s.authed && (
-          <form className="mt-2 space-y-1" onSubmit={async (e) => { e.preventDefault(); try { await s.api.login(user, pw); s.set({ authed: true, error: null }); } catch (err) { s.set({ error: (err as Error).message }); } }}>
+          <form className="mt-2 space-y-1" onSubmit={async (e) => { e.preventDefault(); try { await s.api.login(user, pw); s.set({ error: null, notice: null }); } catch (err) { s.set({ error: (err as Error).message }); } }}>
             <input aria-label="Username" placeholder="Email" value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded border px-2 py-1 dark:bg-neutral-800" />
             <input aria-label="Password" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded border px-2 py-1 dark:bg-neutral-800" />
             <button className="rounded bg-brand-600 px-3 py-1 text-white">Sign in</button>

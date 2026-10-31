@@ -1,4 +1,4 @@
-import type { EditorApi, TokenResponse, UploadResponse, DocumentRef, VersionResult, DocumentInfo, RotateRequest, RotateAngle } from "./types";
+import type { Capabilities, EditorApi, TokenResponse, UploadResponse, DocumentRef, VersionResult, DocumentInfo, RotateRequest, RotateAngle } from "./types";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string, public details?: Record<string, unknown>) { super(message); }
@@ -15,7 +15,10 @@ export class HttpEditorApi implements EditorApi {
   private f: typeof fetch;
   constructor(private opts: HttpApiOptions) { this.f = opts.fetchImpl ?? ((...a) => fetch(...a)); }
 
+  onTokensChanged?: (t: TokenResponse | null) => void;
   get isAuthenticated() { return !!this.tokens; }
+  getTokens() { return this.tokens; }
+  setTokens(t: TokenResponse | null) { this.tokens = t; this.onTokensChanged?.(t); }
   private url(p: string) { return this.opts.baseUrl.replace(/\/$/, "") + p; }
   private authHeaders(): Record<string, string> {
     return this.tokens ? { Authorization: `Bearer ${this.tokens.access_token}` } : {};
@@ -41,13 +44,15 @@ export class HttpEditorApi implements EditorApi {
     try { return (await this.f(this.url("/health"))).ok; } catch { return false; }
   }
   async login(email: string, password: string) {
-    this.tokens = await this.req<TokenResponse>("/auth/login", this.json({ email, password }), false);
-    return this.tokens;
+    this.setTokens(await this.req<TokenResponse>("/auth/login", this.json({ email, password }), false));
+    return this.tokens!;
   }
   async refresh() {
     if (!this.tokens) throw new ApiError(401, "AUTH_REQUIRED", "not logged in");
-    this.tokens = await this.req<TokenResponse>("/auth/refresh", this.json({ refresh_token: this.tokens.refresh_token }), false);
-    return this.tokens;
+    try {
+      this.setTokens(await this.req<TokenResponse>("/auth/refresh", this.json({ refresh_token: this.tokens.refresh_token }), false));
+    } catch (e) { this.setTokens(null); throw e; }
+    return this.tokens!;
   }
   async upload(file: Blob, filename: string) {
     const fd = new FormData();
@@ -62,4 +67,8 @@ export class HttpEditorApi implements EditorApi {
     const body: RotateRequest = { document_id: ref.document_id, expected_version: ref.version, pages, angle };
     return this.req<VersionResult>("/pdf/pages/rotate", this.json(body));
   }
+  reorderPages(ref: DocumentRef, order: number[]) {
+    return this.req<VersionResult>("/pdf/pages/reorder", this.json({ document_id: ref.document_id, expected_version: ref.version, order }));
+  }
+  getCapabilities(id: string) { return this.req<Capabilities>(`/pdf/${encodeURIComponent(id)}/capabilities`); }
 }
