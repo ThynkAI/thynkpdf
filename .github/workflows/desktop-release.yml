@@ -1,0 +1,74 @@
+name: desktop-release
+# Builds the THYNKPDF desktop app (Electron shell + PyInstaller backend sidecar + static web export).
+# Unsigned for now: see apps/desktop/README.md for SmartScreen / Gatekeeper notes and signing requirements.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths: ["apps/desktop/**", ".github/workflows/desktop-release.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, target: win, artifact: THYNKPDF-Windows-x64 }
+          - { os: macos-latest, target: mac, artifact: THYNKPDF-macOS-arm64 }
+          - { os: macos-15-intel, target: mac, artifact: THYNKPDF-macOS-x64 }
+          - { os: ubuntu-latest, target: linux, artifact: THYNKPDF-Linux-x64 }
+    runs-on: ${{ matrix.os }}
+    env:
+      THYNKPDF_STATIC_EXPORT: "1"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Web app static export
+        shell: bash
+        run: |
+          npx --yes pnpm@10.34.6 install --frozen-lockfile
+          npx --yes pnpm@10.34.6 --filter @thynkpdf/web build
+          test -f apps/web/out/index.html
+      - name: Backend sidecar (PyInstaller)
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+          python apps/desktop/build/build_sidecar.py
+      - name: Smoke-test sidecar
+        shell: bash
+        run: python apps/desktop/build/smoke_sidecar.py
+      - name: Package installer
+        working-directory: apps/desktop
+        shell: bash
+        run: |
+          npm install --no-audit --no-fund
+          npx electron-builder --${{ matrix.target }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          if-no-files-found: error
+          path: |
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.AppImage
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out }
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          files: out/**/*
