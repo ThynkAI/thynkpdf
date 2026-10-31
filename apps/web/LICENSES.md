@@ -23,3 +23,5 @@ Test-only (packages/frontend-tests, not shipped): @axe-core/playwright (MPL-2.0)
 - **Noto Sans Regular** (`public/fonts/NotoSans-Regular.ttf`): SIL Open Font License 1.1 (`public/fonts/OFL.txt`). Embedded (subset) only
   when annotation text is outside WinAnsi. It covers Latin, Greek and Cyrillic; CJK isn't covered.
 - **@pdf-lib/fontkit**: MIT. Used to embed the Noto Sans font in browser-written annotations.
+
+- lucide-react (ISC): icon set used throughout the UI. https://lucide.dev
