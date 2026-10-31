@@ -1,7 +1,8 @@
 import hashlib, json, time, re
 from typing import Literal
 import bcrypt, jwt
-from fastapi import FastAPI, Depends, Request, UploadFile, File, Form, Header
+from fastapi import FastAPI, Depends, Request, UploadFile, File, Form, Header, Cookie
+from types import SimpleNamespace
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -11,7 +12,8 @@ from sqlalchemy.exc import IntegrityError
 import thynkpdf_engine as eng
 from thynkpdf_storage import LocalStorage, tenant_key
 from .config import settings
-from .db import make_session_factory, User, Organization, Membership, Document, DocumentVersion, AuditEvent, Job, uid
+from .db import make_session_factory, User, Organization, Membership, Document, DocumentVersion, AuditEvent, Job, RevokedToken, uid
+from . import schemas as S
 
 ROLE_RANK = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
 
@@ -46,7 +48,8 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.exception_handler(eng.EngineError)
     async def _eng(_, e: eng.EngineError):
         st = {"PDF_MALFORMED": 422, "INVALID_FILE_TYPE": 415, "PDF_ENCRYPTED": 422, "EDIT_NOT_SUPPORTED": 422,
-              "TEXT_NOT_FOUND": 422, "EDIT_UNSUPPORTED_CHARACTERS": 422}.get(e.code, 400)
+              "TEXT_NOT_FOUND": 422, "EDIT_UNSUPPORTED_CHARACTERS": 422, "EDIT_UNSUPPORTED_FONT": 422,
+              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404}.get(e.code, 400)
         return JSONResponse({"error": {"code": e.code, "message": e.message, "details": e.details}}, status_code=st)
 
     from fastapi.exceptions import RequestValidationError
@@ -68,12 +71,20 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target))
 
     # ---------------- auth ----------------
-    def tokens(user_id, org_id):
+    REFRESH_COOKIE = "thynkpdf_refresh"
+
+    def set_refresh_cookie(resp: Response, tok: str):
+        resp.set_cookie(REFRESH_COOKIE, tok, max_age=settings.refresh_ttl, httponly=True, samesite="lax",
+                        secure=settings.cookie_secure, path="/auth")
+
+    def tokens(user_id, org_id, resp: Response | None = None):
         t = int(time.time())
         mk = lambda typ, ttl: jwt.encode({"sub": user_id, "org": org_id, "typ": typ, "iat": t, "exp": t + ttl, "jti": uid()},
                                          settings.jwt_secret, algorithm="HS256")
-        return {"access_token": mk("access", settings.access_ttl), "refresh_token": mk("refresh", settings.refresh_ttl),
-                "token_type": "bearer", "expires_in": settings.access_ttl}
+        out = {"access_token": mk("access", settings.access_ttl), "refresh_token": mk("refresh", settings.refresh_ttl),
+               "token_type": "bearer", "expires_in": settings.access_ttl}
+        if resp is not None: set_refresh_cookie(resp, out["refresh_token"])
+        return out
 
     bearer = HTTPBearer(auto_error=False)
 
@@ -100,20 +111,20 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     class LoginIn(BaseModel):
         email: EmailStr; password: str; org_id: str | None = None
     class RefreshIn(BaseModel):
-        refresh_token: str
+        refresh_token: str | None = None
     class TokenOut(BaseModel):
         access_token: str; refresh_token: str; token_type: str; expires_in: int
 
     @app.post("/auth/register", response_model=TokenOut, status_code=201, tags=["auth"])
-    def register(b: RegisterIn, s=Depends(db)):
+    def register(b: RegisterIn, response: Response, s=Depends(db)):
         if s.scalar(select(User).where(User.email == b.email.lower())): raise ApiError(409, "EMAIL_TAKEN", "Email already registered")
         u = User(email=b.email.lower(), password_hash=bcrypt.hashpw(b.password.encode(), bcrypt.gensalt()).decode())
         o = Organization(name=b.org_name); s.add_all([u, o]); s.flush()
         s.add(Membership(org_id=o.id, user_id=u.id, role="owner")); audit(s, o.id, u.id, "auth.register"); s.commit()
-        return tokens(u.id, o.id)
+        return tokens(u.id, o.id, response)
 
     @app.post("/auth/login", response_model=TokenOut, tags=["auth"])
-    def login(b: LoginIn, s=Depends(db)):
+    def login(b: LoginIn, response: Response, s=Depends(db)):
         u = s.scalar(select(User).where(User.email == b.email.lower()))
         if not u or not bcrypt.checkpw(b.password.encode(), u.password_hash.encode()):
             raise ApiError(401, "INVALID_CREDENTIALS", "Invalid email or password")
@@ -122,16 +133,40 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         m = s.scalars(q).first()
         if not m: raise ApiError(403, "NOT_A_MEMBER", "No membership for this organization")
         audit(s, m.org_id, u.id, "auth.login"); s.commit()
-        return tokens(u.id, m.org_id)
+        return tokens(u.id, m.org_id, response)
 
-    @app.post("/auth/refresh", response_model=TokenOut, tags=["auth"])
-    def refresh(b: RefreshIn, s=Depends(db)):
-        try: c = jwt.decode(b.refresh_token, settings.jwt_secret, algorithms=["HS256"])
+    def _read_refresh(s, b, cookie):
+        tok = (b.refresh_token if b else None) or cookie
+        if not tok: raise ApiError(401, "AUTH_REQUIRED", "Refresh token required (body or httpOnly cookie)")
+        try: c = jwt.decode(tok, settings.jwt_secret, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError: raise ApiError(401, "TOKEN_EXPIRED", "Refresh token expired")
         except jwt.PyJWTError: raise ApiError(401, "TOKEN_INVALID", "Invalid refresh token")
         if c.get("typ") != "refresh": raise ApiError(401, "TOKEN_INVALID", "Not a refresh token")
+        if s.get(RevokedToken, c["jti"]): raise ApiError(401, "TOKEN_REVOKED", "Refresh token revoked or already used")
+        return c
+
+    def _revoke(s, c):
+        from datetime import datetime, timezone
+        s.add(RevokedToken(jti=c["jti"], expires_at=datetime.fromtimestamp(c["exp"], timezone.utc)))
+
+    @app.post("/auth/logout", status_code=204, tags=["auth"])
+    def logout(response: Response, b: RefreshIn | None = None, thynkpdf_refresh: str | None = Cookie(None), s=Depends(db)):
+        """Revokes the refresh token (cookie or body) and clears the cookie. Idempotent."""
+        try:
+            c = _read_refresh(s, b, thynkpdf_refresh); _revoke(s, c); audit(s, c["org"], c["sub"], "auth.logout"); s.commit()
+        except ApiError: pass
+        response.delete_cookie(REFRESH_COOKIE, path="/auth", httponly=True, samesite="lax", secure=settings.cookie_secure)
+        response.status_code = 204
+        return response
+
+    @app.post("/auth/refresh", response_model=TokenOut, tags=["auth"])
+    def refresh(response: Response, b: RefreshIn | None = None, thynkpdf_refresh: str | None = Cookie(None), s=Depends(db)):
+        """Rotating refresh: each refresh token is single-use (replay -> TOKEN_REVOKED)."""
+        c = _read_refresh(s, b, thynkpdf_refresh)
         if not s.scalar(select(Membership).where(Membership.user_id == c["sub"], Membership.org_id == c["org"])):
             raise ApiError(403, "NOT_A_MEMBER", "Membership revoked")
-        return tokens(c["sub"], c["org"])
+        _revoke(s, c); s.commit()
+        return tokens(c["sub"], c["org"], response)
 
     @app.get("/auth/me", tags=["auth"])
     def me(p: Principal = Depends(principal)): return p.model_dump()
@@ -157,7 +192,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     class DocumentOut(BaseModel):
         document_id: str; filename: str; current_version: int; version_id: str; created_at: str
     class UploadOut(BaseModel):
-        document_id: str; version_id: str; version: int; sha256: str; size: int; page_count: int
+        document_id: str; version_id: str; version: int; sha256: str; size: int; page_count: int; filename: str
 
     def vout(v): return VersionOut(version_id=v.id, number=v.number, sha256=v.sha256, size=v.size, operation=v.operation,
                                    parent_version_id=v.parent_version_id, created_at=v.created_at.isoformat())
@@ -224,7 +259,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         if not data.startswith(b"%PDF-"): raise ApiError(415, "INVALID_FILE_TYPE", "File is not a PDF (magic bytes)")
         pdf = eng.open_pdf(data)
         d, v = new_document(s, p, file.filename, data, "upload")
-        return UploadOut(document_id=d.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=len(pdf.pages))
+        return UploadOut(document_id=d.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=d.filename, page_count=len(pdf.pages))
 
     def dout(s, d): return DocumentOut(document_id=d.id, filename=d.filename, current_version=d.current_version,
                                        version_id=get_ver(s, d).id, created_at=d.created_at.isoformat())
@@ -271,12 +306,12 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d))
 
     # ---------------- pdf ----------------
-    @app.get("/pdf/{doc_id}/metadata", tags=["pdf"])
+    @app.get("/pdf/{doc_id}/metadata", response_model=S.MetadataOut, tags=["pdf"])
     def metadata(doc_id: str, version: int | None = None, p: Principal = Depends(principal), s=Depends(db)):
         d = get_doc(s, p, doc_id); v = get_ver(s, d, number=version)
         return {"document_id": d.id, "version": v.number, "version_id": v.id, **eng.inspect(load(d, v))}
 
-    @app.get("/pdf/{doc_id}/capabilities", tags=["pdf"])
+    @app.get("/pdf/{doc_id}/capabilities", response_model=S.CapabilitiesOut, tags=["pdf"])
     def caps(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
         d = get_doc(s, p, doc_id); v = get_ver(s, d)
         c = eng.capabilities(load(d, v))
@@ -296,12 +331,16 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     class SplitIn(BaseModel):
         document_id: str; ranges: list[list[int]] = Field(min_length=1, max_length=100)
     class EditOp(BaseModel):
-        op: Literal["text_replace", "text_insert", "text_delete", "image_replace", "image_move", "font_change", "link_change"]
+        op: Literal["text_replace", "text_insert", "text_delete", "text_move", "image_replace", "image_move", "font_change", "link_change"]
         page: int = Field(ge=1)
         object_id: str | None = None
         bbox: list[float] | None = None
         find: str | None = None
         replacement: str | None = None
+        text: str | None = Field(None, description="text_insert: text to add")
+        x: float | None = None; y: float | None = None
+        dx: float | None = None; dy: float | None = None
+        font: str = "Helvetica"; font_size: float = 12
         occurrence: Literal["first", "all"] = "all"
         formatting: dict | None = None
     class EditIn(VersionedOp):
@@ -331,33 +370,37 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     def extract(b: ExtractIn, p: Principal = Depends(principal), s=Depends(db)):
         d, data = writable(s, p, b.document_id); out = eng.extract(data, b.pages)
         nd, v = new_document(s, p, b.filename or f"extract-{d.filename}", out, "extract", b.model_dump())
-        return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=len(b.pages))
+        return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=len(b.pages))
 
     @app.post("/pdf/merge", response_model=UploadOut, status_code=201, tags=["pdf"])
     def merge(b: MergeIn, p: Principal = Depends(principal), s=Depends(db)):
         datas = [writable(s, p, i)[1] for i in b.document_ids]; out = eng.merge(datas)
         nd, v = new_document(s, p, b.filename, out, "merge", b.model_dump())
-        return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=len(eng.open_pdf(out).pages))
+        return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=len(eng.open_pdf(out).pages))
 
     @app.post("/pdf/split", response_model=list[UploadOut], status_code=201, tags=["pdf"])
     def split(b: SplitIn, p: Principal = Depends(principal), s=Depends(db)):
         d, data = writable(s, p, b.document_id); res = []
         for i, part in enumerate(eng.split(data, b.ranges)):
             nd, v = new_document(s, p, f"part{i + 1}-{d.filename}", part, "split", {"range": b.ranges[i]})
-            res.append(UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=b.ranges[i][1] - b.ranges[i][0] + 1))
+            res.append(UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=b.ranges[i][1] - b.ranges[i][0] + 1))
         return res
 
     @app.post("/pdf/edit", response_model=VersionResult, tags=["pdf"])
     def edit(b: EditIn, p: Principal = Depends(principal), s=Depends(db)):
         d, data = writable(s, p, b.document_id); applied = []
         for o in b.operations:
-            if o.op != "text_replace":
-                raise ApiError(422, "EDIT_OP_NOT_IMPLEMENTED", f"Operation {o.op} not implemented yet",
-                               {"supported_ops": ["text_replace"]})
-            if not o.find or o.replacement is None:
-                raise ApiError(422, "VALIDATION_ERROR", "text_replace requires find and replacement")
-            data, n = eng.replace_text(data, o.page, o.find, o.replacement, o.occurrence)
-            applied.append({"op": o.op, "page": o.page, "replacements": n})
+            req = {"text_replace": ("find", "replacement"), "text_delete": ("find",), "text_move": ("find", "dx", "dy"),
+                   "text_insert": ("text", "x", "y")}
+            if o.op not in req:
+                raise ApiError(422, "EDIT_OP_NOT_IMPLEMENTED", f"Operation {o.op} not implemented yet", {"supported_ops": list(req)})
+            missing = [f for f in req[o.op] if getattr(o, f) in (None, "") and not (o.op == "text_replace" and f == "replacement" and o.replacement == "")]
+            if missing: raise ApiError(422, "VALIDATION_ERROR", f"{o.op} requires {missing}")
+            if o.op == "text_replace": data, n = eng.replace_text(data, o.page, o.find, o.replacement, o.occurrence)
+            elif o.op == "text_delete": data, n = eng.delete_text(data, o.page, o.find, o.occurrence)
+            elif o.op == "text_move": data, n = eng.move_text(data, o.page, o.find, o.dx, o.dy)
+            else: data, n = eng.insert_text(data, o.page, o.text, o.x, o.y, o.font_size, o.font), 1
+            applied.append({"op": o.op, "page": o.page, "count": n})
         v = new_version(s, p, d, b.expected_version, data, "edit", b.model_dump())
         return vres(d, v, {"applied": applied, "method": "content_stream_rewrite"})
 
@@ -380,6 +423,9 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/health", tags=["ops"])
     def health(): return {"status": "ok"}
 
+    ctx = SimpleNamespace(**{k: v for k, v in locals().items() if k != "ctx"})
+    from . import features
+    features.register_all(app, ctx)
     return app
 
 

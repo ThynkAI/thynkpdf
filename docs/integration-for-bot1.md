@@ -87,3 +87,30 @@ curl -s -H "Authorization: Bearer $T" localhost:8000/documents/$D/download -o ou
 ```
 ## Integration test procedure
 Upload fixture → GET capabilities → edit → confirm `version` incremented → render downloaded file in PDF.js → verify text changed. Report results back so endpoints can move to INTEGRATED.
+
+---
+# Phase 2 changes (branch feat/backend-phase2)
+Scope note: THYNKPDF is free — no billing/paywall endpoints will be built.
+
+## PR-1 contract changes (auth cookie, filename, capabilities schema, edit + page ops)
+- **Refresh cookie**: `/auth/register`, `/auth/login`, `/auth/refresh` now also set `thynkpdf_refresh` (httpOnly, SameSite=Lax, Path=/auth, Max-Age = refresh TTL; `Secure` when `THYNKPDF_COOKIE_SECURE=true`, required in prod/HTTPS). JSON body still contains `refresh_token` for non-browser clients — the web app should ignore it and rely on the cookie.
+- `POST /auth/refresh` body is optional; reads the cookie when no body. Call with `fetch(url, {method:"POST", credentials:"include"})`.
+- **Refresh rotation**: each refresh token is single-use. Reusing one → 401 `TOKEN_REVOKED`. Serialize refresh calls in the client (one in-flight refresh).
+- `POST /auth/logout` (credentials: include) → 204, revokes the refresh token and clears the cookie. Idempotent.
+- CORS: `allow_credentials=true` for `http://localhost:3000` (exact origin, no wildcard).
+- `UploadOut` (upload/extract/merge/split) now includes `filename` (sanitized basename).
+- `GET /pdf/{id}/capabilities` has a typed schema `CapabilitiesOut` (`PageOps`, `EditOps`, `PageCapability`, `Limitation`) and `GET /pdf/{id}/metadata` → `MetadataOut`. New fields: `edit_ops{text_replace,text_delete,text_move,text_insert}`, per-page same booleans, `page_ops.insert_blank|delete|duplicate`, `annotations`, `forms`.
+
+### /pdf/edit operations
+| op | required | behaviour / limits |
+|---|---|---|
+| text_replace | find, replacement | as before |
+| text_delete | find, occurrence | removes glyphs from the run's string operand; later glyphs in the SAME run shift left; no paragraph reflow |
+| text_move | find, dx, dy | moves the whole Tj/TJ run containing `find` (first match) by wrapping it in `Td` operators. dx/dy in text-space units (= PDF points for unscaled text). Scaled/rotated text matrix → `EDIT_NOT_SUPPORTED` (`TEXT_MATRIX_TRANSFORMED`) |
+| text_insert | text, x, y, font?(std-14 Latin, default Helvetica), font_size?(12) | appends a real BT/Tj/ET text object; WinAnsi only (`EDIT_UNSUPPORTED_CHARACTERS`, `EDIT_UNSUPPORTED_FONT`) |
+Delete/move/replace require the font to be listed in `pages[n].editable_fonts`. Coordinates are PDF user space, origin bottom-left, unrotated page.
+
+### Page structure (each → new version, needs expected_version)
+- `POST /pdf/pages/insert-blank {document_id, expected_version, after(0..n), count, width?, height?}` (size defaults to neighbour page)
+- `POST /pdf/pages/delete {document_id, expected_version, pages}` (cannot delete all; old versions remain → recovery via rollback)
+- `POST /pdf/pages/duplicate {document_id, expected_version, page, count}` (annotations are NOT duplicated)

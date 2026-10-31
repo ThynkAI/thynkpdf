@@ -1,5 +1,7 @@
 """Generate real PDF fixtures with reportlab (standard-14 unembedded fonts) + edge cases."""
 from pathlib import Path
+from reportlab import rl_config
+rl_config.invariant = 1  # deterministic fixtures
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont

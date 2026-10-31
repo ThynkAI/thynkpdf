@@ -8,3 +8,9 @@ class Settings:
     max_upload = int(os.getenv("THYNKPDF_MAX_UPLOAD_BYTES", str(100 * 1024 * 1024)))
     cors_origins = os.getenv("THYNKPDF_CORS_ORIGINS", "http://localhost:3000").split(",")
 settings = Settings()
+settings.cookie_secure = os.getenv("THYNKPDF_COOKIE_SECURE", "false").lower() == "true"
+settings.ai_provider = os.getenv("THYNKPDF_AI_PROVIDER", "stub")
+settings.signing_cert = os.getenv("THYNKPDF_SIGNING_CERT", "")
+settings.signing_key = os.getenv("THYNKPDF_SIGNING_KEY", "")
+settings.signing_key_pass = os.getenv("THYNKPDF_SIGNING_KEY_PASSPHRASE", "")
+settings.signing_cert_trusted = os.getenv("THYNKPDF_SIGNING_CERT_TRUSTED", "false").lower() == "true"

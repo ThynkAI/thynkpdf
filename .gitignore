@@ -2,3 +2,8 @@
 *.db
 data/
 __pycache__/
+node_modules/
+.next/
+.env
+*.pem
+!packages/backend-tests/certs/*.pem
