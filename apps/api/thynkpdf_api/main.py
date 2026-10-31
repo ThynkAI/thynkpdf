@@ -49,7 +49,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     async def _eng(_, e: eng.EngineError):
         st = {"PDF_MALFORMED": 422, "INVALID_FILE_TYPE": 415, "PDF_ENCRYPTED": 422, "EDIT_NOT_SUPPORTED": 422,
               "TEXT_NOT_FOUND": 422, "EDIT_UNSUPPORTED_CHARACTERS": 422, "EDIT_UNSUPPORTED_FONT": 422,
-              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404}.get(e.code, 400)
+              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404, "VALIDATION_ERROR": 422}.get(e.code, 400)
         return JSONResponse({"error": {"code": e.code, "message": e.message, "details": e.details}}, status_code=st)
 
     from fastapi.exceptions import RequestValidationError
@@ -436,7 +436,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/health", tags=["ops"])
     def health(): return {"status": "ok"}
 
-    ctx = SimpleNamespace(**{k: v for k, v in locals().items() if k != "ctx"})
+    ctx = SimpleNamespace(**{k: v for k, v in locals().items() if k != "ctx"}, ApiError=ApiError, settings=settings)
     from . import features
     features.register_all(app, ctx)
     return app
