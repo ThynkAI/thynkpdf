@@ -1,3 +1,4 @@
+# TO ENABLE: copy to .github/workflows/desktop-release.yml (needs a token with the `workflow` scope to push).
 name: desktop-release
 # Builds the THYNKPDF desktop app (Electron shell + PyInstaller backend sidecar + static web export).
 # Unsigned for now: see apps/desktop/README.md for SmartScreen / Gatekeeper notes and signing requirements.

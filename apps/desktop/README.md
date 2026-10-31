@@ -21,7 +21,7 @@ python apps/desktop/build/build_sidecar.py   # needs Python with a shared libpyt
 python apps/desktop/build/smoke_sidecar.py
 cd apps/desktop && npm install && npx electron-builder --linux AppImage   # or --win nsis / --mac dmg on that OS
 ```
-CI: `.github/workflows/desktop-release.yml` builds Windows (NSIS .exe), macOS arm64 and x64 (.dmg) and a Linux AppImage on every
+CI: `ci/desktop-release.yml` (copy it to `.github/workflows/`; pushing workflow files needs the `workflow` token scope) builds Windows (NSIS .exe), macOS arm64 and x64 (.dmg) and a Linux AppImage on every
 run (download them as artifacts). Pushing a `v*` tag also creates a **draft** GitHub Release with the installers attached.
 
 ## Unsigned builds: what users will see
