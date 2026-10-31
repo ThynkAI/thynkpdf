@@ -1,0 +1,4 @@
+sidecar/
+build/.pyi-work/
+dist/
+node_modules/
