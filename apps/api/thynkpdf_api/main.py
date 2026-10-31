@@ -71,10 +71,10 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target))
 
     # ---------------- auth ----------------
-    REFRESH_COOKIE = "thynkpdf_refresh"
+    REFRESH_COOKIE = "thynkpdf_rt"
 
     def set_refresh_cookie(resp: Response, tok: str):
-        resp.set_cookie(REFRESH_COOKIE, tok, max_age=settings.refresh_ttl, httponly=True, samesite="lax",
+        resp.set_cookie(REFRESH_COOKIE, tok, max_age=settings.refresh_ttl, httponly=True, samesite=settings.cookie_samesite,
                         secure=settings.cookie_secure, path="/auth")
 
     def tokens(user_id, org_id, resp: Response | None = None):
@@ -150,19 +150,19 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         s.add(RevokedToken(jti=c["jti"], expires_at=datetime.fromtimestamp(c["exp"], timezone.utc)))
 
     @app.post("/auth/logout", status_code=204, tags=["auth"])
-    def logout(response: Response, b: RefreshIn | None = None, thynkpdf_refresh: str | None = Cookie(None), s=Depends(db)):
+    def logout(response: Response, b: RefreshIn | None = None, thynkpdf_rt: str | None = Cookie(None), s=Depends(db)):
         """Revokes the refresh token (cookie or body) and clears the cookie. Idempotent."""
         try:
-            c = _read_refresh(s, b, thynkpdf_refresh); _revoke(s, c); audit(s, c["org"], c["sub"], "auth.logout"); s.commit()
+            c = _read_refresh(s, b, thynkpdf_rt); _revoke(s, c); audit(s, c["org"], c["sub"], "auth.logout"); s.commit()
         except ApiError: pass
-        response.delete_cookie(REFRESH_COOKIE, path="/auth", httponly=True, samesite="lax", secure=settings.cookie_secure)
+        response.delete_cookie(REFRESH_COOKIE, path="/auth", httponly=True, samesite=settings.cookie_samesite, secure=settings.cookie_secure)
         response.status_code = 204
         return response
 
     @app.post("/auth/refresh", response_model=TokenOut, tags=["auth"])
-    def refresh(response: Response, b: RefreshIn | None = None, thynkpdf_refresh: str | None = Cookie(None), s=Depends(db)):
+    def refresh(response: Response, b: RefreshIn | None = None, thynkpdf_rt: str | None = Cookie(None), s=Depends(db)):
         """Rotating refresh: each refresh token is single-use (replay -> TOKEN_REVOKED)."""
-        c = _read_refresh(s, b, thynkpdf_refresh)
+        c = _read_refresh(s, b, thynkpdf_rt)
         if not s.scalar(select(Membership).where(Membership.user_id == c["sub"], Membership.org_id == c["org"])):
             raise ApiError(403, "NOT_A_MEMBER", "Membership revoked")
         _revoke(s, c); s.commit()
@@ -244,9 +244,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
             s.rollback(); raise ApiError(409, "VERSION_CONFLICT", "Concurrent modification", {})
         return v
 
-    @app.post("/documents/upload", response_model=UploadOut, status_code=201, tags=["documents"])
-    async def upload(request: Request, file: UploadFile = File(...), p: Principal = Depends(principal), s=Depends(db)):
-        need(p, "member")
+    async def read_pdf_upload(request: Request, file: UploadFile) -> tuple[bytes, int]:
         cl = request.headers.get("content-length")
         if cl and int(cl) > settings.max_upload + 64 * 1024:
             raise ApiError(413, "FILE_TOO_LARGE", "Upload exceeds size limit", {"max_bytes": settings.max_upload})
@@ -258,8 +256,14 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         data = bytes(buf)
         if not data.startswith(b"%PDF-"): raise ApiError(415, "INVALID_FILE_TYPE", "File is not a PDF (magic bytes)")
         pdf = eng.open_pdf(data)
+        return data, len(pdf.pages)
+
+    @app.post("/documents/upload", response_model=UploadOut, status_code=201, tags=["documents"])
+    async def upload(request: Request, file: UploadFile = File(...), p: Principal = Depends(principal), s=Depends(db)):
+        need(p, "member")
+        data, npages = await read_pdf_upload(request, file)
         d, v = new_document(s, p, file.filename, data, "upload")
-        return UploadOut(document_id=d.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=d.filename, page_count=len(pdf.pages))
+        return UploadOut(document_id=d.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=d.filename, page_count=npages)
 
     def dout(s, d): return DocumentOut(document_id=d.id, filename=d.filename, current_version=d.current_version,
                                        version_id=get_ver(s, d).id, created_at=d.created_at.isoformat())
@@ -347,14 +351,23 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         operations: list[EditOp] = Field(min_length=1, max_length=100)
         revision_note: str | None = None
     class VersionResult(BaseModel):
-        document_id: str; version_id: str; version: int; sha256: str; size: int; report: dict = {}
+        document_id: str; version_id: str; version: int; sha256: str; size: int; filename: str; report: dict = {}
     class CompressIn(VersionedOp):
         preset: Literal["low", "balanced", "high"] = "balanced"; strip_metadata: bool = False
 
-    def vres(d, v, report=None): return VersionResult(document_id=d.id, version_id=v.id, version=v.number, sha256=v.sha256, size=v.size, report=report or {})
+    def vres(d, v, report=None): return VersionResult(document_id=d.id, version_id=v.id, version=v.number, sha256=v.sha256, size=v.size, filename=d.filename, report=report or {})
 
     def writable(s, p, doc_id):
         need(p, "member"); d = get_doc(s, p, doc_id); return d, load(d, get_ver(s, d))
+
+    @app.post("/documents/{doc_id}/versions", response_model=VersionResult, status_code=201, tags=["documents"])
+    async def upload_version(doc_id: str, request: Request, file: UploadFile = File(...), expected_version: int = Form(..., ge=1),
+                             p: Principal = Depends(principal), s=Depends(db)):
+        """Save client-modified bytes as a new immutable version (same validation as upload). 409 VERSION_CONFLICT if stale."""
+        d, _ = writable(s, p, doc_id)
+        data, npages = await read_pdf_upload(request, file)
+        v = new_version(s, p, d, expected_version, data, "client_upload", {"filename": safe_name(file.filename), "page_count": npages})
+        return vres(d, v, {"page_count": npages})
 
     @app.post("/pdf/pages/rotate", response_model=VersionResult, tags=["pdf"])
     def rotate(b: RotateIn, p: Principal = Depends(principal), s=Depends(db)):
