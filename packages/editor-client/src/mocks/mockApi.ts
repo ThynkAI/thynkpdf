@@ -3,8 +3,8 @@
  * Used only when NEXT_PUBLIC_API_MOCK=1 or in unit tests. Not a backend integration.
  */
 import { PDFDocument, degrees as pdfDegrees } from "pdf-lib";
-import type { Capabilities, EditorApi, DocumentRef, RotateAngle, TokenResponse } from "../types";
-import { VersionConflictError } from "../http";
+import type { EditOp, PdfMetadata, VersionInfo, UploadResponse, Capabilities, EditorApi, DocumentRef, RotateAngle, TokenResponse } from "../types";
+import { ApiError, VersionConflictError } from "../http";
 
 let seq = 0;
 const id = (p: string) => `${p}_${(++seq).toString(36)}`;
@@ -71,5 +71,37 @@ export class MockEditorApi implements EditorApi {
     const bytes = await pdf.save(), version_id = id("ver");
     d.versions.push({ id: version_id, bytes });
     return { document_id: ref.document_id, version_id, version: d.versions.length, sha256: "", size: bytes.length, report: {} };
+  }
+  private latest(docId: string) { const d = this.doc(docId); return d.versions[d.versions.length - 1].bytes; }
+  private async newDoc(pdf: PDFDocument, filename: string): Promise<UploadResponse> {
+    const bytes = await pdf.save();
+    return this.upload(new Blob([bytes as BlobPart]), filename);
+  }
+  private async pick(docId: string, pages: number[]) {
+    const src = await PDFDocument.load(this.latest(docId)); const out = await PDFDocument.create();
+    (await out.copyPages(src, pages.map((n) => n - 1))).forEach((p) => out.addPage(p)); return out;
+  }
+  async getMetadata(docId: string): Promise<PdfMetadata> {
+    const d = await this.getDocument(docId); const pdf = await PDFDocument.load(this.latest(docId));
+    return { document_id: docId, version: d.current_version, version_id: d.version_id, page_count: pdf.getPageCount(), has_acroform: false, form_field_count: 0, has_signatures: false,
+      pages: pdf.getPages().map((p, i) => ({ number: i + 1, width: p.getWidth(), height: p.getHeight(), rotation: p.getRotation().angle, annotations: 0 })) };
+  }
+  async editText(_ref: DocumentRef, _ops: EditOp[]): Promise<never> {
+    throw new ApiError(422, "EDIT_NOT_SUPPORTED", "Text editing is not available in the mock backend");
+  }
+  async extractPages(docId: string, pages: number[], filename?: string) { return this.newDoc(await this.pick(docId, pages), filename ?? `extract-${this.doc(docId).filename}`); }
+  async splitDocument(docId: string, ranges: [number, number][]) {
+    const out: UploadResponse[] = [];
+    for (const [i, [a, b]] of ranges.entries()) out.push(await this.newDoc(await this.pick(docId, Array.from({ length: b - a + 1 }, (_, k) => a + k)), `part${i + 1}-${this.doc(docId).filename}`));
+    return out;
+  }
+  async mergeDocuments(ids: string[], filename = "merged.pdf") {
+    const out = await PDFDocument.create();
+    for (const id of ids) { const src = await PDFDocument.load(this.latest(id)); (await out.copyPages(src, src.getPageIndices())).forEach((p) => out.addPage(p)); }
+    return this.newDoc(out, filename);
+  }
+  async listDocuments() { return Promise.all([...this.docs.keys()].map((k) => this.getDocument(k))); }
+  async listVersions(docId: string): Promise<VersionInfo[]> {
+    return this.doc(docId).versions.map((v, i, a) => ({ version_id: v.id, number: i + 1, sha256: "", size: v.bytes.length, operation: i ? "edit" : "upload", parent_version_id: i ? a[i - 1].id : null, created_at: new Date(0).toISOString() }));
   }
 }

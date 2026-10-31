@@ -16,3 +16,12 @@ export function editGate(action: EditAction, ref: DocumentRef | null, caps: Capa
   }
   return { enabled: true, reason: null };
 }
+
+export function textEditGate(page: number, ref: DocumentRef | null, caps: Capabilities | null, opts: { busy?: boolean; capsError?: string | null } = {}): Gate {
+  const base = editGate("rotate", ref, caps, opts);
+  if (!base.enabled && (!ref || opts.busy || opts.capsError || !caps || caps.version !== ref.version)) return base;
+  if (!caps!.text_replace) return { enabled: false, reason: caps!.document_limitations.map((l) => l.message).join(" ") || "Text editing is not available for this document." };
+  const p = caps!.pages.find((x) => x.number === page);
+  if (!p?.text_replace) return { enabled: false, reason: p?.limitations.map((l) => l.message).join(" ") || `Page ${page} has no editable text.` };
+  return { enabled: true, reason: null };
+}

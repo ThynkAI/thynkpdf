@@ -3,7 +3,8 @@ import { forwardRef, useState } from "react";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { editGate } from "@/lib/gates";
-import { signOut } from "@/lib/documents";
+import { signOut, ensureText } from "@/lib/documents";
+import { TextEditPanel } from "./TextEditPanel";
 
 export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
@@ -17,13 +18,13 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
     <aside aria-label="Right panel" className="flex h-full w-72 flex-col gap-4 overflow-auto border-l border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
       <section>
         <h2 className="mb-2 font-semibold">Search</h2>
-        <form role="search" onSubmit={(e) => { e.preventDefault(); if (q === query && matches.length) nextMatch(1); else setQuery(q); }}>
+        <form role="search" onSubmit={(e) => { e.preventDefault(); if (q === query && matches.length) nextMatch(1); else { setQuery(q); void ensureText(); } }}>
           <input ref={searchRef} aria-label="Search document" placeholder="Find in document" value={q} onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && e.shiftKey) { e.preventDefault(); nextMatch(-1); } }}
             className="w-full rounded border border-neutral-300 bg-white px-2 py-1 dark:border-neutral-700 dark:bg-neutral-800" />
         </form>
         <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
-          <span data-testid="search-count">{!pageSizes.length ? "No document" : !textReady ? "Indexing text…" : query ? `${matches.length ? activeMatch + 1 : 0} of ${matches.length} matches` : "Enter a term"}</span>
+          <span data-testid="search-count">{!pageSizes.length ? "No document" : query && !textReady ? "Indexing text…" : query ? `${matches.length ? activeMatch + 1 : 0} of ${matches.length} matches` : "Enter a term"}</span>
           <button className="ml-auto underline disabled:opacity-40" disabled={!matches.length} onClick={() => nextMatch(-1)}>Prev</button>
           <button className="underline disabled:opacity-40" disabled={!matches.length} onClick={() => nextMatch(1)}>Next</button>
         </div>
@@ -33,6 +34,7 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
           ))}
         </ul>
       </section>
+      <TextEditPanel />
       <section>
         <h2 className="mb-2 font-semibold">Document</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">

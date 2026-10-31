@@ -6,7 +6,7 @@ import { useSession } from "@/lib/session";
 import { rotateCurrentPage } from "@/lib/documents";
 import { editGate } from "@/lib/gates";
 
-export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme, dark }: { onOpen(): void; onToggleSidebar(): void; onTogglePanel(): void; onToggleTheme(): void; dark: boolean }) {
+export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme, dark, onOrganize }: { onOrganize(): void; onOpen(): void; onToggleSidebar(): void; onTogglePanel(): void; onToggleTheme(): void; dark: boolean }) {
   const v = useViewerStore();
   const { ref, caps, capsError, busy } = useSession();
   const rot = editGate("rotate", ref, caps, { busy: !!busy, capsError });
@@ -40,6 +40,7 @@ export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme,
       <span title={rot.reason ?? undefined} data-testid="rotate-wrap">
         <IconButton label={rot.enabled ? "Rotate page clockwise" : `Rotate page — unavailable: ${rot.reason}`} shortcut="Ctrl+Shift+R" disabled={!has || !rot.enabled} onClick={() => rotateCurrentPage(90)}>⟳</IconButton>
       </span>
+      <IconButton label="Organize pages" disabled={!has} onClick={onOrganize}>▦ Organize</IconButton>
       <div className="ml-auto flex items-center gap-1">
         <IconButton label="Search" shortcut="Ctrl+F" onClick={onTogglePanel}>⌕</IconButton>
         <IconButton label={dark ? "Switch to light theme" : "Switch to dark theme"} onClick={onToggleTheme}>{dark ? "☀" : "☾"}</IconButton>

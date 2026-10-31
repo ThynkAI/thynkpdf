@@ -1,4 +1,4 @@
-import type { Capabilities, EditorApi, TokenResponse, UploadResponse, DocumentRef, VersionResult, DocumentInfo, RotateRequest, RotateAngle } from "./types";
+import type { Capabilities, EditOp, PdfMetadata, VersionInfo, EditorApi, TokenResponse, UploadResponse, DocumentRef, VersionResult, DocumentInfo, RotateRequest, RotateAngle } from "./types";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string, public details?: Record<string, unknown>) { super(message); }
@@ -71,4 +71,15 @@ export class HttpEditorApi implements EditorApi {
     return this.req<VersionResult>("/pdf/pages/reorder", this.json({ document_id: ref.document_id, expected_version: ref.version, order }));
   }
   getCapabilities(id: string) { return this.req<Capabilities>(`/pdf/${encodeURIComponent(id)}/capabilities`); }
+  getMetadata(id: string, version?: number) {
+    return this.req<PdfMetadata>(`/pdf/${encodeURIComponent(id)}/metadata${version ? `?version=${version}` : ""}`);
+  }
+  editText(ref: DocumentRef, operations: EditOp[], revision_note?: string) {
+    return this.req<VersionResult>("/pdf/edit", this.json({ document_id: ref.document_id, expected_version: ref.version, operations, revision_note }));
+  }
+  extractPages(document_id: string, pages: number[], filename?: string) { return this.req<UploadResponse>("/pdf/pages/extract", this.json({ document_id, pages, filename })); }
+  splitDocument(document_id: string, ranges: [number, number][]) { return this.req<UploadResponse[]>("/pdf/split", this.json({ document_id, ranges })); }
+  mergeDocuments(document_ids: string[], filename?: string) { return this.req<UploadResponse>("/pdf/merge", this.json({ document_ids, ...(filename ? { filename } : {}) })); }
+  listDocuments() { return this.req<DocumentInfo[]>("/documents"); }
+  listVersions(id: string) { return this.req<VersionInfo[]>(`/documents/${encodeURIComponent(id)}/versions`); }
 }

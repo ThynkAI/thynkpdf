@@ -6,7 +6,7 @@ import { Toolbar } from "@/components/Toolbar";
 import { StatusBar } from "@/components/StatusBar";
 
 const sizes = Array.from({ length: 3 }, () => ({ width: 612, height: 792 }));
-const renderToolbar = () => render(<TooltipProvider><Toolbar onOpen={() => {}} onToggleSidebar={() => {}} onTogglePanel={() => {}} onToggleTheme={() => {}} dark={false} /><StatusBar /></TooltipProvider>);
+const renderToolbar = () => render(<TooltipProvider><Toolbar onOrganize={() => {}} onOpen={() => {}} onToggleSidebar={() => {}} onTogglePanel={() => {}} onToggleTheme={() => {}} dark={false} /><StatusBar /></TooltipProvider>);
 
 describe("app shell", () => {
   it("renders the wordmark", () => { render(<Wordmark />); expect(screen.getByLabelText("THYNKPDF")).toHaveTextContent("THYNKPDF"); });

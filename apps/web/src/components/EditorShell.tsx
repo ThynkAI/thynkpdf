@@ -4,6 +4,7 @@ import { Wordmark, TooltipProvider } from "@thynkpdf/ui";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { PdfViewer, Thumbnails } from "@thynkpdf/pdf-viewer/client";
 import { Toolbar } from "./Toolbar";
+import { Organizer } from "./Organizer";
 import { RightPanel } from "./RightPanel";
 import { StatusBar } from "./StatusBar";
 import { useSession } from "@/lib/session";
@@ -18,6 +19,7 @@ export function EditorShell() {
   const [panel, setPanel] = useState(true);
   const [dark, setDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const [dragging, setDragging] = useState(false);
+  const [organize, setOrganize] = useState(false);
   const fileName = useViewerStore((s) => s.fileName);
   const hasDoc = useViewerStore((s) => s.pageSizes.length > 0);
   const { ref, caps, capsError, busy } = useSession();
@@ -72,7 +74,7 @@ export function EditorShell() {
           <Wordmark />
           <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
-        <Toolbar onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel(true); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
+        <Toolbar onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel(true); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" hidden data-testid="file-input" onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
         <div className="flex min-h-0 flex-1">
           {sidebar && <nav aria-label="Left sidebar" className="w-40 shrink-0 border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
@@ -90,6 +92,7 @@ export function EditorShell() {
           {panel && <RightPanel ref={searchRef} />}
         </div>
         <StatusBar />
+        {organize && <Organizer onClose={() => setOrganize(false)} />}
       </div>
     </TooltipProvider>
   );

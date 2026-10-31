@@ -34,12 +34,18 @@ export function Thumbnails({ onReorder, reorderDisabledReason }: ThumbnailsProps
             return (
               <button key={`${docKey}-${it.index}`} type="button" onClick={() => goToPage(it.index)} aria-current={active ? "page" : undefined}
                 aria-label={`Go to page ${it.index + 1}`}
-                title={onReorder ? (reorderDisabledReason ?? "Drag to reorder") : undefined}
+                title={onReorder ? (reorderDisabledReason ?? "Drag, or Alt+↑/↓, to reorder") : undefined}
                 draggable={canDrag} data-testid={`thumb-${it.index + 1}`}
                 onDragStart={(e) => { if (!canDrag) return; e.stopPropagation(); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("application/x-thynkpdf-page", String(it.index)); setDrag(it.index); }}
                 onDragOver={(e) => { if (drag === null) return; e.preventDefault(); e.stopPropagation(); setOver(it.index); }}
                 onDrop={(e) => { if (drag === null) return; e.preventDefault(); e.stopPropagation(); const from = drag; setDrag(null); setOver(null); if (from !== it.index) onReorder?.(from, it.index); }}
                 onDragEnd={() => { setDrag(null); setOver(null); }}
+                onKeyDown={(e) => {
+                  if (!canDrag || !e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+                  e.preventDefault(); e.stopPropagation();
+                  const to = it.index + (e.key === "ArrowUp" ? -1 : 1);
+                  if (to >= 0 && to < pageSizes.length) onReorder?.(it.index, to);
+                }}
                 className={`absolute left-0 right-0 mx-auto flex flex-col items-center gap-1 rounded p-1 text-xs ${over === it.index && drag !== it.index ? "outline outline-2 outline-dashed outline-brand-500 " : ""}${drag === it.index ? "opacity-50 " : ""}${active ? "bg-brand-500/20 ring-2 ring-brand-500" : "hover:bg-neutral-200 dark:hover:bg-neutral-800"}`}
                 style={{ top: it.start, width: THUMB_W + 12 }}>
                 <PageView doc={doc} pageIndex={it.index} scale={scale} width={THUMB_W} height={Math.round(s.height * scale)} textLayer={false} label={`Thumbnail ${it.index + 1}`} />

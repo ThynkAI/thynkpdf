@@ -4,6 +4,8 @@ export interface KeyLike { key: string; ctrlKey?: boolean; metaKey?: boolean; sh
 const isTyping = (t: EventTarget | null | undefined) =>
   !!t && typeof (t as HTMLElement).tagName === "string" && (/^(INPUT|TEXTAREA|SELECT)$/.test((t as HTMLElement).tagName) || (t as HTMLElement).isContentEditable);
 
+const inDialog = (t: EventTarget | null | undefined) => !!t && typeof (t as Element).closest === "function" && !!(t as Element).closest('[role="dialog"]');
+
 export function resolveShortcut(e: KeyLike): Action | null {
   const mod = !!(e.ctrlKey || e.metaKey);
   if (mod) {
@@ -18,7 +20,7 @@ export function resolveShortcut(e: KeyLike): Action | null {
     }
     return null;
   }
-  if (isTyping(e.target) || e.altKey) return null;
+  if (isTyping(e.target) || e.altKey || inDialog(e.target)) return null;
   switch (e.key) {
     case "PageDown": case "j": case "ArrowRight": return "nextPage";
     case "PageUp": case "k": case "ArrowLeft": return "prevPage";
