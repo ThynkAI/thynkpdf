@@ -34,7 +34,7 @@ test("annotations: every tool, identity, threads, resolve/reopen, eraser, save, 
   await expect(count(page)).toHaveText("(1)");
 
   await tool(page, "Pencil / ink"); let b = await layer(page); await drag(page, b.x + 60, b.y + 260, b.x + 160, b.y + 300); await expect(count(page)).toHaveText("(2)");
-  b = await layer(page); await tool(page, "Rectangle"); await drag(page, b.x + 440, b.y + 300, b.x + 520, b.y + 350); await expect(count(page)).toHaveText("(3)");
+  b = await layer(page); await tool(page, "Rectangle"); await drag(page, b.x + 560, b.y + 110, b.x + 620, b.y + 160); await expect(count(page)).toHaveText("(3)");
   b = await layer(page); await tool(page, "Ellipse"); await drag(page, b.x + 300, b.y + 250, b.x + 380, b.y + 300); await expect(count(page)).toHaveText("(4)");
   b = await layer(page); await tool(page, "Arrow"); await drag(page, b.x + 60, b.y + 340, b.x + 200, b.y + 360); await expect(count(page)).toHaveText("(5)");
   await page.getByLabel("Comment text").fill("Check this paragraph");
@@ -62,7 +62,8 @@ test("annotations: every tool, identity, threads, resolve/reopen, eraser, save, 
   await expect(note.getByTestId("resolved-badge")).toBeVisible();
 
   // eraser on the rectangle
-  b = await layer(page); await tool(page, /^Eraser/); await page.mouse.click(b.x + 445, b.y + 305); await expect(count(page)).toHaveText("(8)");
+  b = await layer(page); await tool(page, /^Eraser/); await page.mouse.click(b.x + 590, b.y + 112); await expect(count(page)).toHaveText("(8)");
+  await expect(page.getByTestId("thread").filter({ hasText: /^Rectangle/ })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
   const [dl] = await Promise.all([page.waitForEvent("download"), page.getByTestId("download-annotated").click()]);
