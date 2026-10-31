@@ -41,4 +41,26 @@ describe.skipIf(!up)("live API: upload -> rotate -> reload", () => {
     expect(pdf2.getPage(1).getRotation().angle).toBe(0);
     expect(pdf2.getPage(2).getRotation().angle).toBe(90); // old page 2 (rotated) is now page 3
   });
+
+  it("text edit, extract, split, merge, metadata, versions", async () => {
+    const api = new HttpEditorApi({ baseUrl: BASE });
+    await api.login(process.env.THYNKPDF_DEV_EMAIL ?? "dev@thynkpdf.dev", process.env.THYNKPDF_DEV_PASSWORD ?? "ThynkDev-2026!");
+    const u = await api.upload(new Blob([fixture], { type: "application/pdf" }), "simple-3page.pdf");
+    const ref = { document_id: u.document_id, version_id: u.version_id, version: u.version };
+    const e = await api.editText(ref, [{ op: "text_replace", page: 1, find: "ACME-001", replacement: "EDIT-001", occurrence: "all" }]);
+    expect(e.version).toBe(2);
+    expect((e.report as any).applied[0].replacements).toBe(1);
+    const miss = await api.editText({ ...ref, version_id: e.version_id, version: 2 }, [{ op: "text_replace", page: 1, find: "NOPE", replacement: "x", occurrence: "all" }]).catch((x) => x);
+    expect(miss.code).toBe("TEXT_NOT_FOUND");
+    const meta = await api.getMetadata(u.document_id, 2);
+    expect(meta.pages).toHaveLength(3);
+    const ex = await api.extractPages(u.document_id, [2, 3]);
+    expect(ex.page_count).toBe(2);
+    const sp = await api.splitDocument(u.document_id, [[1, 1], [2, 3]]);
+    expect(sp.map((x) => x.page_count)).toEqual([1, 2]);
+    const mg = await api.mergeDocuments([u.document_id, ex.document_id], "m.pdf");
+    expect(mg.page_count).toBe(5);
+    expect((await api.listVersions(u.document_id)).length).toBe(2);
+    expect((await api.listDocuments()).some((d) => d.document_id === mg.document_id)).toBe(true);
+  });
 });

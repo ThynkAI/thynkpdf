@@ -14,9 +14,15 @@ export function getPdfjs() {
 }
 export type PdfSource = { data: Uint8Array } | { url: string; httpHeaders?: Record<string, string> };
 
-export async function openPdf(src: PdfSource): Promise<{ doc: PDFDocumentProxy; sizes: Size[] }> {
+/** Page sizes from backend metadata (unrotated width/height + /Rotate) so we don't have to load every page. */
+export function sizesFromMetadata(pages: { width: number; height: number; rotation: number }[]): Size[] {
+  return pages.map((p) => ((((p.rotation % 360) + 360) % 180) === 90 ? { width: p.height, height: p.width } : { width: p.width, height: p.height }));
+}
+
+export async function openPdf(src: PdfSource, knownSizes?: Size[]): Promise<{ doc: PDFDocumentProxy; sizes: Size[] }> {
   const pdfjs = await getPdfjs();
   const doc = await pdfjs.getDocument({ ...src, disableAutoFetch: true, isEvalSupported: false } as Parameters<typeof pdfjs.getDocument>[0]).promise;
+  if (knownSizes && knownSizes.length === doc.numPages) return { doc, sizes: knownSizes };
   const sizes: Size[] = [];
   for (let i = 1; i <= doc.numPages; i++) {
     const vp = (await doc.getPage(i)).getViewport({ scale: 1 });
