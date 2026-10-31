@@ -93,12 +93,13 @@ Upload fixture → GET capabilities → edit → confirm `version` incremented �
 Scope note: THYNKPDF is free — no billing/paywall endpoints will be built.
 
 ## PR-1 contract changes (auth cookie, filename, capabilities schema, edit + page ops)
-- **Refresh cookie**: `/auth/register`, `/auth/login`, `/auth/refresh` now also set `thynkpdf_refresh` (httpOnly, SameSite=Lax, Path=/auth, Max-Age = refresh TTL; `Secure` when `THYNKPDF_COOKIE_SECURE=true`, required in prod/HTTPS). JSON body still contains `refresh_token` for non-browser clients — the web app should ignore it and rely on the cookie.
+- **Refresh cookie**: `/auth/register`, `/auth/login`, `/auth/refresh` now also set `thynkpdf_rt` (httpOnly, SameSite=Strict (env `THYNKPDF_COOKIE_SAMESITE`), Path=/auth, Max-Age = refresh TTL; `Secure` when `THYNKPDF_COOKIE_SECURE=true`, required in prod/HTTPS). JSON body still contains `refresh_token` for non-browser clients — the web app should ignore it and rely on the cookie.
 - `POST /auth/refresh` body is optional; reads the cookie when no body. Call with `fetch(url, {method:"POST", credentials:"include"})`.
 - **Refresh rotation**: each refresh token is single-use. Reusing one → 401 `TOKEN_REVOKED`. Serialize refresh calls in the client (one in-flight refresh).
 - `POST /auth/logout` (credentials: include) → 204, revokes the refresh token and clears the cookie. Idempotent.
 - CORS: `allow_credentials=true` for `http://localhost:3000` (exact origin, no wildcard).
-- `UploadOut` (upload/extract/merge/split) now includes `filename` (sanitized basename).
+- `UploadOut` and `VersionResult` now include `filename` (sanitized basename).
+- **`POST /documents/{id}/versions`** multipart: `file` (PDF) + form field `expected_version` → 201 `VersionResult` (`report.page_count`). Same validation as upload (magic bytes 415, malformed 422, size 413); stale → 409 `VERSION_CONFLICT`. Use this to save client-side modified bytes.
 - `GET /pdf/{id}/capabilities` has a typed schema `CapabilitiesOut` (`PageOps`, `EditOps`, `PageCapability`, `Limitation`) and `GET /pdf/{id}/metadata` → `MetadataOut`. New fields: `edit_ops{text_replace,text_delete,text_move,text_insert}`, per-page same booleans, `page_ops.insert_blank|delete|duplicate`, `annotations`, `forms`.
 
 ### /pdf/edit operations
@@ -110,21 +111,8 @@ Scope note: THYNKPDF is free — no billing/paywall endpoints will be built.
 | text_insert | text, x, y, font?(std-14 Latin, default Helvetica), font_size?(12) | appends a real BT/Tj/ET text object; WinAnsi only (`EDIT_UNSUPPORTED_CHARACTERS`, `EDIT_UNSUPPORTED_FONT`) |
 Delete/move/replace require the font to be listed in `pages[n].editable_fonts`. Coordinates are PDF user space, origin bottom-left, unrotated page.
 
-### Page structure (each → new version, needs expected_version)
-- `POST /pdf/pages/insert-blank {document_id, expected_version, after(0..n), count, width?, height?}` (size defaults to neighbour page)
-- `POST /pdf/pages/delete {document_id, expected_version, pages}` (cannot delete all; old versions remain → recovery via rollback)
-- `POST /pdf/pages/duplicate {document_id, expected_version, page, count}` (annotations are NOT duplicated)
-
-## PR-2: annotations + forms (all writes → new version, need expected_version)
-### Annotations (stored in the PDF `/Annots` with generated `/AP` appearance streams, readable by any viewer)
-- `GET /pdf/{id}/annotations?page=` → `[Annotation{id, page, type, subtype, rect, contents, author, color, editable, ink?}]`. `id` = `/NM` (ours are `thynk-<hex>`); pre-existing annots without NM get `p{page}-i{index}` (index-based → may change after edits; refetch).
-- `POST /pdf/annotations {document_id, expected_version, type: highlight|note|ink|rectangle|ellipse|line, page, rect?, ink?, color?[r,g,b 0..1], width?, contents?}` → VersionResult + `annotation_id`. `ink` = list of strokes `[x1,y1,x2,y2,...]`; line uses `rect` as endpoints.
-- `PATCH /pdf/annotations/{annotation_id} {document_id, expected_version, rect?, ink?, color?, contents?, width?}`
-- `DELETE /pdf/annotations/{annotation_id}?document_id=&expected_version=` (also removes its popup)
-- Other subtypes (Link, FreeText, Stamp…) are listed with `editable:false`; PATCH → `EDIT_NOT_SUPPORTED`. Errors: `ANNOTATION_NOT_FOUND` (404).
-### Forms (AcroForm; PDF JavaScript is never executed — `has_actions`/`calculated` are reported only)
-- `GET /pdf/{id}/forms` → `[FormField{name,type,value,required,read_only,options,max_length,page,rect,has_actions,calculated}]`
-- `POST /pdf/forms {document_id, expected_version, fields:[{name, type: text|multiline|checkbox|radio|dropdown|listbox|signature, page, rect | rects(radio), options?, default?, required?, read_only?, max_length?, font_size?}]}` → `FORM_FIELD_EXISTS` (409) on duplicate names.
-- `POST /pdf/forms/fill {document_id, expected_version, values:{name:value} | csv:"name,value\n...", flatten?}` → report `{filled, missing_required, flattened?}`. checkbox=bool, radio=option name, listbox=list. Invalid values → 422 `VALIDATION_ERROR` with `details.fields{name: max_length|invalid_option|expected_boolean|read_only}`; unknown → `FORM_FIELD_NOT_FOUND`.
-- `POST /pdf/forms/flatten {document_id, expected_version, confirm:true}` → burns widgets AND all annotations into content, removes AcroForm. `confirm:false` → `CONFIRMATION_REQUIRED`. Recover via earlier version.
-- `GET /pdf/{id}/forms/export?format=json|csv` (CSV cells starting with = + - @ are prefixed with `'`).
+### Page structure (each → new version, needs expected_version) — matches frontend R1.x
+- `POST /pdf/pages/delete {document_id, expected_version, pages}` → 400 `INVALID_PAGE`, 400 `CANNOT_DELETE_ALL_PAGES`
+- `POST /pdf/pages/duplicate {document_id, expected_version, pages:[int], position?: "after_each"|int(0..n)}` (annotations are NOT duplicated)
+- `POST /pdf/pages/insert-blank {document_id, expected_version, after_page(0=start), count=1, width?, height?}` (size defaults to neighbour page)
+- `POST /pdf/pages/insert-from {document_id, expected_version, source_document_id, source_pages?, after_page}` (source must be in the same org; it is not modified)

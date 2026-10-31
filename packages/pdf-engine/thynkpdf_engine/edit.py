@@ -96,7 +96,7 @@ def insert_blank(data: bytes, after: int, count: int = 1, width: float | None = 
 
 def delete_pages(data: bytes, pages: list[int]) -> bytes:
     pdf = open_pdf(data); n = len(pdf.pages); _check_pages(n, pages)
-    if len(set(pages)) >= n: raise EngineError("INVALID_REQUEST", "Cannot delete every page")
+    if len(set(pages)) >= n: raise EngineError("CANNOT_DELETE_ALL_PAGES", "Cannot delete every page")
     for p in sorted(set(pages), reverse=True): del pdf.pages[p - 1]
     return _save(pdf)
 
@@ -109,4 +109,33 @@ def duplicate_page(data: bytes, page: int, count: int = 1) -> bytes:
         cp = Dictionary(  # annotations are not duplicated (popup/parent refs); documented
             {k: v for k, v in src.obj.items() if k not in ("/Annots", "/Parent")})
         pdf.pages.insert(page + i, pikepdf.Page(pdf.make_indirect(cp)))
+    return _save(pdf)
+
+
+def _clone_page(pdf, src):
+    cp = Dictionary({k: v for k, v in src.obj.items() if k not in ("/Annots", "/Parent")})  # annotations not duplicated
+    return pikepdf.Page(pdf.make_indirect(cp))
+
+
+def duplicate_pages(data: bytes, pages: list[int], position="after_each") -> bytes:
+    """position="after_each": each copy right after its original; int N: all copies (in order) after page N (0 = start)."""
+    pdf = open_pdf(data); n = len(pdf.pages); _check_pages(n, pages)
+    if not pages: raise EngineError("INVALID_PAGE", "No pages selected")
+    srcs = [pdf.pages[p - 1] for p in pages]
+    if position == "after_each":
+        for p in sorted(pages, reverse=True):
+            pdf.pages.insert(p, _clone_page(pdf, pdf.pages[p - 1]))
+    else:
+        if not isinstance(position, int) or not 0 <= position <= n: raise EngineError("INVALID_PAGE", "position must be after_each or 0..page_count")
+        clones = [_clone_page(pdf, sp) for sp in srcs]
+        for i, cpg in enumerate(clones): pdf.pages.insert(position + i, cpg)
+    return _save(pdf)
+
+
+def insert_from(data: bytes, source: bytes, source_pages: list[int] | None, after_page: int) -> bytes:
+    pdf = open_pdf(data); src = open_pdf(source); n = len(pdf.pages)
+    if not 0 <= after_page <= n: raise EngineError("INVALID_PAGE", "after_page must be 0..page_count", {"page_count": n})
+    sp = source_pages or list(range(1, len(src.pages) + 1)); _check_pages(len(src.pages), sp)
+    for i, p in enumerate(sp):
+        pdf.pages.insert(after_page + i, src.pages[p - 1])
     return _save(pdf)

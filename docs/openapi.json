@@ -326,6 +326,26 @@
     "title": "Body_upload_documents_upload_post",
     "type": "object"
    },
+   "Body_upload_version_documents__doc_id__versions_post": {
+    "properties": {
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "file": {
+      "contentMediaType": "application/octet-stream",
+      "title": "File",
+      "type": "string"
+     }
+    },
+    "required": [
+     "file",
+     "expected_version"
+    ],
+    "title": "Body_upload_version_documents__doc_id__versions_post",
+    "type": "object"
+   },
    "CapabilitiesOut": {
     "properties": {
      "annotations": {
@@ -527,13 +547,6 @@
    },
    "DuplicateIn": {
     "properties": {
-     "count": {
-      "default": 1,
-      "maximum": 100.0,
-      "minimum": 1.0,
-      "title": "Count",
-      "type": "integer"
-     },
      "document_id": {
       "title": "Document Id",
       "type": "string"
@@ -543,16 +556,33 @@
       "title": "Expected Version",
       "type": "integer"
      },
-     "page": {
-      "minimum": 1.0,
-      "title": "Page",
-      "type": "integer"
+     "pages": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+     },
+     "position": {
+      "anyOf": [
+       {
+        "const": "after_each",
+        "type": "string"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "default": "after_each",
+      "title": "Position"
      }
     },
     "required": [
      "document_id",
      "expected_version",
-     "page"
+     "pages"
     ],
     "title": "DuplicateIn",
     "type": "object"
@@ -1171,11 +1201,11 @@
    },
    "InsertBlankIn": {
     "properties": {
-     "after": {
+     "after_page": {
       "default": 0,
       "description": "Insert after this page (0 = at start)",
       "minimum": 0.0,
-      "title": "After",
+      "title": "After Page",
       "type": "integer"
      },
      "count": {
@@ -1197,6 +1227,7 @@
      "height": {
       "anyOf": [
        {
+        "exclusiveMinimum": 0.0,
         "type": "number"
        },
        {
@@ -1208,6 +1239,7 @@
      "width": {
       "anyOf": [
        {
+        "exclusiveMinimum": 0.0,
         "type": "number"
        },
        {
@@ -1222,6 +1254,50 @@
      "expected_version"
     ],
     "title": "InsertBlankIn",
+    "type": "object"
+   },
+   "InsertFromIn": {
+    "properties": {
+     "after_page": {
+      "minimum": 0.0,
+      "title": "After Page",
+      "type": "integer"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "source_document_id": {
+      "title": "Source Document Id",
+      "type": "string"
+     },
+     "source_pages": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Pages"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "source_document_id",
+     "after_page"
+    ],
+    "title": "InsertFromIn",
     "type": "object"
    },
    "Limitation": {
@@ -1841,6 +1917,10 @@
       "title": "Document Id",
       "type": "string"
      },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
      "report": {
       "additionalProperties": true,
       "default": {},
@@ -1869,7 +1949,8 @@
      "version_id",
      "version",
      "sha256",
-     "size"
+     "size",
+     "filename"
     ],
     "title": "VersionResult",
     "type": "object"
@@ -2006,7 +2087,7 @@
     "parameters": [
      {
       "in": "cookie",
-      "name": "thynkpdf_refresh",
+      "name": "thynkpdf_rt",
       "required": false,
       "schema": {
        "anyOf": [
@@ -2017,7 +2098,7 @@
          "type": "null"
         }
        ],
-       "title": "Thynkpdf Refresh"
+       "title": "Thynkpdf Rt"
       }
      }
     ],
@@ -2240,7 +2321,7 @@
     "parameters": [
      {
       "in": "cookie",
-      "name": "thynkpdf_refresh",
+      "name": "thynkpdf_rt",
       "required": false,
       "schema": {
        "anyOf": [
@@ -2251,7 +2332,7 @@
          "type": "null"
         }
        ],
-       "title": "Thynkpdf Refresh"
+       "title": "Thynkpdf Rt"
       }
      }
     ],
@@ -3078,6 +3159,132 @@
      }
     ],
     "summary": "Versions",
+    "tags": [
+     "documents"
+    ]
+   },
+   "post": {
+    "description": "Save client-modified bytes as a new immutable version (same validation as upload). 409 VERSION_CONFLICT if stale.",
+    "operationId": "upload_version_documents__doc_id__versions_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_version_documents__doc_id__versions_post"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Upload Version",
     "tags": [
      "documents"
     ]
@@ -4618,7 +4825,7 @@
   },
   "/pdf/pages/delete": {
    "post": {
-    "description": "Destructive within the new version only; previous versions remain downloadable (recovery = rollback).",
+    "description": "Previous versions remain downloadable (recovery = restore version). 400 CANNOT_DELETE_ALL_PAGES.",
     "operationId": "delete_pdf_pages_delete_post",
     "requestBody": {
      "content": {
@@ -5077,6 +5284,123 @@
      }
     ],
     "summary": "Insert Blank",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/insert-from": {
+   "post": {
+    "description": "Inserts pages of another document in the same organization (source is read, never modified).",
+    "operationId": "insert_from_pdf_pages_insert_from_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InsertFromIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Insert From",
     "tags": [
      "pdf"
     ]
