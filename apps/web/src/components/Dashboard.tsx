@@ -46,7 +46,7 @@ export function Dashboard() {
   return (
     <div className="flex min-h-screen flex-col" onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); if (s.authed) void upload(e.dataTransfer.files); }}>
       <header className="flex h-12 items-center gap-3 border-b px-4 dark:border-neutral-800">
-        <a href="/" aria-label="Back to editor"><Wordmark /></a>
+        <a href="/" aria-label="THYNKPDF editor"><Wordmark /></a>
         <h1 className="text-sm font-semibold">Documents</h1>
         <a href="/" className="ml-auto text-sm underline">Open editor</a>
       </header>

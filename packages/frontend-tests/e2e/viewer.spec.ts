@@ -26,8 +26,8 @@ test("opens a real PDF locally: virtualization, high-DPI canvas, text layer, nav
   // virtualized: far fewer than 12 page canvases mounted in main viewer
   expect(await page.locator(".tp-viewer .tp-page").count()).toBeLessThan(12);
   // high-DPI: backing store = 2x CSS width
-  const ratio = await page.locator(".tp-viewer canvas").first().evaluate((c: HTMLCanvasElement) => c.width / c.getBoundingClientRect().width);
-  expect(ratio).toBeGreaterThan(1.9);
+  const [ratio, dpr] = await page.locator(".tp-viewer canvas").first().evaluate((c: HTMLCanvasElement) => [c.width / c.getBoundingClientRect().width, window.devicePixelRatio]);
+  expect(ratio).toBeCloseTo(dpr, 1);
   await expect(page.locator('.tp-viewer [data-page="1"] .textLayer span').first()).toBeVisible();
   await expect(page.locator('.tp-viewer [data-page="1"] .textLayer')).toContainText("Page 1 heading");
   // keyboard navigation
