@@ -15,3 +15,4 @@ packages/frontend-tests/.venv/
 *.pem
 !packages/backend-tests/certs/*.pem
 installers/dist/
+apps/web/out/
