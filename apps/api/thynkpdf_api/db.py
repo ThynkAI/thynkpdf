@@ -42,6 +42,8 @@ class Document(Base):
     deleted_by: Mapped[str | None] = mapped_column(String(36), nullable=True)
     folder_id: Mapped[str | None] = mapped_column(ForeignKey("folders.id"), nullable=True, index=True)
     visibility: Mapped[str] = mapped_column(String(16), default="org", server_default="org")  # org|restricted
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    purged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 class DocumentVersion(Base):
     __tablename__ = "document_versions"
@@ -54,6 +56,7 @@ class DocumentVersion(Base):
     size: Mapped[int] = mapped_column(Integer)
     storage_key: Mapped[str] = mapped_column(String(512))
     operation: Mapped[str] = mapped_column(String(64))
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     operation_params: Mapped[str] = mapped_column(Text, default="{}")
     parent_version_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
@@ -193,11 +196,20 @@ class DocumentTag(Base):
 
 class ShareGrant(Base):
     __tablename__ = "share_grants"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
+    document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
+    user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)  # null = link share
+    token_hash: Mapped[str | None] = mapped_column(String(64), unique=True, nullable=True)
+    permission: Mapped[str] = mapped_column(String(8))  # view|edit
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+class DocumentStar(Base):
+    __tablename__ = "document_stars"
     __table_args__ = (UniqueConstraint("document_id", "user_id"),)
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     org_id: Mapped[str] = mapped_column(ForeignKey("organizations.id"), index=True)
     document_id: Mapped[str] = mapped_column(ForeignKey("documents.id"), index=True)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
-    permission: Mapped[str] = mapped_column(String(8))  # view|edit
-    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

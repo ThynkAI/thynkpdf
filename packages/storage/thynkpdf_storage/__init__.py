@@ -25,6 +25,7 @@ class ObjectStorage(Protocol):
     def get(self, key: str) -> bytes: ...
     def path(self, key: str) -> Path | None: ...
     def exists(self, key: str) -> bool: ...
+    def delete(self, key: str) -> None: ...
 
 
 class LocalStorage:
@@ -44,6 +45,9 @@ class LocalStorage:
         return hashlib.sha256(data).hexdigest()
 
     def get(self, key): return self._p(key).read_bytes()
+    def delete(self, key):
+        p = self._p(key)
+        if p.exists(): p.unlink()
     def path(self, key): return self._p(key)
     def exists(self, key): return self._p(key).exists()
 
@@ -55,6 +59,7 @@ class S3Storage:  # pragma: no cover - requires MinIO/S3 (not available on this 
         self.s3.put_object(Bucket=self.bucket, Key=validate_key(key), Body=data, IfNoneMatch="*", ServerSideEncryption="AES256")
         return hashlib.sha256(data).hexdigest()
     def get(self, key): return self.s3.get_object(Bucket=self.bucket, Key=validate_key(key))["Body"].read()
+    def delete(self, key): self.s3.delete_object(Bucket=self.bucket, Key=validate_key(key))
     def path(self, key): return None
     def exists(self, key):
         try: self.s3.head_object(Bucket=self.bucket, Key=validate_key(key)); return True
