@@ -53,8 +53,7 @@ export async function openFile(file: File) {
       const up = await s.api.upload(file, file.name);
       await openServerRef({ document_id: up.document_id, version_id: up.version_id, version: up.version }, file.name, false);
     } else {
-      await load({ data: new Uint8Array(await file.arrayBuffer()) }, file.name);
-      s.set({ ref: null, caps: null, source: "local" });
+      await loadLocalBytes(new Uint8Array(await file.arrayBuffer()), file.name);
     }
   } catch (e) {
     s.set({ error: `Could not open ${file.name}: ${(e as Error).message}` });
@@ -175,4 +174,11 @@ export async function openVersionReadOnly(documentId: string, versionId: string,
 export function bootstrapAuth() {
   const s = useSession.getState();
   if (s.api.kind === "http" && !s.api.getTokens()) { const p = loadPersisted(); if (p.tokens) s.api.setTokens(p.tokens); }
+}
+
+export async function loadLocalBytes(bytes: Uint8Array, name: string) {
+  const { localBytesRef } = await import("./copies");
+  localBytesRef.current = bytes;
+  await load({ data: bytes.slice() }, name); // PDF.js transfers its copy to the worker
+  useSession.getState().set({ ref: null, caps: null, source: "local" });
 }

@@ -5,6 +5,7 @@ import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { PdfViewer, Thumbnails } from "@thynkpdf/pdf-viewer/client";
 import { Toolbar } from "./Toolbar";
 import { Organizer } from "./Organizer";
+import { SignatureBox } from "./SignatureBox";
 import { RightPanel } from "./RightPanel";
 import { StatusBar } from "./StatusBar";
 import { useSession } from "@/lib/session";
@@ -85,7 +86,7 @@ export function EditorShell() {
         <div className="flex min-h-0 flex-1">
           {sidebar && <nav aria-label="Left sidebar" className="w-40 shrink-0 border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
           <main className="relative min-w-0 flex-1">
-            <PdfViewer />
+            <PdfViewer renderOverlay={(i, sc) => <SignatureBox pageIndex={i} scale={sc} />} />
             {!hasDoc && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-neutral-500">
                 <Wordmark className="scale-150" />

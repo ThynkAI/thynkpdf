@@ -17,3 +17,20 @@ for (let i = 1; i <= 12; i++) {
 }
 writeFileSync(join(out, "sample-12p.pdf"), await doc.save({ useObjectStreams: false }));
 console.log("wrote", join(out, "sample-12p.pdf"));
+
+{
+  const f = await PDFDocument.create();
+  f.setCreationDate(new Date(0)); f.setModificationDate(new Date(0));
+  const font = await f.embedFont(StandardFonts.Helvetica);
+  const page = f.addPage([612, 792]);
+  page.drawText("Application form", { x: 72, y: 720, size: 22, font });
+  const form = f.getForm();
+  page.drawText("Full name", { x: 72, y: 664, size: 12, font });
+  form.createTextField("full_name").addToPage(page, { x: 160, y: 656, width: 260, height: 22 });
+  page.drawText("I agree", { x: 72, y: 624, size: 12, font });
+  form.createCheckBox("agree").addToPage(page, { x: 160, y: 620, width: 16, height: 16 });
+  page.drawText("Country", { x: 72, y: 584, size: 12, font });
+  const dd = form.createDropdown("country"); dd.addOptions(["Canada", "USA", "Other"]); dd.addToPage(page, { x: 160, y: 576, width: 160, height: 22 });
+  writeFileSync(join(out, "form-fields.pdf"), await f.save({ useObjectStreams: false }));
+  console.log("wrote", join(out, "form-fields.pdf"));
+}

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useViewerStore } from "./store";
 import { computeScale } from "./zoom";
@@ -7,7 +7,12 @@ import { PageView } from "./PageView";
 
 export const PAGE_GAP = 16;
 
-export function PdfViewer({ className }: { className?: string }) {
+export interface PdfViewerProps {
+  className?: string;
+  /** Rendered absolutely over each mounted page (CSS px at `scale`, top-left origin). */
+  renderOverlay?: (pageIndex: number, scale: number) => ReactNode;
+}
+export function PdfViewer({ className, renderOverlay }: PdfViewerProps) {
   const { doc, docKey, pageSizes, zoomMode, customScale, scrollRequest, query, currentPage, matches, activeMatch } = useViewerStore();
   const am = activeMatch >= 0 ? matches[activeMatch] : undefined;
   const setEffectiveScale = useViewerStore((s) => s.setEffectiveScale);
@@ -63,7 +68,10 @@ export function PdfViewer({ className }: { className?: string }) {
             const w = Math.round(s.width * scale), h = Math.round(s.height * scale);
             return (
               <div key={`${docKey}-${it.index}`} style={{ position: "absolute", top: it.start, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
-                <PageView doc={doc} pageIndex={it.index} scale={scale} width={w} height={h} query={query} activeHit={am && am.page === it.index ? am.index : -1} />
+                <div className="relative" style={{ width: w, height: h }}>
+                  <PageView doc={doc} pageIndex={it.index} scale={scale} width={w} height={h} query={query} activeHit={am && am.page === it.index ? am.index : -1} />
+                  {renderOverlay?.(it.index, scale)}
+                </div>
               </div>
             );
           })}
