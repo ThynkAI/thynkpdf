@@ -9,7 +9,7 @@ import { SignInForm } from "./SignInForm";
 import { SignPanel } from "./SignPanel";
 import { FormsPanel } from "./FormsPanel";
 
-export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, searchRef) {
+export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void }>(function RightPanel({ onClose }, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
   const [q, setQ] = useState(query);
   const s = useSession();
@@ -17,7 +17,8 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
   const perPage = new Map<number, number>();
   matches.forEach((m) => perPage.set(m.page, (perPage.get(m.page) ?? 0) + 1));
   return (
-    <aside aria-label="Right panel" className="flex h-full w-72 flex-col gap-4 overflow-auto border-l border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+    <aside aria-label="Right panel" className="absolute inset-y-0 right-0 z-20 flex h-full w-[min(18rem,100%)] flex-col gap-4 overflow-auto border-l shadow-lg lg:static lg:w-72 lg:shadow-none border-neutral-200 bg-neutral-50 p-3 text-sm dark:border-neutral-800 dark:bg-neutral-900">
+      {onClose && <button className="self-end rounded px-2 text-xs underline lg:hidden" onClick={onClose} aria-label="Close panel">Close</button>}
       <section>
         <h2 className="mb-2 font-semibold">Search</h2>
         <form role="search" onSubmit={(e) => { e.preventDefault(); if (q === query && matches.length) nextMatch(1); else { setQuery(q); void ensureText(); } }}>

@@ -25,7 +25,7 @@ export function Thumbnails({ onReorder, reorderDisabledReason }: ThumbnailsProps
   useEffect(() => { if (pageSizes.length) v.scrollToIndex(currentPage, { align: "auto" }); }, [currentPage, pageSizes.length, v]);
   const hitPages = new Set(matches.map((m) => m.page));
   return (
-    <div ref={ref} className="h-full overflow-auto py-2" aria-label="Page thumbnails" data-testid="thumbnails">
+    <div ref={ref} role="region" className="h-full overflow-auto py-2" aria-label="Page thumbnails" data-testid="thumbnails">
       {doc && (
         <div style={{ height: v.getTotalSize(), position: "relative" }}>
           {v.getVirtualItems().map((it) => {

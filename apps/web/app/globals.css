@@ -5,3 +5,8 @@ html, body { height: 100%; }
 .tp-hit { background: rgba(250, 204, 21, 0.45); color: transparent; border-radius: 2px; }
 .textLayer ::selection { background: rgba(79, 70, 229, 0.35); }
 .tp-hit-active { background: rgba(234, 88, 12, 0.6); outline: 2px solid rgb(234, 88, 12); }
+/* WCAG AA contrast for muted text on dark surfaces */
+.dark .text-neutral-500 { color: rgb(163 163 163); }
+.dark .text-amber-700 { color: rgb(251 191 36); }
+.dark .text-red-600 { color: rgb(248 113 113); }
+.dark .text-green-700 { color: rgb(74 222 128); }

@@ -15,7 +15,7 @@ export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme,
   useEffect(() => setPageInput(String(v.currentPage + 1)), [v.currentPage]);
   const has = n > 0;
   return (
-    <div role="toolbar" aria-label="Document toolbar" className="flex h-11 items-center gap-1 border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-900">
+    <div role="toolbar" aria-label="Document toolbar" className="flex h-11 items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap border-b border-neutral-200 bg-neutral-50 px-2 dark:border-neutral-800 dark:bg-neutral-900">
       <IconButton label="Toggle thumbnails" onClick={onToggleSidebar}>☰</IconButton>
       <IconButton label="Open PDF" shortcut="Ctrl+O" onClick={onOpen}>Open</IconButton>
       <div className="mx-2 h-5 w-px bg-neutral-300 dark:bg-neutral-700" />

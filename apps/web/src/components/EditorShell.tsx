@@ -16,8 +16,9 @@ import { resolveShortcut } from "@/lib/shortcuts";
 export function EditorShell() {
   const fileRef = useRef<HTMLInputElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const [sidebar, setSidebar] = useState(true);
-  const [panel, setPanel] = useState(true);
+  const [narrow] = useState(() => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches);
+  const [sidebar, setSidebar] = useState(!narrow);
+  const [panel, setPanel] = useState(() => typeof window === "undefined" || window.matchMedia("(min-width: 1024px)").matches);
   const [dark, setDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const [dragging, setDragging] = useState(false);
   const [organize, setOrganize] = useState(false);
@@ -81,14 +82,14 @@ export function EditorShell() {
           <a href="/documents" className="rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">Documents</a>
           <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
-        <Toolbar onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel(true); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
+        <Toolbar onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" hidden data-testid="file-input" onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
-        <div className="flex min-h-0 flex-1">
-          {sidebar && <nav aria-label="Left sidebar" className="w-40 shrink-0 border-r border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
+        <div className="relative flex min-h-0 flex-1">
+          {sidebar && <nav aria-label="Left sidebar" className="absolute inset-y-0 left-0 z-20 w-40 shrink-0 border-r shadow-lg md:static md:shadow-none border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
           <main className="relative min-w-0 flex-1">
             <PdfViewer renderOverlay={(i, sc) => <SignatureBox pageIndex={i} scale={sc} />} />
             {!hasDoc && (
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-neutral-500">
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-neutral-800 dark:text-neutral-200">
                 <Wordmark className="scale-150" />
                 <p>Drop a PDF here or press <kbd>Ctrl+O</kbd></p>
                 <button className="pointer-events-auto rounded bg-brand-600 px-4 py-2 text-white" onClick={() => fileRef.current?.click()}>Open PDF</button>
@@ -96,7 +97,7 @@ export function EditorShell() {
             )}
             {dragging && <div data-testid="drop-overlay" className="pointer-events-none absolute inset-2 rounded-lg border-4 border-dashed border-brand-500 bg-brand-500/10" />}
           </main>
-          {panel && <RightPanel ref={searchRef} />}
+          {panel && <RightPanel ref={searchRef} onClose={() => setPanel(false)} />}
         </div>
         <StatusBar />
         {organize && <Organizer onClose={() => setOrganize(false)} />}

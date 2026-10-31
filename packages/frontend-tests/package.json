@@ -1,3 +1,15 @@
-{ "name": "@thynkpdf/frontend-tests", "version": "0.1.0", "private": true, "type": "module",
-  "scripts": { "fixtures": "node scripts/make-fixtures.mjs", "e2e": "node scripts/make-fixtures.mjs && playwright test" },
-  "devDependencies": { "@playwright/test": "1.56.1", "pdf-lib": "^1.17.1" } }
+{
+  "name": "@thynkpdf/frontend-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "e2e": "node scripts/make-fixtures.mjs && playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "1.56.1",
+    "pdf-lib": "^1.17.1"
+  }
+}

@@ -60,7 +60,7 @@ export function PdfViewer({ className, renderOverlay }: PdfViewerProps) {
   };
 
   return (
-    <div ref={ref} onScroll={onScroll} className={`tp-viewer relative h-full overflow-auto bg-neutral-200 dark:bg-neutral-900 ${className ?? ""}`} data-testid="viewer-scroll" tabIndex={0} aria-label="Document pages">
+    <div ref={ref} onScroll={onScroll} className={`tp-viewer relative h-full overflow-auto bg-neutral-200 dark:bg-neutral-900 ${className ?? ""}`} data-testid="viewer-scroll" tabIndex={0} role="region" aria-label="Document pages">
       {doc && (
         <div style={{ height: v.getTotalSize(), position: "relative", minWidth: "100%", width: Math.max(...pageSizes.map((p) => p.width)) * scale + 32 }}>
           {v.getVirtualItems().map((it) => {
