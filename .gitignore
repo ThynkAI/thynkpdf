@@ -10,3 +10,4 @@ apps/web/node_modules/.vite/
 packages/frontend-tests/test-results/
 packages/frontend-tests/playwright-report/
 apps/web/tsconfig.tsbuildinfo
+packages/frontend-tests/.venv/

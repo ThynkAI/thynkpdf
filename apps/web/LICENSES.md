@@ -17,3 +17,5 @@ No Adobe (or other third-party) branding, icons, or assets are used. The THYNKPD
 | @playwright/test (dev) | E2E | Apache-2.0 |
 | typescript (dev) | Type checking | Apache-2.0 |
 Glyph icons in the toolbar are Unicode characters rendered by system fonts.
+
+Test-only (packages/frontend-tests, not shipped): @axe-core/playwright (MPL-2.0), pikepdf (MPL-2.0, wraps qpdf Apache-2.0) and pypdf (BSD-3-Clause) in a local Python venv for third-party PDF verification.

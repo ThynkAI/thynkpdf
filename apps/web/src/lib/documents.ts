@@ -3,6 +3,7 @@ import { openPdf, extractAllText, sizesFromMetadata, type PdfSource } from "@thy
 import { useViewerStore, moveOrder, isIdentity } from "@thynkpdf/pdf-viewer";
 import { useSession } from "./session";
 import { loadPersisted, savePersisted } from "./persist";
+import { useAnnot } from "./annotState";
 import { ApiError, VersionConflictError, type DocumentRef, type VersionResult } from "@thynkpdf/editor-client";
 
 let textJob: Promise<void> | null = null;
@@ -45,6 +46,7 @@ async function openServerRef(ref: DocumentRef, name: string, keepPage: boolean) 
 }
 
 export async function openFile(file: File) {
+  useAnnot.getState().set({ working: null });
   const s = useSession.getState();
   s.set({ busy: "Opening…", error: null, notice: null });
   try {
@@ -62,6 +64,7 @@ export async function openFile(file: File) {
 
 /** Open the current version of a server document (used for session restore and conflict recovery). */
 export async function openLatest(documentId: string, keepPage = false) {
+  useAnnot.getState().set({ working: null });
   const s = useSession.getState();
   const d = await s.api.getDocument(documentId);
   await openServerRef({ document_id: d.document_id, version_id: d.version_id, version: d.current_version }, d.filename, keepPage);
@@ -176,9 +179,9 @@ export function bootstrapAuth() {
   if (s.api.kind === "http" && !s.api.getTokens()) { const p = loadPersisted(); if (p.tokens) s.api.setTokens(p.tokens); }
 }
 
-export async function loadLocalBytes(bytes: Uint8Array, name: string) {
+export async function loadLocalBytes(bytes: Uint8Array, name: string, keepPage = false) {
   const { localBytesRef } = await import("./copies");
   localBytesRef.current = bytes;
-  await load({ data: bytes.slice() }, name); // PDF.js transfers its copy to the worker
+  await load({ data: bytes.slice() }, name, keepPage); // PDF.js transfers its copy to the worker
   useSession.getState().set({ ref: null, caps: null, source: "local" });
 }

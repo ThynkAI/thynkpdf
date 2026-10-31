@@ -27,7 +27,13 @@ test("editor with a document, organizer and signature dialogs have no axe violat
   if (await page.getByRole("button", { name: "Organize pages" }).isVisible()) {
     await page.getByRole("button", { name: "Organize pages" }).click();
     await axe(page, '[role="dialog"]');
-    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Close organizer" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  }
+  if (await page.getByRole("button", { name: "Annotate" }).isVisible()) {
+    await page.getByRole("button", { name: "Annotate" }).click();
+    await expect(page.getByRole("toolbar", { name: "Annotation tools" })).toBeVisible();
+    await axe(page, '[aria-label="Annotation tools"]');
   }
   await page.getByRole("button", { name: "Search" }).click();
   await page.getByRole("button", { name: "Create signature" }).click();

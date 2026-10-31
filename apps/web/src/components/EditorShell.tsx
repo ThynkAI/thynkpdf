@@ -6,6 +6,9 @@ import { PdfViewer, Thumbnails } from "@thynkpdf/pdf-viewer/client";
 import { Toolbar } from "./Toolbar";
 import { Organizer } from "./Organizer";
 import { SignatureBox } from "./SignatureBox";
+import { AnnotToolbar } from "./AnnotToolbar";
+import { AnnotOverlay, markupFromSelection } from "./AnnotOverlay";
+import { useAnnot } from "@/lib/annotState";
 import { RightPanel } from "./RightPanel";
 import { StatusBar } from "./StatusBar";
 import { useSession } from "@/lib/session";
@@ -22,6 +25,12 @@ export function EditorShell() {
   const [dark, setDark] = useState(() => typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
   const [dragging, setDragging] = useState(false);
   const [organize, setOrganize] = useState(false);
+  const annotOpen = useAnnot((a) => a.open);
+  useEffect(() => {
+    const up = () => { if (useAnnot.getState().open) setTimeout(() => void markupFromSelection(), 0); };
+    document.addEventListener("mouseup", up); document.addEventListener("touchend", up);
+    return () => { document.removeEventListener("mouseup", up); document.removeEventListener("touchend", up); };
+  }, []);
   const fileName = useViewerStore((s) => s.fileName);
   const hasDoc = useViewerStore((s) => s.pageSizes.length > 0);
   const { ref, caps, capsError, busy } = useSession();
@@ -82,12 +91,13 @@ export function EditorShell() {
           <a href="/documents" className="rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">Documents</a>
           <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
-        <Toolbar onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
+        <Toolbar onAnnotate={() => useAnnot.getState().set({ open: !annotOpen, tool: annotOpen ? "none" : useAnnot.getState().tool })} annotating={annotOpen} onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
+        {annotOpen && hasDoc && <AnnotToolbar />}
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" hidden data-testid="file-input" onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
         <div className="relative flex min-h-0 flex-1">
           {sidebar && <nav aria-label="Left sidebar" className="absolute inset-y-0 left-0 z-20 w-40 shrink-0 border-r shadow-lg md:static md:shadow-none border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><Thumbnails onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
           <main className="relative min-w-0 flex-1">
-            <PdfViewer renderOverlay={(i, sc) => <SignatureBox pageIndex={i} scale={sc} />} />
+            <PdfViewer renderOverlay={(i, sc) => <><AnnotOverlay pageIndex={i} scale={sc} /><SignatureBox pageIndex={i} scale={sc} /></>} />
             {!hasDoc && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-neutral-800 dark:text-neutral-200">
                 <Wordmark className="scale-150" />

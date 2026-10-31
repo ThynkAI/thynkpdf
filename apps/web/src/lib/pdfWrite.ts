@@ -2,7 +2,7 @@
  * Client-side PDF writes with pdf-lib (MIT). Used for visual signatures and AcroForm fill/creation because the backend
  * has no endpoints for these yet (see apps/web/docs/frontend-backend-requests.md §3–4). Output is a real PDF.
  */
-import { PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup, StandardFonts } from "pdf-lib";
+import { degrees, PDFDocument, PDFTextField, PDFCheckBox, PDFDropdown, PDFRadioGroup, StandardFonts } from "pdf-lib";
 
 export interface PdfRect { x: number; y: number; width: number; height: number } // PDF user space, origin bottom-left
 
@@ -17,12 +17,13 @@ export async function pageInfo(bytes: Uint8Array, pageIndex: number) {
   return { rotation: ((p.getRotation().angle % 360) + 360) % 360, width: mb.width, height: mb.height, origin: { x: mb.x, y: mb.y } };
 }
 
-export async function stampImage(bytes: Uint8Array, pageIndex: number, rect: PdfRect, image: Uint8Array, mime: "image/png" | "image/jpeg"): Promise<Uint8Array> {
+/** rect.rotate (degrees CCW, about x/y) lets the image stay upright on rotated pages; see geometry.uprightImagePlacement. */
+export async function stampImage(bytes: Uint8Array, pageIndex: number, rect: PdfRect & { rotate?: number }, image: Uint8Array, mime: "image/png" | "image/jpeg"): Promise<Uint8Array> {
   const pdf = await PDFDocument.load(bytes);
   const img = mime === "image/png" ? await pdf.embedPng(image) : await pdf.embedJpg(image);
   const page = pdf.getPage(pageIndex);
-  if (page.getRotation().angle % 360 !== 0) throw new Error("Placing signatures on rotated pages is not supported yet.");
-  page.drawImage(img, rect);
+  const { rotate, ...r } = rect;
+  page.drawImage(img, { ...r, rotate: degrees(rotate ?? 0) });
   return pdf.save();
 }
 

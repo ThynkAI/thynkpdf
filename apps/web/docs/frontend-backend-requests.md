@@ -47,3 +47,9 @@ Visual e-signatures (image stamped into page), explicitly NOT cryptographic/PAdE
 - R6.1 `POST /ai/ask {document_id, version, question, page_range?}` → `{answer, citations:[{page, quote}], model}` (or SSE stream `text/event-stream`).
 - R6.2 `POST /ai/summarize {document_id, version, length:"short"|"long"}` → same shape.
 - Must be free-tier safe (THYNKPDF is free): document rate limits in the response (`429 RATE_LIMITED` with `details.retry_after`).
+
+## Status check 2026-10-31 ~2:05 PM EDT
+Open (unmerged) backend PRs add many of the above: #4 `feat/backend-phase2` (cookie refresh, typed capabilities, page delete/duplicate/insert-blank),
+#6 `feat/backend-annotations-forms` (annotations CRUD, forms create/fill/flatten/export), #8 `feat/backend-signing-audit` (e-sign workflow, PAdES sign, audit).
+None is on `main` and the live dev API (:8000) still serves the 22-path main contract, so the frontend has not wired them yet.
+Still missing from all branches: version upload from client bytes (`POST /documents/{id}/versions` multipart + expected_version), folders/tags/star/trash/share, `/ai`.

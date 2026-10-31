@@ -7,6 +7,7 @@ import { signOut, ensureText } from "@/lib/documents";
 import { TextEditPanel } from "./TextEditPanel";
 import { SignInForm } from "./SignInForm";
 import { SignPanel } from "./SignPanel";
+import { CommentsPanel } from "./CommentsPanel";
 import { FormsPanel } from "./FormsPanel";
 
 export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void }>(function RightPanel({ onClose }, searchRef) {
@@ -37,6 +38,7 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void }>
           ))}
         </ul>
       </section>
+      <CommentsPanel />
       <TextEditPanel />
       <SignPanel />
       <FormsPanel />
