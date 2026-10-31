@@ -125,7 +125,7 @@ test("signature images persist in IndexedDB across reloads", async ({ page }) =>
 test.describe("live backend", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
-  test("annotate a server document and save as a new server document", async ({ page }) => {
+  test("annotate a server document and save as a new version", async ({ page }) => {
     await signInAndUpload(page);
     await page.getByRole("button", { name: "Annotate" }).click();
     await page.getByLabel("Comment text").fill("Server note");
@@ -134,8 +134,9 @@ test.describe("live backend", () => {
     await expect(page.getByTestId("error")).toHaveCount(0);
     await expect(count(page)).toHaveText("(1)");
     await expect(page.getByText("Unsaved annotations")).toBeVisible();
-    await page.getByRole("button", { name: "Save as new document" }).click();
-    await expect(page.getByTestId("doc-title")).toHaveText("simple-3page-annotated.pdf");
+    await page.getByRole("button", { name: "Save as new version" }).click();
+    await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
+    await expect(page.getByTestId("doc-title")).toHaveText("simple-3page.pdf");
     await expect(page.getByText("Source: backend")).toBeVisible();
     await expect(count(page)).toHaveText("(1)");
     await expect(page.getByTestId("thread").getByTestId("author")).toHaveText("dev@thynkpdf.dev");
@@ -151,7 +152,7 @@ test.describe("live backend", () => {
     await page.getByRole("button", { name: "Use signature" }).click();
     await page.getByRole("button", { name: /^Place on page/ }).click();
     await page.getByRole("button", { name: "Apply signature" }).click();
-    await expect(page.getByTestId("doc-title")).toHaveText("simple-3page-signed.pdf");
+    await expect(page.getByTestId("version-id")).toHaveText(/^v3 /);
     await expect(page.getByTestId("error")).toHaveCount(0);
   });
 

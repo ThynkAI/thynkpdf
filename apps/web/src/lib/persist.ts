@@ -1,17 +1,15 @@
 /**
- * Session persistence. The backend issues tokens only in JSON bodies (no httpOnly cookie support yet), so we keep them in
- * sessionStorage: survives reload in the same tab, cleared when the tab closes, not shared across tabs.
- * TRADEOFF: any script running on this origin (e.g. via XSS) can read sessionStorage, so a stolen refresh token is usable
- * for up to its lifetime (14 d). Switch to an httpOnly SameSite refresh cookie once the backend supports it.
+ * Session persistence. Only the last-opened document id is stored (sessionStorage). Tokens are NOT persisted:
+ * the access token lives in memory and the refresh token is the backend's httpOnly SameSite=Strict cookie `thynkpdf_rt`
+ * (Path=/auth), which page scripts cannot read. After a reload the app calls POST /auth/refresh with credentials:"include".
  */
-import type { TokenResponse } from "@thynkpdf/editor-client";
-const KEY = "tp-session-v1";
-export interface Persisted { tokens: TokenResponse | null; lastDocumentId: string | null }
-const empty: Persisted = { tokens: null, lastDocumentId: null };
+const KEY = "tp-session-v2";
+export interface Persisted { lastDocumentId: string | null }
+const empty: Persisted = { lastDocumentId: null };
 export function loadPersisted(storage: Storage | undefined = globalThis.sessionStorage): Persisted {
   try { const v = storage?.getItem(KEY); return v ? { ...empty, ...JSON.parse(v) } : empty; } catch { return empty; }
 }
 export function savePersisted(p: Partial<Persisted>, storage: Storage | undefined = globalThis.sessionStorage) {
-  try { storage?.setItem(KEY, JSON.stringify({ ...loadPersisted(storage), ...p })); } catch { /* storage unavailable */ }
+  try { storage?.setItem(KEY, JSON.stringify({ ...loadPersisted(storage), ...p })); storage?.removeItem("tp-session-v1"); } catch { /* storage unavailable */ }
 }
 export function clearPersisted(storage: Storage | undefined = globalThis.sessionStorage) { try { storage?.removeItem(KEY); } catch { /* */ } }

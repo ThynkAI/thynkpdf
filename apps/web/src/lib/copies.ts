@@ -1,7 +1,7 @@
 "use client";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "./session";
-import { describeError, openLatest, loadLocalBytes } from "./documents";
+import { describeError, loadLocalBytes, runVersionedOp, http } from "./documents";
 
 /** Bytes of the currently open document (local file bytes, or downloaded from the server version). */
 export async function currentBytes(): Promise<Uint8Array> {
@@ -21,8 +21,9 @@ export const localBytesRef: { current: Uint8Array | null } = { current: null };
 export const lastDownload: { url: string | null; name: string | null } = { url: null, name: null };
 
 /**
- * Save a client-modified PDF. Server docs: uploaded as a NEW document (backend has no endpoint to add a version from
- * client bytes — request R4.2/R3.2) and opened. Local docs: reopened in the viewer and offered as a download.
+ * Save a client-modified PDF. Server docs: saved as a NEW VERSION of the same document via POST /documents/{id}/versions
+ * (expected_version; 409 VERSION_CONFLICT reloads latest, 409 DOCUMENT_SIGNED is reported distinctly). Local docs:
+ * reopened in the viewer and offered as a download.
  */
 export async function saveModifiedCopy(bytes: Uint8Array, suffix: string): Promise<{ kind: "server" | "local"; name: string } | null> {
   const s = useSession.getState();
@@ -31,9 +32,11 @@ export async function saveModifiedCopy(bytes: Uint8Array, suffix: string): Promi
   s.set({ busy: "Saving…", error: null });
   try {
     if (s.ref) {
-      const up = await s.api.upload(new Blob([bytes as BlobPart], { type: "application/pdf" }), name);
-      await openLatest(up.document_id);
-      s.set({ notice: `Saved as new document “${name}”.` });
+      const ref = s.ref;
+      s.set({ busy: null });
+      const ok = await runVersionedOp(`Save (${suffix})`, (r) => http().uploadVersion(r, bytes, useViewerStore.getState().fileName ?? name), ref);
+      if (!ok) return null;
+      s.set({ notice: `Saved as version ${useSession.getState().ref?.version ?? ""} of this document.` });
       return { kind: "server", name };
     }
     await loadLocalBytes(bytes, name);

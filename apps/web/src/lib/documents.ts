@@ -4,7 +4,7 @@ import { useViewerStore, moveOrder, isIdentity } from "@thynkpdf/pdf-viewer";
 import { useSession } from "./session";
 import { loadPersisted, savePersisted } from "./persist";
 import { useAnnot } from "./annotState";
-import { ApiError, VersionConflictError, type DocumentRef, type VersionResult } from "@thynkpdf/editor-client";
+import { ApiError, VersionConflictError, DocumentSignedError, RateLimitedError, HttpEditorApi, type DocumentRef, type VersionResult } from "@thynkpdf/editor-client";
 
 let textJob: Promise<void> | null = null;
 async function load(src: PdfSource, name: string, keepPage = false, sizes?: { width: number; height: number }[]) {
@@ -76,8 +76,7 @@ export async function restoreSession(target?: { doc: string; version?: string; n
   const s = useSession.getState();
   if (s.api.kind !== "http") return;
   const p = loadPersisted();
-  if (!p.tokens) return;
-  s.api.setTokens(p.tokens);
+  if (!(await bootstrapAuth())) return;
   if (target) {
     s.set({ busy: "Opening…" });
     try {
@@ -97,16 +96,20 @@ export async function restoreSession(target?: { doc: string; version?: string; n
 }
 
 export let lastReport: Record<string, unknown> | null = null;
-async function runPageOp(label: string, op: (ref: DocumentRef) => Promise<VersionResult>) {
+async function runPageOp(label: string, op: (ref: DocumentRef) => Promise<VersionResult>, refOverride?: DocumentRef | null) {
   const s = useSession.getState();
-  if (!s.ref) return;
-  const ref = s.ref;
+  const ref = refOverride ?? s.ref;
+  if (!ref) return;
   s.set({ busy: `${label}…`, error: null, notice: null });
   try {
     const r = await op(ref);
     lastReport = r.report ?? null;
     await openServerRef({ document_id: r.document_id, version_id: r.version_id, version: r.version }, useViewerStore.getState().fileName ?? "document.pdf", true);
   } catch (e) {
+    if (e instanceof DocumentSignedError) {
+      s.set({ error: `${label} blocked: this version carries a digital signature, and changing it in place would invalidate the signature. Work on a copy (Organize → Extract to new PDF) or restore an unsigned version from Documents → Versions. (DOCUMENT_SIGNED)` });
+      return false;
+    }
     if (e instanceof VersionConflictError) {
       try {
         const d = await openLatest(ref.document_id, true);
@@ -118,8 +121,12 @@ async function runPageOp(label: string, op: (ref: DocumentRef) => Promise<Versio
 }
 
 export function describeError(e: unknown) {
+  if (e instanceof DocumentSignedError) return "This document is digitally signed; editing it in place would invalidate the signature (DOCUMENT_SIGNED).";
+  if (e instanceof RateLimitedError) return `Rate limited — try again in ${e.retryAfter ?? "a few"} seconds (RATE_LIMITED).`;
   if (e instanceof ApiError) {
     const hint = typeof e.details?.hint === "string" ? ` (${e.details.hint})` : "";
+    const v = Array.isArray(e.details?.errors) ? (e.details!.errors as { loc?: unknown[]; msg?: string }[])[0] : null;
+    if (v?.msg) return `${e.code}: ${(v.loc ?? []).slice(1).join(".")} — ${v.msg}`;
     return `${e.code}: ${e.message}${hint}`;
   }
   return (e as Error).message;
@@ -137,7 +144,7 @@ export async function reorderPage(from: number, to: number) {
 
 export async function signOut() {
   const s = useSession.getState();
-  s.api.setTokens(null);
+  if (s.api instanceof HttpEditorApi) await s.api.logout(); else s.api.setTokens(null);
   savePersisted({ lastDocumentId: null });
 }
 
@@ -145,12 +152,24 @@ export async function signOut() {
 export async function replaceText(page: number, find: string, replacement: string, occurrence: "all" | "first") {
   const ok = await runPageOp("Edit text", (ref) => useSession.getState().api.editText(ref, [{ op: "text_replace", page, find, replacement, occurrence }]));
   if (!ok) return null;
-  const applied = (lastReport?.applied as { replacements?: number }[] | undefined) ?? [];
-  return applied.reduce((n, a) => n + (a.replacements ?? 0), 0);
+  const applied = (lastReport?.applied as { count?: number; replacements?: number }[] | undefined) ?? [];
+  return applied.reduce((n, a) => n + (a.count ?? a.replacements ?? 0), 0);
 }
 
 export const rotatePages = (pages: number[], angle: 90 | 180 | 270 | -90) =>
   runPageOp("Rotate", (ref) => useSession.getState().api.rotatePages(ref, pages, angle));
+export const deletePages = (pages: number[]) => runPageOp("Delete pages", (ref) => http().deletePages(ref, pages));
+export const duplicatePages = (pages: number[]) => runPageOp("Duplicate pages", (ref) => http().duplicatePages(ref, pages));
+export const insertBlankAfter = (afterPage: number) => runPageOp("Insert blank page", (ref) => http().insertBlank(ref, afterPage));
+export const insertFromDoc = (sourceId: string, afterPage: number) => runPageOp("Insert pages", (ref) => http().insertFrom(ref, sourceId, afterPage));
+/** Save client-modified bytes as a new version of the open server document. */
+export const saveAsNewVersion = (bytes: Uint8Array) => runPageOp("Save new version", (ref) => http().uploadVersion(ref, bytes, useViewerStore.getState().fileName ?? "document.pdf"));
+export const restoreVersionOp = (versionId: string) => runPageOp("Restore version", (ref) => http().restoreVersion(ref, versionId));
+export function http(): HttpEditorApi {
+  const a = useSession.getState().api;
+  if (!(a instanceof HttpEditorApi)) throw new ApiError(0, "SERVER_REQUIRED", "Requires the THYNKPDF server (not available in mock/local mode).");
+  return a;
+}
 export const reorderTo = (order: number[]) => runPageOp("Reorder", (ref) => useSession.getState().api.reorderPages(ref, order));
 
 /** Backend ops that create NEW documents. Return the created documents; caller decides whether to open. */
@@ -173,11 +192,16 @@ export async function openVersionReadOnly(documentId: string, versionId: string,
   return d;
 }
 
-/** Restore tokens from sessionStorage without opening anything (dashboard). */
-export function bootstrapAuth() {
+/** Re-establish the session after reload via the httpOnly refresh cookie. Returns true when authenticated. Concurrent calls share one refresh. */
+export async function bootstrapAuth(): Promise<boolean> {
   const s = useSession.getState();
-  if (s.api.kind === "http" && !s.api.getTokens()) { const p = loadPersisted(); if (p.tokens) s.api.setTokens(p.tokens); }
+  if (s.api.kind !== "http") return true;
+  if (s.api.getTokens()) return true;
+  try { await s.api.refresh(); return true; } catch { return false; }
 }
+
+/** Run a versioned server op from outside documents.ts (annotations, forms, signing, page ops). */
+export const runVersionedOp = runPageOp;
 
 export async function loadLocalBytes(bytes: Uint8Array, name: string, keepPage = false) {
   const { localBytesRef } = await import("./copies");

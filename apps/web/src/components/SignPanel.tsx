@@ -8,9 +8,12 @@ import { SignatureDialog } from "./SignatureDialog";
 import { currentBytes, saveModifiedCopy, lastDownload } from "@/lib/copies";
 import { pageInfo, stampImage } from "@/lib/pdfWrite";
 import { uprightImagePlacement } from "@/lib/geometry";
-import { describeError } from "@/lib/documents";
+import { describeError, http, runVersionedOp } from "@/lib/documents";
+import { displayBoxToPdfRect } from "@/lib/geometry";
+import { toPngBlob } from "@/lib/png";
+import { RequestSignatures } from "./RequestSignatures";
+import { AuditPanel } from "./AuditPanel";
 
-const BLOCKED = "Needs backend support (apps/web/docs/frontend-backend-requests.md §4).";
 export function SignPanel() {
   const { image, placement, set } = useSignature();
   const { currentPage, pageSizes } = useViewerStore();
@@ -32,8 +35,26 @@ export function SignPanel() {
     set({ placement: { page: currentPage, left: sz.width / 2 - w / 2, top: sz.height * 0.7, width: w, height: w / image.aspect } });
     setTimeout(() => { const el = document.querySelector<HTMLElement>('[data-testid="sig-box"]'); el?.scrollIntoView({ block: "center" }); el?.focus(); }, 50);
   };
+  const [more, setMore] = useState<"request" | "audit" | null>(null);
+  const server = !!s.ref && s.api.kind === "http";
   const apply = async () => {
     if (!image || !placement) return;
+    if (server && (await pageInfo(await currentBytes(), placement.page)).rotation % 360 === 0) {
+      // Versioned server path: PNG asset upload + POST /pdf/signatures/place (expected_version). Visual only (report.visual_only).
+      try {
+        const bytes = await currentBytes();
+        const info = await pageInfo(bytes, placement.page);
+        const r = displayBoxToPdfRect(placement.left, placement.top, placement.width, placement.height,
+          { width: info.width, height: info.height, rotation: info.rotation, x0: info.origin.x, y0: info.origin.y }, 1);
+        const png = await toPngBlob(image.dataUrl);
+        const asset = await http().uploadSignaturePng(png.blob);
+        const ok = await runVersionedOp("Place signature", (ref) => http().placeSignatures(ref, [{ asset_id: asset.asset_id, page: placement.page + 1, rect: [r.x, r.y, r.x + r.width, r.y + r.height] }]));
+        if (ok) { set({ placement: null }); s.set({ notice: `Signature placed — saved as version ${useSession.getState().ref?.version}.` }); }
+      } catch (e) { s.set({ error: `Signing failed: ${describeError(e)}` }); }
+      return;
+    }
+    // Local files, and rotated server pages (the server's stamp does not counter-rotate yet — backend request R4.5):
+    // stamp upright in the browser, then save (server docs → new version via POST /documents/{id}/versions).
     try {
       const bytes = await currentBytes();
       const info = await pageInfo(bytes, placement.page);
@@ -68,12 +89,14 @@ export function SignPanel() {
               </li>))}
           </ul>
         </div>)}
-      <p className="mt-1 text-[11px] text-neutral-500">{s.ref ? "Saved as a new document on the server (versioned signing needs backend support)." : "Local file: a signed copy opens here and can be downloaded."}</p>
+      <p className="mt-1 text-[11px] text-neutral-500">{server ? "Server document: the signature is stamped by the server and saved as a new version (visual only)." : "Local file: a signed copy opens here and can be downloaded."}</p>
       {dl && <a className="text-xs underline" href={dl.url} download={dl.name} data-testid="download-signed">Download {dl.name}</a>}
       <div className="mt-2 flex flex-wrap gap-1 text-xs">
-        <button disabled title={BLOCKED} className="rounded border px-2 py-1 opacity-40" aria-label="Request signatures (unavailable: backend support missing)">Request signatures</button>
-        <button disabled title={BLOCKED} className="rounded border px-2 py-1 opacity-40" aria-label="Audit trail (unavailable: backend support missing)">Audit trail</button>
+        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!server} title={server ? undefined : "Requires a document opened through the THYNKPDF server"} aria-expanded={more === "request"} onClick={() => setMore(more === "request" ? null : "request")}>Request signatures</button>
+        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!server} title={server ? undefined : "Requires a document opened through the THYNKPDF server"} aria-expanded={more === "audit"} onClick={() => setMore(more === "audit" ? null : "audit")}>Audit trail</button>
       </div>
+      {server && more === "request" && <RequestSignatures />}
+      {server && more === "audit" && <AuditPanel />}
       {dialog && <SignatureDialog onClose={() => setDialog(false)} />}
     </section>
   );

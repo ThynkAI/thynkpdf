@@ -133,7 +133,7 @@ test("409 conflict shows message and reloads latest version", async ({ page, req
   await signInAndUpload(page);
   // Change the document behind the UI's back.
   const tok = await (await request.post(API + "/auth/login", { data: { email: EMAIL, password: PASSWORD } })).json();
-  const docId = await page.evaluate(() => JSON.parse(sessionStorage.getItem("tp-session-v1")!).lastDocumentId as string);
+  const docId = await page.evaluate(() => JSON.parse(sessionStorage.getItem("tp-session-v2")!).lastDocumentId as string);
   const r = await request.post(API + "/pdf/pages/rotate", { headers: { Authorization: `Bearer ${tok.access_token}` }, data: { document_id: docId, expected_version: 1, pages: [3], angle: 180 } });
   expect(r.ok()).toBe(true);
   await page.getByRole("button", { name: "Rotate page clockwise" }).click();

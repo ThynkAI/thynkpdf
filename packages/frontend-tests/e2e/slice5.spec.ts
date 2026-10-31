@@ -38,7 +38,7 @@ test("local: draw, place, resize, apply visual signature; download contains stam
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await expect(page.getByTestId("sig-disclaimer")).toContainText("not a cryptographic");
-  await expect(page.getByRole("button", { name: /Request signatures \(unavailable/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Request signatures" })).toBeDisabled(); // needs a server document
   await drawAndPlace(page);
   await page.getByRole("button", { name: "Apply signature" }).click();
   await expect(page.getByTestId("doc-title")).toHaveText("sample-12p-signed.pdf");
@@ -69,13 +69,13 @@ test("local: fill form fields and add a new field", async ({ page }) => {
 
 test.describe("live backend", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
-  test("server doc: signature saved as a new server document", async ({ page }) => {
+  test("server doc: signature placed by the server as a new version", async ({ page }) => {
     await signInAndUpload(page);
     await drawAndPlace(page);
     await page.getByRole("button", { name: "Apply signature" }).click();
-    await expect(page.getByTestId("doc-title")).toHaveText("simple-3page-signed.pdf");
-    await expect(page.getByTestId("notice")).toContainText("Saved as new document");
+    await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
+    await expect(page.getByTestId("doc-title")).toHaveText("simple-3page.pdf");
+    await expect(page.getByTestId("notice")).toContainText("Signature placed");
     await expect(page.getByText("Source: backend")).toBeVisible();
-    await expect(page.getByTestId("version-id")).toHaveText(/^v1 /);
   });
 });

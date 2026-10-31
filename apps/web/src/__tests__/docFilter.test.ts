@@ -1,10 +1,11 @@
-import { filterDocs } from "@/lib/docFilter";
-const d = (filename: string, created_at: string) => ({ document_id: filename, filename, current_version: 1, version_id: "v", created_at });
-const docs = [d("b.pdf", "2026-01-02"), d("Alpha.pdf", "2026-01-03"), d("c-report.pdf", "2026-01-01")];
-describe("filterDocs", () => {
-  it("filters case-insensitively", () => expect(filterDocs(docs, "ALP", "created_desc").map((x) => x.filename)).toEqual(["Alpha.pdf"]));
-  it("sorts", () => {
-    expect(filterDocs(docs, "", "created_desc").map((x) => x.filename)).toEqual(["Alpha.pdf", "b.pdf", "c-report.pdf"]);
-    expect(filterDocs(docs, "", "name_desc")[0].filename).toBe("c-report.pdf");
+import { toQuery, parseTags } from "@/lib/docFilter";
+describe("toQuery", () => {
+  it("maps views, search, sort and cursor to GET /documents params", () => {
+    expect(toQuery({ kind: "all" }, "  rep ", "name_asc")).toEqual({ sort: "name", order: "asc", limit: 50, q: "rep" });
+    expect(toQuery({ kind: "trash" }, "", "updated_desc", "c1")).toMatchObject({ trashed: true, cursor: "c1", sort: "updated_at", order: "desc" });
+    expect(toQuery({ kind: "starred" }, "", "created_desc").starred).toBe(true);
+    expect(toQuery({ kind: "folder", id: "root" }, "", "created_asc").folder_id).toBe("root");
+    expect(toQuery({ kind: "tag", tag: "tax" }, "", "created_asc").tag).toBe("tax");
   });
+  it("parses tags to the backend charset", () => expect(parseTags("Tax, 2026 bad!tag tax q_1")).toEqual(["tax", "2026", "q_1"]));
 });

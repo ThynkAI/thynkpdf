@@ -23,7 +23,7 @@ test.describe("slice 3 (live backend)", () => {
     await signInAndUpload(page);
     await page.getByRole("button", { name: "Organize pages" }).click();
     const dlg = page.getByRole("dialog");
-    await expect(dlg.getByRole("button", { name: /Delete \(unavailable/ })).toBeDisabled();
+    await expect(dlg.getByRole("button", { name: "Delete", exact: true })).toBeDisabled(); // nothing selected
     await dlg.getByTestId("org-page-1").focus();
     await page.keyboard.press("Alt+ArrowRight");
     await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);

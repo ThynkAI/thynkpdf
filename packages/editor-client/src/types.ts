@@ -8,25 +8,35 @@ export type DocumentInfo = S["DocumentOut"];
 export type RotateRequest = S["RotateIn"];
 export type RotateAngle = RotateRequest["angle"];
 export type ReorderRequest = S["ReorderIn"];
-export type EditOp = S["EditOp"];
+export type EditOp = Omit<S["EditOp"], "font" | "font_size"> & Partial<Pick<S["EditOp"], "font" | "font_size">>;
 export type VersionInfo = S["VersionOut"];
-/** HAND-WRITTEN subset of GET /pdf/{id}/metadata (no response schema in openapi.json). */
-export interface PdfMetadata {
-  document_id: string; version: number; version_id: string; page_count: number;
-  has_acroform: boolean; form_field_count: number; has_signatures: boolean;
-  pages: { number: number; width: number; height: number; rotation: number; annotations: number }[];
-}
-
-/** HAND-WRITTEN: /pdf/{id}/capabilities has no response schema in openapi.json yet (backend ask). Mirrors docs/integration-for-bot1.md. */
-export interface Limitation { code: string; message: string; font?: string }
-export interface Capabilities {
-  document_id: string; version: number; version_id: string;
-  page_ops: { rotate: boolean; reorder: boolean; extract: boolean; split: boolean; merge: boolean };
-  compress: boolean; text_replace: boolean;
-  document_limitations: Limitation[];
-  pages: { number: number; text_replace: boolean; editable_fonts: string[]; limitations: Limitation[] }[];
-  safe_alternatives: string[];
-}
+export type DocumentPage = S["DocumentPage"];
+export interface ListQuery { q?: string; folder_id?: string; tag?: string; starred?: boolean; trashed?: boolean; sort?: "updated_at" | "name" | "created_at"; order?: "asc" | "desc"; limit?: number; cursor?: string }
+export type DocPatch = S["DocPatch"];
+export type Folder = S["FolderOut"];
+export type Share = S["ShareOut"];
+export type ShareIn = S["ShareIn"];
+export type Annotation = S["Annotation"];
+export type AnnotationIn = S["AnnotationIn"];
+export type AnnotationsOut = S["AnnotationsOut"];
+export type FormField = S["FormField"];
+export type FormsOut = S["FormsOut"];
+export type FieldSpec = Partial<S["FieldSpec"]> & Pick<S["FieldSpec"], "name" | "type" | "page">;
+export type SignatureAsset = S["AssetOut"];
+export type Placement = S["Placement"];
+export type CreateSignatureRequest = S["CreateReqIn"];
+export type CreatedSignatureRequest = S["CreatedReqOut"];
+export type SignatureRequest = S["ReqOut"];
+export type SignatureEvents = S["EventsOut"];
+export type SignSession = S["SignSessionOut"];
+export type SignerPlacement = S["SignerPlacement"];
+export type AuditEntry = S["DocAuditOut"];
+export type AiAnswer = S["AIOut"];
+export type SigStatus = S["SigStatus"];
+export type VerifyOut = S["VerifyOut"];
+export type PdfMetadata = S["MetadataOut"];
+export type Limitation = S["Limitation"];
+export type Capabilities = S["CapabilitiesOut"];
 /** What the editor holds about the open server document. `version` is used as expected_version. */
 export interface DocumentRef { document_id: string; version_id: string; version: number }
 
@@ -50,7 +60,7 @@ export interface EditorApi {
   extractPages(documentId: string, pages: number[], filename?: string): Promise<UploadResponse>;
   splitDocument(documentId: string, ranges: [number, number][]): Promise<UploadResponse[]>;
   mergeDocuments(documentIds: string[], filename?: string): Promise<UploadResponse>;
-  listDocuments(): Promise<DocumentInfo[]>;
+  listDocuments(q?: ListQuery): Promise<DocumentPage>;
   listVersions(documentId: string): Promise<VersionInfo[]>;
   /** Session persistence hooks. */
   getTokens(): TokenResponse | null;

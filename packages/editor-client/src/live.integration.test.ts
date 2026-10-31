@@ -49,7 +49,7 @@ describe.skipIf(!up)("live API: upload -> rotate -> reload", () => {
     const ref = { document_id: u.document_id, version_id: u.version_id, version: u.version };
     const e = await api.editText(ref, [{ op: "text_replace", page: 1, find: "ACME-001", replacement: "EDIT-001", occurrence: "all" }]);
     expect(e.version).toBe(2);
-    expect((e.report as any).applied[0].replacements).toBe(1);
+    expect((e.report as any).applied[0].count).toBe(1);
     const miss = await api.editText({ ...ref, version_id: e.version_id, version: 2 }, [{ op: "text_replace", page: 1, find: "NOPE", replacement: "x", occurrence: "all" }]).catch((x) => x);
     expect(miss.code).toBe("TEXT_NOT_FOUND");
     const meta = await api.getMetadata(u.document_id, 2);
@@ -61,6 +61,6 @@ describe.skipIf(!up)("live API: upload -> rotate -> reload", () => {
     const mg = await api.mergeDocuments([u.document_id, ex.document_id], "m.pdf");
     expect(mg.page_count).toBe(5);
     expect((await api.listVersions(u.document_id)).length).toBe(2);
-    expect((await api.listDocuments()).some((d) => d.document_id === mg.document_id)).toBe(true);
+    expect((await api.listDocuments({ limit: 200 })).items.some((d) => d.document_id === mg.document_id)).toBe(true);
   });
 });
