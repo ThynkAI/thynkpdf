@@ -7,10 +7,11 @@ A free PDF editor: edit, merge and split, compress, sign, fill forms, annotate a
 1. Open the [Releases page](https://github.com/ThynkAI/thynkpdf/releases) and download the installer for your computer:
    | Your computer | File |
    |---|---|
-   | Windows 10/11 (64-bit) | `THYNKPDF-Setup-<version>.exe` |
-   | Mac with Apple silicon (M1/M2/M3/M4) | the `.dmg` whose name contains `arm64` |
-   | Mac with Intel | the `.dmg` whose name contains `x64` |
+   | Windows 10/11 (64-bit) | `THYNKPDF.Setup.<version>.exe` |
+   | Mac with Apple silicon (M1/M2/M3/M4) | `THYNKPDF-<version>-arm64.dmg` |
+   | Mac with Intel | `THYNKPDF-<version>.dmg` (no `arm64` in the name) |
    | Linux (64-bit) | `THYNKPDF-<version>.AppImage` |
+   Not sure which Mac you have? Apple menu → **About This Mac**: "Chip: Apple M…" means Apple silicon; "Processor: Intel" means Intel.
 2. Install it:
    - **Windows:** double-click the `.exe` and follow the steps.
    - **Mac:** open the `.dmg` and drag **THYNKPDF** into **Applications**.
