@@ -12,7 +12,7 @@ def test_upload_inspect_edit_version_download(client, orgA):
     assert cap["text_replace"] and cap["pages"][0]["text_replace"]
     e = client.post("/pdf/edit", headers=orgA, json={"document_id": doc, "expected_version": 1, "operations": [
         {"op": "text_replace", "page": 2, "find": "ACME-002", "replacement": "THYNK-777"}]})
-    assert e.status_code == 200, e.text; assert e.json()["version"] == 2 and e.json()["report"]["applied"][0]["replacements"] == 1
+    assert e.status_code == 200, e.text; assert e.json()["version"] == 2 and e.json()["report"]["applied"][0]["count"] == 1
     vs = client.get(f"/documents/{doc}/versions", headers=orgA).json(); assert [v["number"] for v in vs] == [1, 2]
     new = client.get(f"/documents/{doc}/versions/{e.json()['version_id']}/file", headers=orgA)
     assert new.status_code == 200 and hashlib.sha256(new.content).hexdigest() == e.json()["sha256"]

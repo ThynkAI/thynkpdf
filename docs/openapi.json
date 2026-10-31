@@ -1,127 +1,1369 @@
 {
- "openapi": "3.1.0",
+ "components": {
+  "schemas": {
+   "Body_upload_documents_upload_post": {
+    "properties": {
+     "file": {
+      "contentMediaType": "application/octet-stream",
+      "title": "File",
+      "type": "string"
+     }
+    },
+    "required": [
+     "file"
+    ],
+    "title": "Body_upload_documents_upload_post",
+    "type": "object"
+   },
+   "Body_upload_version_documents__doc_id__versions_post": {
+    "properties": {
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "file": {
+      "contentMediaType": "application/octet-stream",
+      "title": "File",
+      "type": "string"
+     }
+    },
+    "required": [
+     "file",
+     "expected_version"
+    ],
+    "title": "Body_upload_version_documents__doc_id__versions_post",
+    "type": "object"
+   },
+   "CapabilitiesOut": {
+    "properties": {
+     "annotations": {
+      "title": "Annotations",
+      "type": "boolean"
+     },
+     "compress": {
+      "title": "Compress",
+      "type": "boolean"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "document_limitations": {
+      "items": {
+       "$ref": "#/components/schemas/Limitation"
+      },
+      "title": "Document Limitations",
+      "type": "array"
+     },
+     "edit_ops": {
+      "$ref": "#/components/schemas/EditOps"
+     },
+     "forms": {
+      "title": "Forms",
+      "type": "boolean"
+     },
+     "page_ops": {
+      "$ref": "#/components/schemas/PageOps"
+     },
+     "pages": {
+      "items": {
+       "$ref": "#/components/schemas/PageCapability"
+      },
+      "title": "Pages",
+      "type": "array"
+     },
+     "safe_alternatives": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Safe Alternatives",
+      "type": "array"
+     },
+     "text_replace": {
+      "title": "Text Replace",
+      "type": "boolean"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "version_id",
+     "page_ops",
+     "edit_ops",
+     "compress",
+     "annotations",
+     "forms",
+     "text_replace",
+     "document_limitations",
+     "pages",
+     "safe_alternatives"
+    ],
+    "title": "CapabilitiesOut",
+    "type": "object"
+   },
+   "CompressIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "preset": {
+      "default": "balanced",
+      "enum": [
+       "low",
+       "balanced",
+       "high"
+      ],
+      "title": "Preset",
+      "type": "string"
+     },
+     "strip_metadata": {
+      "default": false,
+      "title": "Strip Metadata",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "CompressIn",
+    "type": "object"
+   },
+   "DeleteIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "pages": {
+      "items": {
+       "type": "integer"
+      },
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "pages"
+    ],
+    "title": "DeleteIn",
+    "type": "object"
+   },
+   "DocumentOut": {
+    "properties": {
+     "created_at": {
+      "title": "Created At",
+      "type": "string"
+     },
+     "current_version": {
+      "title": "Current Version",
+      "type": "integer"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "filename",
+     "current_version",
+     "version_id",
+     "created_at"
+    ],
+    "title": "DocumentOut",
+    "type": "object"
+   },
+   "DuplicateIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "pages": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+     },
+     "position": {
+      "anyOf": [
+       {
+        "const": "after_each",
+        "type": "string"
+       },
+       {
+        "type": "integer"
+       }
+      ],
+      "default": "after_each",
+      "title": "Position"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "pages"
+    ],
+    "title": "DuplicateIn",
+    "type": "object"
+   },
+   "EditIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "operations": {
+      "items": {
+       "$ref": "#/components/schemas/EditOp"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Operations",
+      "type": "array"
+     },
+     "revision_note": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Revision Note"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "operations"
+    ],
+    "title": "EditIn",
+    "type": "object"
+   },
+   "EditOp": {
+    "properties": {
+     "bbox": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bbox"
+     },
+     "dx": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dx"
+     },
+     "dy": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dy"
+     },
+     "find": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Find"
+     },
+     "font": {
+      "default": "Helvetica",
+      "title": "Font",
+      "type": "string"
+     },
+     "font_size": {
+      "default": 12,
+      "title": "Font Size",
+      "type": "number"
+     },
+     "formatting": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Formatting"
+     },
+     "object_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Object Id"
+     },
+     "occurrence": {
+      "default": "all",
+      "enum": [
+       "first",
+       "all"
+      ],
+      "title": "Occurrence",
+      "type": "string"
+     },
+     "op": {
+      "enum": [
+       "text_replace",
+       "text_insert",
+       "text_delete",
+       "text_move",
+       "image_replace",
+       "image_move",
+       "font_change",
+       "link_change"
+      ],
+      "title": "Op",
+      "type": "string"
+     },
+     "page": {
+      "minimum": 1.0,
+      "title": "Page",
+      "type": "integer"
+     },
+     "replacement": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Replacement"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "text_insert: text to add",
+      "title": "Text"
+     },
+     "x": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "X"
+     },
+     "y": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Y"
+     }
+    },
+    "required": [
+     "op",
+     "page"
+    ],
+    "title": "EditOp",
+    "type": "object"
+   },
+   "EditOps": {
+    "properties": {
+     "text_delete": {
+      "title": "Text Delete",
+      "type": "boolean"
+     },
+     "text_insert": {
+      "title": "Text Insert",
+      "type": "boolean"
+     },
+     "text_move": {
+      "title": "Text Move",
+      "type": "boolean"
+     },
+     "text_replace": {
+      "title": "Text Replace",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "text_replace",
+     "text_delete",
+     "text_move",
+     "text_insert"
+    ],
+    "title": "EditOps",
+    "type": "object"
+   },
+   "ErrorBody": {
+    "properties": {
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "details": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Details",
+      "type": "object"
+     },
+     "message": {
+      "title": "Message",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code",
+     "message"
+    ],
+    "title": "ErrorBody",
+    "type": "object"
+   },
+   "ErrorResponse": {
+    "properties": {
+     "error": {
+      "$ref": "#/components/schemas/ErrorBody"
+     }
+    },
+    "required": [
+     "error"
+    ],
+    "title": "ErrorResponse",
+    "type": "object"
+   },
+   "ExtractIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Filename"
+     },
+     "pages": {
+      "items": {
+       "type": "integer"
+      },
+      "minItems": 1,
+      "title": "Pages",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "pages"
+    ],
+    "title": "ExtractIn",
+    "type": "object"
+   },
+   "FontInfo": {
+    "properties": {
+     "base_font": {
+      "title": "Base Font",
+      "type": "string"
+     },
+     "embedded": {
+      "title": "Embedded",
+      "type": "boolean"
+     },
+     "encoding": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Encoding"
+     },
+     "resource": {
+      "title": "Resource",
+      "type": "string"
+     },
+     "subtype": {
+      "title": "Subtype",
+      "type": "string"
+     },
+     "used": {
+      "title": "Used",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "resource",
+     "base_font",
+     "subtype",
+     "embedded",
+     "used",
+     "encoding"
+    ],
+    "title": "FontInfo",
+    "type": "object"
+   },
+   "InsertBlankIn": {
+    "properties": {
+     "after_page": {
+      "default": 0,
+      "description": "Insert after this page (0 = at start)",
+      "minimum": 0.0,
+      "title": "After Page",
+      "type": "integer"
+     },
+     "count": {
+      "default": 1,
+      "maximum": 100.0,
+      "minimum": 1.0,
+      "title": "Count",
+      "type": "integer"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "height": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Height"
+     },
+     "width": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Width"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "InsertBlankIn",
+    "type": "object"
+   },
+   "InsertFromIn": {
+    "properties": {
+     "after_page": {
+      "minimum": 0.0,
+      "title": "After Page",
+      "type": "integer"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "source_document_id": {
+      "title": "Source Document Id",
+      "type": "string"
+     },
+     "source_pages": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Pages"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "source_document_id",
+     "after_page"
+    ],
+    "title": "InsertFromIn",
+    "type": "object"
+   },
+   "Limitation": {
+    "properties": {
+     "code": {
+      "title": "Code",
+      "type": "string"
+     },
+     "font": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Font"
+     },
+     "message": {
+      "title": "Message",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code",
+     "message"
+    ],
+    "title": "Limitation",
+    "type": "object"
+   },
+   "LoginIn": {
+    "properties": {
+     "email": {
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+     },
+     "org_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Org Id"
+     },
+     "password": {
+      "title": "Password",
+      "type": "string"
+     }
+    },
+    "required": [
+     "email",
+     "password"
+    ],
+    "title": "LoginIn",
+    "type": "object"
+   },
+   "MemberIn": {
+    "properties": {
+     "email": {
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+     },
+     "password": {
+      "maxLength": 128,
+      "minLength": 10,
+      "title": "Password",
+      "type": "string"
+     },
+     "role": {
+      "enum": [
+       "admin",
+       "member",
+       "viewer"
+      ],
+      "title": "Role",
+      "type": "string"
+     }
+    },
+    "required": [
+     "email",
+     "password",
+     "role"
+    ],
+    "title": "MemberIn",
+    "type": "object"
+   },
+   "MergeIn": {
+    "properties": {
+     "document_ids": {
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 50,
+      "minItems": 2,
+      "title": "Document Ids",
+      "type": "array"
+     },
+     "filename": {
+      "default": "merged.pdf",
+      "title": "Filename",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_ids"
+    ],
+    "title": "MergeIn",
+    "type": "object"
+   },
+   "MetadataOut": {
+    "properties": {
+     "attachments": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Attachments",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "form_field_count": {
+      "title": "Form Field Count",
+      "type": "integer"
+     },
+     "has_acroform": {
+      "title": "Has Acroform",
+      "type": "boolean"
+     },
+     "has_javascript": {
+      "title": "Has Javascript",
+      "type": "boolean"
+     },
+     "has_outlines": {
+      "title": "Has Outlines",
+      "type": "boolean"
+     },
+     "has_signatures": {
+      "title": "Has Signatures",
+      "type": "boolean"
+     },
+     "info": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "title": "Info",
+      "type": "object"
+     },
+     "is_encrypted": {
+      "title": "Is Encrypted",
+      "type": "boolean"
+     },
+     "is_linearized": {
+      "title": "Is Linearized",
+      "type": "boolean"
+     },
+     "page_count": {
+      "title": "Page Count",
+      "type": "integer"
+     },
+     "pages": {
+      "items": {
+       "$ref": "#/components/schemas/PageInfo"
+      },
+      "title": "Pages",
+      "type": "array"
+     },
+     "pdf_version": {
+      "title": "Pdf Version",
+      "type": "string"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "version_id",
+     "pdf_version",
+     "page_count",
+     "info",
+     "is_encrypted",
+     "has_outlines",
+     "has_acroform",
+     "form_field_count",
+     "has_signatures",
+     "has_javascript",
+     "attachments",
+     "is_linearized",
+     "pages"
+    ],
+    "title": "MetadataOut",
+    "type": "object"
+   },
+   "PageCapability": {
+    "properties": {
+     "editable_fonts": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Editable Fonts",
+      "type": "array"
+     },
+     "limitations": {
+      "items": {
+       "$ref": "#/components/schemas/Limitation"
+      },
+      "title": "Limitations",
+      "type": "array"
+     },
+     "number": {
+      "title": "Number",
+      "type": "integer"
+     },
+     "text_delete": {
+      "title": "Text Delete",
+      "type": "boolean"
+     },
+     "text_insert": {
+      "title": "Text Insert",
+      "type": "boolean"
+     },
+     "text_move": {
+      "title": "Text Move",
+      "type": "boolean"
+     },
+     "text_replace": {
+      "title": "Text Replace",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "number",
+     "text_replace",
+     "text_delete",
+     "text_move",
+     "text_insert",
+     "editable_fonts",
+     "limitations"
+    ],
+    "title": "PageCapability",
+    "type": "object"
+   },
+   "PageInfo": {
+    "properties": {
+     "annotations": {
+      "title": "Annotations",
+      "type": "integer"
+     },
+     "fonts": {
+      "items": {
+       "$ref": "#/components/schemas/FontInfo"
+      },
+      "title": "Fonts",
+      "type": "array"
+     },
+     "height": {
+      "title": "Height",
+      "type": "number"
+     },
+     "images": {
+      "title": "Images",
+      "type": "integer"
+     },
+     "number": {
+      "title": "Number",
+      "type": "integer"
+     },
+     "rotation": {
+      "title": "Rotation",
+      "type": "integer"
+     },
+     "width": {
+      "title": "Width",
+      "type": "number"
+     }
+    },
+    "required": [
+     "number",
+     "width",
+     "height",
+     "rotation",
+     "annotations",
+     "fonts",
+     "images"
+    ],
+    "title": "PageInfo",
+    "type": "object"
+   },
+   "PageOps": {
+    "properties": {
+     "delete": {
+      "default": true,
+      "title": "Delete",
+      "type": "boolean"
+     },
+     "duplicate": {
+      "default": true,
+      "title": "Duplicate",
+      "type": "boolean"
+     },
+     "extract": {
+      "title": "Extract",
+      "type": "boolean"
+     },
+     "insert_blank": {
+      "default": true,
+      "title": "Insert Blank",
+      "type": "boolean"
+     },
+     "merge": {
+      "title": "Merge",
+      "type": "boolean"
+     },
+     "reorder": {
+      "title": "Reorder",
+      "type": "boolean"
+     },
+     "rotate": {
+      "title": "Rotate",
+      "type": "boolean"
+     },
+     "split": {
+      "title": "Split",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "rotate",
+     "reorder",
+     "extract",
+     "split",
+     "merge"
+    ],
+    "title": "PageOps",
+    "type": "object"
+   },
+   "RefreshIn": {
+    "properties": {
+     "refresh_token": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Refresh Token"
+     }
+    },
+    "title": "RefreshIn",
+    "type": "object"
+   },
+   "RegisterIn": {
+    "properties": {
+     "email": {
+      "format": "email",
+      "title": "Email",
+      "type": "string"
+     },
+     "org_name": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Org Name",
+      "type": "string"
+     },
+     "password": {
+      "maxLength": 128,
+      "minLength": 10,
+      "title": "Password",
+      "type": "string"
+     }
+    },
+    "required": [
+     "email",
+     "password",
+     "org_name"
+    ],
+    "title": "RegisterIn",
+    "type": "object"
+   },
+   "ReorderIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "order": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Order",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "order"
+    ],
+    "title": "ReorderIn",
+    "type": "object"
+   },
+   "RotateIn": {
+    "properties": {
+     "angle": {
+      "enum": [
+       90,
+       180,
+       270,
+       -90
+      ],
+      "title": "Angle",
+      "type": "integer"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "pages": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pages"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version",
+     "angle"
+    ],
+    "title": "RotateIn",
+    "type": "object"
+   },
+   "SplitIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "ranges": {
+      "items": {
+       "items": {
+        "type": "integer"
+       },
+       "type": "array"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Ranges",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "ranges"
+    ],
+    "title": "SplitIn",
+    "type": "object"
+   },
+   "TokenOut": {
+    "properties": {
+     "access_token": {
+      "title": "Access Token",
+      "type": "string"
+     },
+     "expires_in": {
+      "title": "Expires In",
+      "type": "integer"
+     },
+     "refresh_token": {
+      "title": "Refresh Token",
+      "type": "string"
+     },
+     "token_type": {
+      "title": "Token Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "access_token",
+     "refresh_token",
+     "token_type",
+     "expires_in"
+    ],
+    "title": "TokenOut",
+    "type": "object"
+   },
+   "UploadOut": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
+     "page_count": {
+      "title": "Page Count",
+      "type": "integer"
+     },
+     "sha256": {
+      "title": "Sha256",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version_id",
+     "version",
+     "sha256",
+     "size",
+     "page_count",
+     "filename"
+    ],
+    "title": "UploadOut",
+    "type": "object"
+   },
+   "VersionOut": {
+    "properties": {
+     "created_at": {
+      "title": "Created At",
+      "type": "string"
+     },
+     "number": {
+      "title": "Number",
+      "type": "integer"
+     },
+     "operation": {
+      "title": "Operation",
+      "type": "string"
+     },
+     "parent_version_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Parent Version Id"
+     },
+     "sha256": {
+      "title": "Sha256",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "version_id",
+     "number",
+     "sha256",
+     "size",
+     "operation",
+     "parent_version_id",
+     "created_at"
+    ],
+    "title": "VersionOut",
+    "type": "object"
+   },
+   "VersionResult": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
+     "report": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Report",
+      "type": "object"
+     },
+     "sha256": {
+      "title": "Sha256",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version_id",
+     "version",
+     "sha256",
+     "size",
+     "filename"
+    ],
+    "title": "VersionResult",
+    "type": "object"
+   }
+  },
+  "securitySchemes": {
+   "HTTPBearer": {
+    "scheme": "bearer",
+    "type": "http"
+   }
+  }
+ },
  "info": {
   "title": "THYNKPDF API",
   "version": "0.1.0"
  },
+ "openapi": "3.1.0",
  "paths": {
-  "/auth/register": {
-   "post": {
-    "tags": [
-     "auth"
-    ],
-    "summary": "Register",
-    "operationId": "register_auth_register_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/RegisterIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "201": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/TokenOut"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    }
-   }
-  },
   "/auth/login": {
    "post": {
-    "tags": [
-     "auth"
-    ],
-    "summary": "Login",
     "operationId": "login_auth_login_post",
     "requestBody": {
      "content": {
@@ -135,319 +1377,1659 @@
     },
     "responses": {
      "200": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/TokenOut"
         }
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
-      "description": "Bad Request",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Bad Request"
      },
      "401": {
-      "description": "Unauthorized",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unauthorized"
      },
      "403": {
-      "description": "Forbidden",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Forbidden"
      },
      "404": {
-      "description": "Not Found",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Not Found"
      },
      "409": {
-      "description": "Conflict",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Conflict"
      },
      "413": {
-      "description": "Content Too Large",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Content Too Large"
      },
      "415": {
-      "description": "Unsupported Media Type",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unsupported Media Type"
      },
      "422": {
-      "description": "Unprocessable Content",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unprocessable Content"
      }
-    }
-   }
-  },
-  "/auth/refresh": {
-   "post": {
+    },
+    "summary": "Login",
     "tags": [
      "auth"
+    ]
+   }
+  },
+  "/auth/logout": {
+   "post": {
+    "description": "Revokes the refresh token (cookie or body) and clears the cookie. Idempotent.",
+    "operationId": "logout_auth_logout_post",
+    "parameters": [
+     {
+      "in": "cookie",
+      "name": "thynkpdf_rt",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Thynkpdf Rt"
+      }
+     }
     ],
-    "summary": "Refresh",
-    "operationId": "refresh_auth_refresh_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/RefreshIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/TokenOut"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/RefreshIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "B"
        }
       }
      }
-    }
+    },
+    "responses": {
+     "204": {
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Logout",
+    "tags": [
+     "auth"
+    ]
    }
   },
   "/auth/me": {
    "get": {
-    "tags": [
-     "auth"
-    ],
-    "summary": "Me",
     "operationId": "me_auth_me_get",
     "responses": {
      "200": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
         "schema": {}
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
-      "description": "Bad Request",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Bad Request"
      },
      "401": {
-      "description": "Unauthorized",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unauthorized"
      },
      "403": {
-      "description": "Forbidden",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Forbidden"
      },
      "404": {
-      "description": "Not Found",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Not Found"
      },
      "409": {
-      "description": "Conflict",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Conflict"
      },
      "413": {
-      "description": "Content Too Large",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Content Too Large"
      },
      "415": {
-      "description": "Unsupported Media Type",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unsupported Media Type"
      },
      "422": {
-      "description": "Unprocessable Content",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unprocessable Content"
      }
     },
     "security": [
      {
       "HTTPBearer": []
      }
+    ],
+    "summary": "Me",
+    "tags": [
+     "auth"
+    ]
+   }
+  },
+  "/auth/refresh": {
+   "post": {
+    "description": "Rotating refresh: each refresh token is single-use (replay -> TOKEN_REVOKED).",
+    "operationId": "refresh_auth_refresh_post",
+    "parameters": [
+     {
+      "in": "cookie",
+      "name": "thynkpdf_rt",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Thynkpdf Rt"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/RefreshIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "B"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TokenOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Refresh",
+    "tags": [
+     "auth"
+    ]
+   }
+  },
+  "/auth/register": {
+   "post": {
+    "operationId": "register_auth_register_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RegisterIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TokenOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Register",
+    "tags": [
+     "auth"
+    ]
+   }
+  },
+  "/documents": {
+   "get": {
+    "operationId": "list_docs_documents_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "offset",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "Offset",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/DocumentOut"
+         },
+         "title": "Response List Docs Documents Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "List Docs",
+    "tags": [
+     "documents"
+    ]
+   }
+  },
+  "/documents/upload": {
+   "post": {
+    "operationId": "upload_documents_upload_post",
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_documents_upload_post"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UploadOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Upload",
+    "tags": [
+     "documents"
+    ]
+   }
+  },
+  "/documents/{doc_id}": {
+   "get": {
+    "operationId": "get_document_documents__doc_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DocumentOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Document",
+    "tags": [
+     "documents"
+    ]
+   }
+  },
+  "/documents/{doc_id}/download": {
+   "get": {
+    "operationId": "download_current_documents__doc_id__download_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       },
+       "application/pdf": {}
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Download Current",
+    "tags": [
+     "documents"
+    ]
+   }
+  },
+  "/documents/{doc_id}/versions": {
+   "get": {
+    "operationId": "versions_documents__doc_id__versions_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/VersionOut"
+         },
+         "title": "Response Versions Documents  Doc Id  Versions Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Versions",
+    "tags": [
+     "documents"
+    ]
+   },
+   "post": {
+    "description": "Save client-modified bytes as a new immutable version (same validation as upload). 409 VERSION_CONFLICT if stale.",
+    "operationId": "upload_version_documents__doc_id__versions_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_upload_version_documents__doc_id__versions_post"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Upload Version",
+    "tags": [
+     "documents"
+    ]
+   }
+  },
+  "/documents/{doc_id}/versions/{version_id}/file": {
+   "get": {
+    "operationId": "download_version_documents__doc_id__versions__version_id__file_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "doc_id",
+      "required": true,
+      "schema": {
+       "title": "Doc Id",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "version_id",
+      "required": true,
+      "schema": {
+       "title": "Version Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       },
+       "application/pdf": {}
+      },
+      "description": "Successful Response"
+     },
+     "206": {
+      "content": {
+       "application/pdf": {}
+      },
+      "description": "Partial Content"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Download Version",
+    "tags": [
+     "documents"
+    ]
+   }
+  },
+  "/health": {
+   "get": {
+    "operationId": "health_health_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Health",
+    "tags": [
+     "ops"
+    ]
+   }
+  },
+  "/jobs/{job_id}": {
+   "get": {
+    "operationId": "job_jobs__job_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "job_id",
+      "required": true,
+      "schema": {
+       "title": "Job Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Job",
+    "tags": [
+     "jobs"
     ]
    }
   },
   "/orgs/members": {
    "post": {
-    "tags": [
-     "orgs"
-    ],
-    "summary": "Add Member",
     "description": "Dev-stage invite: creates (or attaches) a user with a role in the caller's org. Admin+.",
     "operationId": "add_member_orgs_members_post",
     "requestBody": {
@@ -462,113 +3044,345 @@
     },
     "responses": {
      "201": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
         "schema": {}
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
-      "description": "Bad Request",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Bad Request"
      },
      "401": {
-      "description": "Unauthorized",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unauthorized"
      },
      "403": {
-      "description": "Forbidden",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Forbidden"
      },
      "404": {
-      "description": "Not Found",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Not Found"
      },
      "409": {
-      "description": "Conflict",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Conflict"
      },
      "413": {
-      "description": "Content Too Large",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Content Too Large"
      },
      "415": {
-      "description": "Unsupported Media Type",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unsupported Media Type"
      },
      "422": {
-      "description": "Unprocessable Content",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unprocessable Content"
      }
     },
     "security": [
      {
       "HTTPBearer": []
      }
+    ],
+    "summary": "Add Member",
+    "tags": [
+     "orgs"
     ]
    }
   },
-  "/documents/upload": {
+  "/pdf/compress": {
    "post": {
-    "tags": [
-     "documents"
-    ],
-    "summary": "Upload",
-    "operationId": "upload_documents_upload_post",
+    "operationId": "compress_pdf_compress_post",
     "requestBody": {
      "content": {
-      "multipart/form-data": {
+      "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/Body_upload_documents_upload_post"
+        "$ref": "#/components/schemas/CompressIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Compress",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/edit": {
+   "post": {
+    "operationId": "edit_pdf_edit_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EditIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Edit",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/merge": {
+   "post": {
+    "operationId": "merge_pdf_merge_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MergeIn"
        }
       }
      },
@@ -576,151 +3390,949 @@
     },
     "responses": {
      "201": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/UploadOut"
         }
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
-      "description": "Bad Request",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Bad Request"
      },
      "401": {
-      "description": "Unauthorized",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unauthorized"
      },
      "403": {
-      "description": "Forbidden",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Forbidden"
      },
      "404": {
-      "description": "Not Found",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Not Found"
      },
      "409": {
-      "description": "Conflict",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Conflict"
      },
      "413": {
-      "description": "Content Too Large",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Content Too Large"
      },
      "415": {
-      "description": "Unsupported Media Type",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unsupported Media Type"
      },
      "422": {
-      "description": "Unprocessable Content",
       "content": {
        "application/json": {
         "schema": {
          "$ref": "#/components/schemas/ErrorResponse"
         }
        }
-      }
+      },
+      "description": "Unprocessable Content"
      }
     },
     "security": [
      {
       "HTTPBearer": []
      }
+    ],
+    "summary": "Merge",
+    "tags": [
+     "pdf"
     ]
    }
   },
-  "/documents": {
-   "get": {
-    "tags": [
-     "documents"
-    ],
-    "summary": "List Docs",
-    "operationId": "list_docs_documents_get",
+  "/pdf/pages/delete": {
+   "post": {
+    "description": "Previous versions remain downloadable (recovery = restore version). 400 CANNOT_DELETE_ALL_PAGES.",
+    "operationId": "delete_pdf_pages_delete_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DeleteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
     "security": [
      {
       "HTTPBearer": []
      }
     ],
-    "parameters": [
-     {
-      "name": "limit",
-      "in": "query",
-      "required": false,
-      "schema": {
-       "type": "integer",
-       "default": 50,
-       "title": "Limit"
+    "summary": "Delete",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/duplicate": {
+   "post": {
+    "description": "Duplicated pages do not copy annotations (documented limitation).",
+    "operationId": "duplicate_pdf_pages_duplicate_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DuplicateIn"
+       }
       }
      },
-     {
-      "name": "offset",
-      "in": "query",
-      "required": false,
-      "schema": {
-       "type": "integer",
-       "default": 0,
-       "title": "Offset"
-      }
-     }
-    ],
+     "required": true
+    },
     "responses": {
      "200": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
         "schema": {
-         "type": "array",
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Duplicate",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/extract": {
+   "post": {
+    "operationId": "extract_pdf_pages_extract_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ExtractIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/UploadOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Extract",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/insert-blank": {
+   "post": {
+    "operationId": "insert_blank_pdf_pages_insert_blank_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InsertBlankIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Insert Blank",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/insert-from": {
+   "post": {
+    "description": "Inserts pages of another document in the same organization (source is read, never modified).",
+    "operationId": "insert_from_pdf_pages_insert_from_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InsertFromIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Insert From",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/reorder": {
+   "post": {
+    "operationId": "reorder_pdf_pages_reorder_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReorderIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Reorder",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/pages/rotate": {
+   "post": {
+    "operationId": "rotate_pdf_pages_rotate_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RotateIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Rotate",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/split": {
+   "post": {
+    "operationId": "split_pdf_split_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SplitIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "201": {
+      "content": {
+       "application/json": {
+        "schema": {
          "items": {
-          "$ref": "#/components/schemas/DocumentOut"
+          "$ref": "#/components/schemas/UploadOut"
          },
-         "title": "Response List Docs Documents Get"
+         "title": "Response Split Pdf Split Post",
+         "type": "array"
         }
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
       "content": {
@@ -802,42 +4414,42 @@
       },
       "description": "Unprocessable Content"
      }
-    }
-   }
-  },
-  "/documents/{doc_id}": {
-   "get": {
-    "tags": [
-     "documents"
-    ],
-    "summary": "Get Document",
-    "operationId": "get_document_documents__doc_id__get",
+    },
     "security": [
      {
       "HTTPBearer": []
      }
     ],
+    "summary": "Split",
+    "tags": [
+     "pdf"
+    ]
+   }
+  },
+  "/pdf/{doc_id}/capabilities": {
+   "get": {
+    "operationId": "caps_pdf__doc_id__capabilities_get",
     "parameters": [
      {
-      "name": "doc_id",
       "in": "path",
+      "name": "doc_id",
       "required": true,
       "schema": {
-       "type": "string",
-       "title": "Doc Id"
+       "title": "Doc Id",
+       "type": "string"
       }
      }
     ],
     "responses": {
      "200": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/DocumentOut"
+         "$ref": "#/components/schemas/CapabilitiesOut"
         }
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
       "content": {
@@ -919,402 +4531,34 @@
       },
       "description": "Unprocessable Content"
      }
-    }
-   }
-  },
-  "/documents/{doc_id}/versions": {
-   "get": {
-    "tags": [
-     "documents"
-    ],
-    "summary": "Versions",
-    "operationId": "versions_documents__doc_id__versions_get",
+    },
     "security": [
      {
       "HTTPBearer": []
      }
     ],
-    "parameters": [
-     {
-      "name": "doc_id",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Doc Id"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "type": "array",
-         "items": {
-          "$ref": "#/components/schemas/VersionOut"
-         },
-         "title": "Response Versions Documents  Doc Id  Versions Get"
-        }
-       }
-      }
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    }
-   }
-  },
-  "/documents/{doc_id}/versions/{version_id}/file": {
-   "get": {
+    "summary": "Caps",
     "tags": [
-     "documents"
-    ],
-    "summary": "Download Version",
-    "operationId": "download_version_documents__doc_id__versions__version_id__file_get",
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "parameters": [
-     {
-      "name": "doc_id",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Doc Id"
-      }
-     },
-     {
-      "name": "version_id",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Version Id"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       },
-       "application/pdf": {}
-      }
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     },
-     "206": {
-      "content": {
-       "application/pdf": {}
-      },
-      "description": "Partial Content"
-     }
-    }
-   }
-  },
-  "/documents/{doc_id}/download": {
-   "get": {
-    "tags": [
-     "documents"
-    ],
-    "summary": "Download Current",
-    "operationId": "download_current_documents__doc_id__download_get",
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "parameters": [
-     {
-      "name": "doc_id",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Doc Id"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       },
-       "application/pdf": {}
-      }
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    }
+     "pdf"
+    ]
    }
   },
   "/pdf/{doc_id}/metadata": {
    "get": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Metadata",
     "operationId": "metadata_pdf__doc_id__metadata_get",
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
     "parameters": [
      {
-      "name": "doc_id",
       "in": "path",
+      "name": "doc_id",
       "required": true,
       "schema": {
-       "type": "string",
-       "title": "Doc Id"
+       "title": "Doc Id",
+       "type": "string"
       }
      },
      {
-      "name": "version",
       "in": "query",
+      "name": "version",
       "required": false,
       "schema": {
        "anyOf": [
@@ -1331,12 +4575,14 @@
     ],
     "responses": {
      "200": {
-      "description": "Successful Response",
       "content": {
        "application/json": {
-        "schema": {}
+        "schema": {
+         "$ref": "#/components/schemas/MetadataOut"
+        }
        }
-      }
+      },
+      "description": "Successful Response"
      },
      "400": {
       "content": {
@@ -1418,1825 +4664,16 @@
       },
       "description": "Unprocessable Content"
      }
-    }
-   }
-  },
-  "/pdf/{doc_id}/capabilities": {
-   "get": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Caps",
-    "operationId": "caps_pdf__doc_id__capabilities_get",
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "parameters": [
-     {
-      "name": "doc_id",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Doc Id"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    }
-   }
-  },
-  "/pdf/pages/rotate": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Rotate",
-    "operationId": "rotate_pdf_pages_rotate_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/RotateIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/VersionResult"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
     },
     "security": [
      {
       "HTTPBearer": []
      }
+    ],
+    "summary": "Metadata",
+    "tags": [
+     "pdf"
     ]
-   }
-  },
-  "/pdf/pages/reorder": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Reorder",
-    "operationId": "reorder_pdf_pages_reorder_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/ReorderIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/VersionResult"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ]
-   }
-  },
-  "/pdf/pages/extract": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Extract",
-    "operationId": "extract_pdf_pages_extract_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/ExtractIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "201": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/UploadOut"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ]
-   }
-  },
-  "/pdf/merge": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Merge",
-    "operationId": "merge_pdf_merge_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/MergeIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "201": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/UploadOut"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ]
-   }
-  },
-  "/pdf/split": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Split",
-    "operationId": "split_pdf_split_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/SplitIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "201": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "items": {
-          "$ref": "#/components/schemas/UploadOut"
-         },
-         "type": "array",
-         "title": "Response Split Pdf Split Post"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ]
-   }
-  },
-  "/pdf/edit": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Edit",
-    "operationId": "edit_pdf_edit_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/EditIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/VersionResult"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ]
-   }
-  },
-  "/pdf/compress": {
-   "post": {
-    "tags": [
-     "pdf"
-    ],
-    "summary": "Compress",
-    "operationId": "compress_pdf_compress_post",
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/CompressIn"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/VersionResult"
-        }
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ]
-   }
-  },
-  "/jobs/{job_id}": {
-   "get": {
-    "tags": [
-     "jobs"
-    ],
-    "summary": "Job",
-    "operationId": "job_jobs__job_id__get",
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "parameters": [
-     {
-      "name": "job_id",
-      "in": "path",
-      "required": true,
-      "schema": {
-       "type": "string",
-       "title": "Job Id"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    }
-   }
-  },
-  "/health": {
-   "get": {
-    "tags": [
-     "ops"
-    ],
-    "summary": "Health",
-    "operationId": "health_health_get",
-    "responses": {
-     "200": {
-      "description": "Successful Response",
-      "content": {
-       "application/json": {
-        "schema": {}
-       }
-      }
-     },
-     "400": {
-      "description": "Bad Request",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "401": {
-      "description": "Unauthorized",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "403": {
-      "description": "Forbidden",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "404": {
-      "description": "Not Found",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "409": {
-      "description": "Conflict",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "413": {
-      "description": "Content Too Large",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "415": {
-      "description": "Unsupported Media Type",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     },
-     "422": {
-      "description": "Unprocessable Content",
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      }
-     }
-    }
-   }
-  }
- },
- "components": {
-  "schemas": {
-   "Body_upload_documents_upload_post": {
-    "properties": {
-     "file": {
-      "type": "string",
-      "contentMediaType": "application/octet-stream",
-      "title": "File"
-     }
-    },
-    "type": "object",
-    "required": [
-     "file"
-    ],
-    "title": "Body_upload_documents_upload_post"
-   },
-   "CompressIn": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "expected_version": {
-      "type": "integer",
-      "minimum": 1.0,
-      "title": "Expected Version"
-     },
-     "preset": {
-      "type": "string",
-      "enum": [
-       "low",
-       "balanced",
-       "high"
-      ],
-      "title": "Preset",
-      "default": "balanced"
-     },
-     "strip_metadata": {
-      "type": "boolean",
-      "title": "Strip Metadata",
-      "default": false
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "expected_version"
-    ],
-    "title": "CompressIn"
-   },
-   "DocumentOut": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "filename": {
-      "type": "string",
-      "title": "Filename"
-     },
-     "current_version": {
-      "type": "integer",
-      "title": "Current Version"
-     },
-     "version_id": {
-      "type": "string",
-      "title": "Version Id"
-     },
-     "created_at": {
-      "type": "string",
-      "title": "Created At"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "filename",
-     "current_version",
-     "version_id",
-     "created_at"
-    ],
-    "title": "DocumentOut"
-   },
-   "EditIn": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "expected_version": {
-      "type": "integer",
-      "minimum": 1.0,
-      "title": "Expected Version"
-     },
-     "operations": {
-      "items": {
-       "$ref": "#/components/schemas/EditOp"
-      },
-      "type": "array",
-      "maxItems": 100,
-      "minItems": 1,
-      "title": "Operations"
-     },
-     "revision_note": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Revision Note"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "expected_version",
-     "operations"
-    ],
-    "title": "EditIn"
-   },
-   "EditOp": {
-    "properties": {
-     "op": {
-      "type": "string",
-      "enum": [
-       "text_replace",
-       "text_insert",
-       "text_delete",
-       "image_replace",
-       "image_move",
-       "font_change",
-       "link_change"
-      ],
-      "title": "Op"
-     },
-     "page": {
-      "type": "integer",
-      "minimum": 1.0,
-      "title": "Page"
-     },
-     "object_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Object Id"
-     },
-     "bbox": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Bbox"
-     },
-     "find": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Find"
-     },
-     "replacement": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Replacement"
-     },
-     "occurrence": {
-      "type": "string",
-      "enum": [
-       "first",
-       "all"
-      ],
-      "title": "Occurrence",
-      "default": "all"
-     },
-     "formatting": {
-      "anyOf": [
-       {
-        "additionalProperties": true,
-        "type": "object"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Formatting"
-     }
-    },
-    "type": "object",
-    "required": [
-     "op",
-     "page"
-    ],
-    "title": "EditOp"
-   },
-   "ErrorBody": {
-    "properties": {
-     "code": {
-      "type": "string",
-      "title": "Code"
-     },
-     "message": {
-      "type": "string",
-      "title": "Message"
-     },
-     "details": {
-      "additionalProperties": true,
-      "type": "object",
-      "title": "Details",
-      "default": {}
-     }
-    },
-    "type": "object",
-    "required": [
-     "code",
-     "message"
-    ],
-    "title": "ErrorBody"
-   },
-   "ErrorResponse": {
-    "properties": {
-     "error": {
-      "$ref": "#/components/schemas/ErrorBody"
-     }
-    },
-    "type": "object",
-    "required": [
-     "error"
-    ],
-    "title": "ErrorResponse"
-   },
-   "ExtractIn": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "pages": {
-      "items": {
-       "type": "integer"
-      },
-      "type": "array",
-      "minItems": 1,
-      "title": "Pages"
-     },
-     "filename": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Filename"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "pages"
-    ],
-    "title": "ExtractIn"
-   },
-   "LoginIn": {
-    "properties": {
-     "email": {
-      "type": "string",
-      "format": "email",
-      "title": "Email"
-     },
-     "password": {
-      "type": "string",
-      "title": "Password"
-     },
-     "org_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Org Id"
-     }
-    },
-    "type": "object",
-    "required": [
-     "email",
-     "password"
-    ],
-    "title": "LoginIn"
-   },
-   "MemberIn": {
-    "properties": {
-     "email": {
-      "type": "string",
-      "format": "email",
-      "title": "Email"
-     },
-     "password": {
-      "type": "string",
-      "maxLength": 128,
-      "minLength": 10,
-      "title": "Password"
-     },
-     "role": {
-      "type": "string",
-      "enum": [
-       "admin",
-       "member",
-       "viewer"
-      ],
-      "title": "Role"
-     }
-    },
-    "type": "object",
-    "required": [
-     "email",
-     "password",
-     "role"
-    ],
-    "title": "MemberIn"
-   },
-   "MergeIn": {
-    "properties": {
-     "document_ids": {
-      "items": {
-       "type": "string"
-      },
-      "type": "array",
-      "maxItems": 50,
-      "minItems": 2,
-      "title": "Document Ids"
-     },
-     "filename": {
-      "type": "string",
-      "title": "Filename",
-      "default": "merged.pdf"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_ids"
-    ],
-    "title": "MergeIn"
-   },
-   "RefreshIn": {
-    "properties": {
-     "refresh_token": {
-      "type": "string",
-      "title": "Refresh Token"
-     }
-    },
-    "type": "object",
-    "required": [
-     "refresh_token"
-    ],
-    "title": "RefreshIn"
-   },
-   "RegisterIn": {
-    "properties": {
-     "email": {
-      "type": "string",
-      "format": "email",
-      "title": "Email"
-     },
-     "password": {
-      "type": "string",
-      "maxLength": 128,
-      "minLength": 10,
-      "title": "Password"
-     },
-     "org_name": {
-      "type": "string",
-      "maxLength": 200,
-      "minLength": 1,
-      "title": "Org Name"
-     }
-    },
-    "type": "object",
-    "required": [
-     "email",
-     "password",
-     "org_name"
-    ],
-    "title": "RegisterIn"
-   },
-   "ReorderIn": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "expected_version": {
-      "type": "integer",
-      "minimum": 1.0,
-      "title": "Expected Version"
-     },
-     "order": {
-      "items": {
-       "type": "integer"
-      },
-      "type": "array",
-      "title": "Order"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "expected_version",
-     "order"
-    ],
-    "title": "ReorderIn"
-   },
-   "RotateIn": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "expected_version": {
-      "type": "integer",
-      "minimum": 1.0,
-      "title": "Expected Version"
-     },
-     "pages": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "integer"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Pages"
-     },
-     "angle": {
-      "type": "integer",
-      "enum": [
-       90,
-       180,
-       270,
-       -90
-      ],
-      "title": "Angle"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "expected_version",
-     "angle"
-    ],
-    "title": "RotateIn"
-   },
-   "SplitIn": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "ranges": {
-      "items": {
-       "items": {
-        "type": "integer"
-       },
-       "type": "array"
-      },
-      "type": "array",
-      "maxItems": 100,
-      "minItems": 1,
-      "title": "Ranges"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "ranges"
-    ],
-    "title": "SplitIn"
-   },
-   "TokenOut": {
-    "properties": {
-     "access_token": {
-      "type": "string",
-      "title": "Access Token"
-     },
-     "refresh_token": {
-      "type": "string",
-      "title": "Refresh Token"
-     },
-     "token_type": {
-      "type": "string",
-      "title": "Token Type"
-     },
-     "expires_in": {
-      "type": "integer",
-      "title": "Expires In"
-     }
-    },
-    "type": "object",
-    "required": [
-     "access_token",
-     "refresh_token",
-     "token_type",
-     "expires_in"
-    ],
-    "title": "TokenOut"
-   },
-   "UploadOut": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "version_id": {
-      "type": "string",
-      "title": "Version Id"
-     },
-     "version": {
-      "type": "integer",
-      "title": "Version"
-     },
-     "sha256": {
-      "type": "string",
-      "title": "Sha256"
-     },
-     "size": {
-      "type": "integer",
-      "title": "Size"
-     },
-     "page_count": {
-      "type": "integer",
-      "title": "Page Count"
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "version_id",
-     "version",
-     "sha256",
-     "size",
-     "page_count"
-    ],
-    "title": "UploadOut"
-   },
-   "VersionOut": {
-    "properties": {
-     "version_id": {
-      "type": "string",
-      "title": "Version Id"
-     },
-     "number": {
-      "type": "integer",
-      "title": "Number"
-     },
-     "sha256": {
-      "type": "string",
-      "title": "Sha256"
-     },
-     "size": {
-      "type": "integer",
-      "title": "Size"
-     },
-     "operation": {
-      "type": "string",
-      "title": "Operation"
-     },
-     "parent_version_id": {
-      "anyOf": [
-       {
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Parent Version Id"
-     },
-     "created_at": {
-      "type": "string",
-      "title": "Created At"
-     }
-    },
-    "type": "object",
-    "required": [
-     "version_id",
-     "number",
-     "sha256",
-     "size",
-     "operation",
-     "parent_version_id",
-     "created_at"
-    ],
-    "title": "VersionOut"
-   },
-   "VersionResult": {
-    "properties": {
-     "document_id": {
-      "type": "string",
-      "title": "Document Id"
-     },
-     "version_id": {
-      "type": "string",
-      "title": "Version Id"
-     },
-     "version": {
-      "type": "integer",
-      "title": "Version"
-     },
-     "sha256": {
-      "type": "string",
-      "title": "Sha256"
-     },
-     "size": {
-      "type": "integer",
-      "title": "Size"
-     },
-     "report": {
-      "additionalProperties": true,
-      "type": "object",
-      "title": "Report",
-      "default": {}
-     }
-    },
-    "type": "object",
-    "required": [
-     "document_id",
-     "version_id",
-     "version",
-     "sha256",
-     "size"
-    ],
-    "title": "VersionResult"
-   }
-  },
-  "securitySchemes": {
-   "HTTPBearer": {
-    "type": "http",
-    "scheme": "bearer"
    }
   }
  }

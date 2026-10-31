@@ -108,10 +108,15 @@ def capabilities(data: bytes) -> dict:
             ok, why = _font_editable(f)
             (ok_fonts.append(f["resource"]) if ok else lims.append({"code": why, "message": f"Font {f['base_font']} ({f['resource']}) not safely editable", "font": f["resource"]}))
         text_edit = bool(ok_fonts) and not m["has_signatures"]
-        pages.append({"number": p["number"], "text_replace": text_edit, "editable_fonts": ok_fonts, "limitations": lims})
+        ins = not m["has_signatures"]
+        pages.append({"number": p["number"], "text_replace": text_edit, "text_delete": text_edit, "text_move": text_edit,
+                      "text_insert": ins, "editable_fonts": ok_fonts, "limitations": lims})
     page_ops = not m["has_signatures"]
-    return {"page_ops": {op: page_ops for op in ("rotate", "reorder", "extract", "split", "merge")},
-            "compress": True, "text_replace": any(p["text_replace"] for p in pages),
+    anyp = lambda k: any(p[k] for p in pages)
+    return {"page_ops": {op: page_ops for op in ("rotate", "reorder", "extract", "split", "merge", "insert_blank", "delete", "duplicate")},
+            "edit_ops": {k: anyp(k) for k in ("text_replace", "text_delete", "text_move", "text_insert")},
+            "annotations": not m["has_signatures"], "forms": not m["has_signatures"],
+            "compress": True, "text_replace": anyp("text_replace"),
             "document_limitations": doc_lims, "pages": pages,
             "safe_alternatives": ["ocr (when text layer absent)", "annotations/comments", "replace page via merge"]}
 
