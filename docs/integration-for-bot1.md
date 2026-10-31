@@ -114,3 +114,17 @@ Delete/move/replace require the font to be listed in `pages[n].editable_fonts`. 
 - `POST /pdf/pages/insert-blank {document_id, expected_version, after(0..n), count, width?, height?}` (size defaults to neighbour page)
 - `POST /pdf/pages/delete {document_id, expected_version, pages}` (cannot delete all; old versions remain → recovery via rollback)
 - `POST /pdf/pages/duplicate {document_id, expected_version, page, count}` (annotations are NOT duplicated)
+
+## PR-2: annotations + forms (all writes → new version, need expected_version)
+### Annotations (stored in the PDF `/Annots` with generated `/AP` appearance streams, readable by any viewer)
+- `GET /pdf/{id}/annotations?page=` → `[Annotation{id, page, type, subtype, rect, contents, author, color, editable, ink?}]`. `id` = `/NM` (ours are `thynk-<hex>`); pre-existing annots without NM get `p{page}-i{index}` (index-based → may change after edits; refetch).
+- `POST /pdf/annotations {document_id, expected_version, type: highlight|note|ink|rectangle|ellipse|line, page, rect?, ink?, color?[r,g,b 0..1], width?, contents?}` → VersionResult + `annotation_id`. `ink` = list of strokes `[x1,y1,x2,y2,...]`; line uses `rect` as endpoints.
+- `PATCH /pdf/annotations/{annotation_id} {document_id, expected_version, rect?, ink?, color?, contents?, width?}`
+- `DELETE /pdf/annotations/{annotation_id}?document_id=&expected_version=` (also removes its popup)
+- Other subtypes (Link, FreeText, Stamp…) are listed with `editable:false`; PATCH → `EDIT_NOT_SUPPORTED`. Errors: `ANNOTATION_NOT_FOUND` (404).
+### Forms (AcroForm; PDF JavaScript is never executed — `has_actions`/`calculated` are reported only)
+- `GET /pdf/{id}/forms` → `[FormField{name,type,value,required,read_only,options,max_length,page,rect,has_actions,calculated}]`
+- `POST /pdf/forms {document_id, expected_version, fields:[{name, type: text|multiline|checkbox|radio|dropdown|listbox|signature, page, rect | rects(radio), options?, default?, required?, read_only?, max_length?, font_size?}]}` → `FORM_FIELD_EXISTS` (409) on duplicate names.
+- `POST /pdf/forms/fill {document_id, expected_version, values:{name:value} | csv:"name,value\n...", flatten?}` → report `{filled, missing_required, flattened?}`. checkbox=bool, radio=option name, listbox=list. Invalid values → 422 `VALIDATION_ERROR` with `details.fields{name: max_length|invalid_option|expected_boolean|read_only}`; unknown → `FORM_FIELD_NOT_FOUND`.
+- `POST /pdf/forms/flatten {document_id, expected_version, confirm:true}` → burns widgets AND all annotations into content, removes AcroForm. `confirm:false` → `CONFIRMATION_REQUIRED`. Recover via earlier version.
+- `GET /pdf/{id}/forms/export?format=json|csv` (CSV cells starting with = + - @ are prefixed with `'`).
