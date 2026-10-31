@@ -1,42 +1,45 @@
 /**
- * MOCK LAYER — in-memory stand-in for the THYNKPDF backend, matching the agreed shapes.
- * Used only when NEXT_PUBLIC_API_MOCK=1 or in tests. Not a backend integration.
+ * MOCK LAYER — in-memory stand-in for the THYNKPDF backend, matching docs/openapi.json shapes.
+ * Used only when NEXT_PUBLIC_API_MOCK=1 or in unit tests. Not a backend integration.
  */
 import { PDFDocument, degrees as pdfDegrees } from "pdf-lib";
-import type { EditorApi, DocumentRef } from "../types";
+import type { EditorApi, DocumentRef, RotateAngle } from "../types";
+import { VersionConflictError } from "../http";
 
 let seq = 0;
 const id = (p: string) => `${p}_${(++seq).toString(36)}`;
+interface Doc { filename: string; versions: { id: string; bytes: Uint8Array }[] }
 
 export class MockEditorApi implements EditorApi {
   readonly kind = "mock" as const;
-  readonly store = new Map<string, Map<string, Uint8Array>>();
+  readonly docs = new Map<string, Doc>();
   async health() { return true; }
-  async login(_u: string, _p: string) {
-    return { access_token: "mock-access", refresh_token: "mock-refresh", token_type: "bearer", expires_in: 3600 };
-  }
-  async refresh() { return this.login("", ""); }
-  async upload(file: Blob, _filename: string) {
+  async login() { return { access_token: "mock-access", refresh_token: "mock-refresh", token_type: "bearer", expires_in: 900 }; }
+  async refresh() { return this.login(); }
+  async upload(file: Blob, filename: string) {
     const bytes = new Uint8Array(await file.arrayBuffer());
-    await PDFDocument.load(bytes); // validate like a backend would
+    const pdf = await PDFDocument.load(bytes);
     const document_id = id("doc"), version_id = id("ver");
-    this.store.set(document_id, new Map([[version_id, bytes]]));
-    return { document_id, version_id };
+    this.docs.set(document_id, { filename, versions: [{ id: version_id, bytes }] });
+    return { document_id, version_id, version: 1, sha256: "", size: bytes.length, page_count: pdf.getPageCount() };
   }
-  private get(ref: DocumentRef) {
-    const b = this.store.get(ref.document_id)?.get(ref.version_id);
-    if (!b) throw new Error("404 version not found");
-    return b;
+  private doc(docId: string) { const d = this.docs.get(docId); if (!d) throw new Error("DOCUMENT_NOT_FOUND"); return d; }
+  async getDocument(docId: string) {
+    const d = this.doc(docId), v = d.versions.length;
+    return { document_id: docId, filename: d.filename, current_version: v, version_id: d.versions[v - 1].id, created_at: new Date(0).toISOString() };
   }
-  async fileSource(ref: DocumentRef) { return { data: this.get(ref).slice() }; }
-  async rotatePages(ref: DocumentRef, pages: number[], deg: 90 | 180 | 270) {
-    const doc = await PDFDocument.load(this.get(ref));
-    for (const i of pages) {
-      const p = doc.getPage(i);
-      p.setRotation(pdfDegrees((p.getRotation().angle + deg) % 360));
-    }
-    const version_id = id("ver");
-    this.store.get(ref.document_id)!.set(version_id, await doc.save());
-    return { document_id: ref.document_id, version_id };
+  async fileSource(ref: Pick<DocumentRef, "document_id" | "version_id">) {
+    const v = this.doc(ref.document_id).versions.find((x) => x.id === ref.version_id);
+    if (!v) throw new Error("VERSION_NOT_FOUND");
+    return { data: v.bytes.slice() };
+  }
+  async rotatePages(ref: DocumentRef, pages: number[], angle: RotateAngle) {
+    const d = this.doc(ref.document_id);
+    if (ref.version !== d.versions.length) throw new VersionConflictError(409, "VERSION_CONFLICT", "stale version", { current_version: d.versions.length });
+    const pdf = await PDFDocument.load(d.versions[d.versions.length - 1].bytes);
+    for (const n of pages) { const p = pdf.getPage(n - 1); p.setRotation(pdfDegrees((p.getRotation().angle + angle + 360) % 360)); }
+    const bytes = await pdf.save(), version_id = id("ver");
+    d.versions.push({ id: version_id, bytes });
+    return { document_id: ref.document_id, version_id, version: d.versions.length, sha256: "", size: bytes.length, report: {} };
   }
 }

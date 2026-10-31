@@ -36,7 +36,7 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
         <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
           <dt className="text-neutral-500">Name</dt><dd className="truncate">{fileName ?? "—"}</dd>
           <dt className="text-neutral-500">Pages</dt><dd>{pageSizes.length || "—"}</dd>
-          <dt className="text-neutral-500">Version</dt><dd className="truncate" data-testid="version-id">{s.ref?.version_id ?? "local only"}</dd>
+          <dt className="text-neutral-500">Version</dt><dd className="truncate" data-testid="version-id">{s.ref ? `v${s.ref.version} (${s.ref.version_id.slice(0, 8)})` : "local only"}</dd>
         </dl>
       </section>
       <section>
