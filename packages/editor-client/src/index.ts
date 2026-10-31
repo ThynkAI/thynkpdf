@@ -1,5 +1,5 @@
 export * from "./types";
-export { HttpEditorApi, ApiError } from "./http";
+export { HttpEditorApi, ApiError, VersionConflictError } from "./http";
 export { MockEditorApi } from "./mocks/mockApi";
 import { HttpEditorApi } from "./http";
 import { MockEditorApi } from "./mocks/mockApi";

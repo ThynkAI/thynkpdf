@@ -9,7 +9,8 @@
     "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
-    "openapi-typescript": "^7.13.0"
+    "openapi-typescript": "7",
+    "typescript": "~5.9.3"
   },
   "scripts": {
     "gen": "openapi-typescript ../../docs/openapi.json -o src/generated/schema.d.ts"
