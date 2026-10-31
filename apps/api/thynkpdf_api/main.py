@@ -67,8 +67,14 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         try: yield s
         finally: s.close()
 
-    def audit(s, org, user, action, target=None):
-        s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target))
+    def audit(s, org, user, action, target=None, document_id=None, actor_email=None, version=None, request=None, details=None):
+        if actor_email is None and user:
+            u = s.get(User, user); actor_email = u.email if u else None
+        ip = ua = None
+        if request is not None:
+            ip = request.client.host if request.client else None; ua = (request.headers.get("user-agent") or "")[:300]
+        s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target, document_id=document_id, actor_email=actor_email,
+                         version=version, ip=ip, user_agent=ua, details=json.dumps(details or {}, sort_keys=True)))
 
     # ---------------- auth ----------------
     REFRESH_COOKIE = "thynkpdf_rt"
@@ -226,7 +232,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         v = DocumentVersion(id=vid, org_id=p.org_id, document_id=d.id, number=number, sha256=sha, size=len(data),
                             storage_key=key, operation=op, operation_params=json.dumps(params or {}), parent_version_id=parent,
                             created_by=p.user_id)
-        s.add(v); audit(s, p.org_id, p.user_id, f"document.{op}", d.id); return v
+        s.add(v); audit(s, p.org_id, p.user_id, f"document.{op}", d.id, document_id=d.id, version=number); return v
 
     def new_version(s, p, d: Document, expected: int, data: bytes, op, params) -> DocumentVersion:
         """Optimistic concurrency: compare-and-swap on documents.current_version + unique(document_id, number)."""
@@ -303,11 +309,15 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/documents/{doc_id}/versions/{version_id}/file", tags=["documents"],
              responses={200: {"content": {"application/pdf": {}}}, 206: {"content": {"application/pdf": {}}}})
     def download_version(doc_id: str, version_id: str, request: Request, p: Principal = Depends(principal), s=Depends(db)):
-        d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d, version_id=version_id))
+        d = get_doc(s, p, doc_id); v = get_ver(s, d, version_id=version_id)
+        audit(s, p.org_id, p.user_id, "document.view", d.id, document_id=d.id, version=v.number, request=request); s.commit()
+        return stream_file(request, d, v)
 
     @app.get("/documents/{doc_id}/download", tags=["documents"], responses={200: {"content": {"application/pdf": {}}}})
     def download_current(doc_id: str, request: Request, p: Principal = Depends(principal), s=Depends(db)):
-        d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d))
+        d = get_doc(s, p, doc_id); v = get_ver(s, d)
+        audit(s, p.org_id, p.user_id, "document.view", d.id, document_id=d.id, version=v.number, request=request); s.commit()
+        return stream_file(request, d, v)
 
     # ---------------- pdf ----------------
     @app.get("/pdf/{doc_id}/metadata", response_model=S.MetadataOut, tags=["pdf"])
@@ -357,8 +367,14 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
 
     def vres(d, v, report=None): return VersionResult(document_id=d.id, version_id=v.id, version=v.number, sha256=v.sha256, size=v.size, filename=d.filename, report=report or {})
 
-    def writable(s, p, doc_id):
-        need(p, "member"); d = get_doc(s, p, doc_id); return d, load(d, get_ver(s, d))
+    def writable(s, p, doc_id, allow_signed=False):
+        need(p, "member"); d = get_doc(s, p, doc_id); data = load(d, get_ver(s, d))
+        if not allow_signed:
+            m = eng.inspect(data)
+            if m["has_signatures"]:
+                raise ApiError(409, "DOCUMENT_SIGNED", "Document carries digital signatures; modifying it would invalidate them",
+                               {"safe_options": ["extract pages to a new document", "roll back to an unsigned version"]})
+        return d, data
 
     @app.post("/documents/{doc_id}/versions", response_model=VersionResult, status_code=201, tags=["documents"])
     async def upload_version(doc_id: str, request: Request, file: UploadFile = File(...), expected_version: int = Form(..., ge=1),
@@ -381,19 +397,19 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
 
     @app.post("/pdf/pages/extract", response_model=UploadOut, status_code=201, tags=["pdf"])
     def extract(b: ExtractIn, p: Principal = Depends(principal), s=Depends(db)):
-        d, data = writable(s, p, b.document_id); out = eng.extract(data, b.pages)
+        d, data = writable(s, p, b.document_id, allow_signed=True); out = eng.extract(data, b.pages)
         nd, v = new_document(s, p, b.filename or f"extract-{d.filename}", out, "extract", b.model_dump())
         return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=len(b.pages))
 
     @app.post("/pdf/merge", response_model=UploadOut, status_code=201, tags=["pdf"])
     def merge(b: MergeIn, p: Principal = Depends(principal), s=Depends(db)):
-        datas = [writable(s, p, i)[1] for i in b.document_ids]; out = eng.merge(datas)
+        datas = [writable(s, p, i, allow_signed=True)[1] for i in b.document_ids]; out = eng.merge(datas)
         nd, v = new_document(s, p, b.filename, out, "merge", b.model_dump())
         return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=len(eng.open_pdf(out).pages))
 
     @app.post("/pdf/split", response_model=list[UploadOut], status_code=201, tags=["pdf"])
     def split(b: SplitIn, p: Principal = Depends(principal), s=Depends(db)):
-        d, data = writable(s, p, b.document_id); res = []
+        d, data = writable(s, p, b.document_id, allow_signed=True); res = []
         for i, part in enumerate(eng.split(data, b.ranges)):
             nd, v = new_document(s, p, f"part{i + 1}-{d.filename}", part, "split", {"range": b.ranges[i]})
             res.append(UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=nd.filename, page_count=b.ranges[i][1] - b.ranges[i][0] + 1))
