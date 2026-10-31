@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import { PDFDocument, PDFName, PDFDict } from "pdf-lib";
-import { apiUp, signInAndUpload, LOCAL_FIXTURE } from "./helpers";
+import { apiUp, signInAndUpload, LOCAL_FIXTURE, stableBox } from "./helpers";
 const FORM = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "fixtures", "form-fields.pdf");
 
 async function drawAndPlace(page: Page) {
@@ -18,11 +18,11 @@ async function drawAndPlace(page: Page) {
   await expect(box).toBeVisible();
   await box.scrollIntoViewIfNeeded();
   await page.getByTestId("viewer-scroll").evaluate((el) => el.scrollBy(0, 150));
-  const before = (await box.boundingBox())!;
+  const before = await stableBox(box);
   // move and resize with the mouse
   await page.mouse.move(before.x + before.width / 2, before.y + before.height / 2); await page.mouse.down();
   await page.mouse.move(before.x + before.width / 2 - 60, before.y + before.height / 2 - 40, { steps: 5 }); await page.mouse.up();
-  const h = (await page.getByTestId("sig-resize").boundingBox())!;
+  const h = await stableBox(page.getByTestId("sig-resize"));
   await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down();
   await page.mouse.move(h.x + 50, h.y + 10, { steps: 5 }); await page.mouse.up();
   const after = (await box.boundingBox())!;

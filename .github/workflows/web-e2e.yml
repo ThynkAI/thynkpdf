@@ -38,7 +38,7 @@ jobs:
           curl -sf -X POST localhost:8000/auth/register -H 'content-type: application/json' \
             -d '{"email":"dev@thynkpdf.dev","password":"ThynkDev-2026!","org_name":"THYNKPDF Dev"}' > /dev/null
       - name: Third-party PDF verifiers (pikepdf/qpdf, pypdf)
-        run: python -m venv packages/frontend-tests/.venv && packages/frontend-tests/.venv/bin/pip install -q pikepdf pypdf
+        run: rm -rf packages/frontend-tests/.venv && python -m venv packages/frontend-tests/.venv && packages/frontend-tests/.venv/bin/pip install -q pikepdf pypdf
       - name: Typecheck
         run: cd apps/web && npx tsc --noEmit -p .
       - name: Unit + live contract tests

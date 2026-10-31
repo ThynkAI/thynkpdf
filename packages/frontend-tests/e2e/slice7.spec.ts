@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import AxeBuilder from "@axe-core/playwright";
-import { apiUp, signIn, signInAndUpload, LOCAL_FIXTURE } from "./helpers";
+import { apiUp, signIn, signInAndUpload, LOCAL_FIXTURE, stableBox } from "./helpers";
 const here = path.dirname(new URL(import.meta.url).pathname);
 const PY = path.join(here, "..", ".venv", "bin", "python");
 const VERIFY = path.join(here, "..", "scripts", "verify_pdf.py");
@@ -12,7 +12,7 @@ const VERIFY = path.join(here, "..", "scripts", "verify_pdf.py");
 async function tool(page: Page, label: RegExp | string) { await page.getByRole("toolbar", { name: "Annotation tools" }).getByRole("button", { name: label }).click(); }
 const count = (page: Page) => page.getByTestId("thread-count");
 async function layer(page: Page) {
-  const l = page.getByTestId("annot-layer-1"); await expect(l).toBeVisible(); return (await l.boundingBox())!;
+  const l = page.getByTestId("annot-layer-1"); await expect(l).toBeVisible(); return stableBox(l);
 }
 async function drag(page: Page, x1: number, y1: number, x2: number, y2: number) {
   await page.mouse.move(x1, y1); await page.mouse.down(); await page.mouse.move((x1 + x2) / 2, (y1 + y2) / 2, { steps: 4 }); await page.mouse.move(x2, y2, { steps: 4 }); await page.mouse.up();
@@ -34,7 +34,7 @@ test("annotations: every tool, identity, threads, resolve/reopen, eraser, save, 
   await expect(count(page)).toHaveText("(1)");
 
   await tool(page, "Pencil / ink"); let b = await layer(page); await drag(page, b.x + 60, b.y + 260, b.x + 160, b.y + 300); await expect(count(page)).toHaveText("(2)");
-  b = await layer(page); await tool(page, "Rectangle"); await drag(page, b.x + 200, b.y + 250, b.x + 280, b.y + 300); await expect(count(page)).toHaveText("(3)");
+  b = await layer(page); await tool(page, "Rectangle"); await drag(page, b.x + 560, b.y + 110, b.x + 620, b.y + 160); await expect(count(page)).toHaveText("(3)");
   b = await layer(page); await tool(page, "Ellipse"); await drag(page, b.x + 300, b.y + 250, b.x + 380, b.y + 300); await expect(count(page)).toHaveText("(4)");
   b = await layer(page); await tool(page, "Arrow"); await drag(page, b.x + 60, b.y + 340, b.x + 200, b.y + 360); await expect(count(page)).toHaveText("(5)");
   await page.getByLabel("Comment text").fill("Check this paragraph");
@@ -62,7 +62,8 @@ test("annotations: every tool, identity, threads, resolve/reopen, eraser, save, 
   await expect(note.getByTestId("resolved-badge")).toBeVisible();
 
   // eraser on the rectangle
-  b = await layer(page); await tool(page, /^Eraser/); await page.mouse.click(b.x + 205, b.y + 255); await expect(count(page)).toHaveText("(8)");
+  b = await layer(page); await tool(page, /^Eraser/); await page.mouse.click(b.x + 590, b.y + 112); await expect(count(page)).toHaveText("(8)");
+  await expect(page.getByTestId("thread").filter({ hasText: /^Rectangle/ })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
   const [dl] = await Promise.all([page.waitForEvent("download"), page.getByTestId("download-annotated").click()]);
