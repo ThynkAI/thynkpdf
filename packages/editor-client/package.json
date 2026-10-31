@@ -1,0 +1,17 @@
+{
+  "name": "@thynkpdf/editor-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
+  },
+  "scripts": {
+    "gen": "openapi-typescript ../../docs/openapi.json -o src/generated/schema.d.ts"
+  }
+}

@@ -1,0 +1,14 @@
+alembic==1.20.1
+bcrypt==5.0.0
+email-validator==2.3.0
+fastapi==0.162.0
+httpx==0.28.1
+pikepdf==10.17.0
+pydantic==2.14.2
+PyJWT==2.15.1
+pypdf==6.21.4
+pytest==9.2.0
+python-multipart==0.0.33
+reportlab==5.1.0
+SQLAlchemy==2.1.6
+uvicorn==0.54.0

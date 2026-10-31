@@ -1,0 +1,6 @@
+packages:
+  - apps/web
+  - packages/ui
+  - packages/pdf-viewer
+  - packages/editor-client
+  - packages/frontend-tests

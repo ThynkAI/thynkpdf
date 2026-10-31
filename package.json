@@ -1,0 +1,10 @@
+{
+  "name": "thynkpdf",
+  "private": true,
+  "scripts": {
+    "web:dev": "pnpm --filter @thynkpdf/web dev",
+    "web:build": "pnpm --filter @thynkpdf/web build",
+    "web:test": "pnpm -r --filter './packages/{ui,pdf-viewer,editor-client}' --filter @thynkpdf/web test",
+    "web:e2e": "pnpm --filter @thynkpdf/frontend-tests e2e"
+  }
+}

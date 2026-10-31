@@ -1,0 +1,386 @@
+import hashlib, json, time, re
+from typing import Literal
+import bcrypt, jwt
+from fastapi import FastAPI, Depends, Request, UploadFile, File, Form, Header
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+import thynkpdf_engine as eng
+from thynkpdf_storage import LocalStorage, tenant_key
+from .config import settings
+from .db import make_session_factory, User, Organization, Membership, Document, DocumentVersion, AuditEvent, Job, uid
+
+ROLE_RANK = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
+
+
+class ApiError(Exception):
+    def __init__(self, status, code, message, details=None):
+        self.status, self.code, self.message, self.details = status, code, message, details or {}
+
+
+class ErrorBody(BaseModel):
+    code: str; message: str; details: dict = {}
+class ErrorResponse(BaseModel):
+    error: ErrorBody
+
+
+def create_app(database_url=None, storage_root=None) -> FastAPI:
+    app = FastAPI(title="THYNKPDF API", version="0.1.0",
+                  responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
+                             404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}, 413: {"model": ErrorResponse},
+                             415: {"model": ErrorResponse}, 422: {"model": ErrorResponse}})
+    app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
+                       allow_methods=["*"], allow_headers=["*"],
+                       expose_headers=["Content-Range", "Accept-Ranges", "Content-Length", "ETag", "X-Document-Version"])
+    SessionF = make_session_factory(database_url or settings.database_url)
+    store = LocalStorage(storage_root or settings.storage_root)
+    app.state.sessions, app.state.storage = SessionF, store
+
+    @app.exception_handler(ApiError)
+    async def _api(_, e: ApiError):
+        return JSONResponse({"error": {"code": e.code, "message": e.message, "details": e.details}}, status_code=e.status)
+
+    @app.exception_handler(eng.EngineError)
+    async def _eng(_, e: eng.EngineError):
+        st = {"PDF_MALFORMED": 422, "INVALID_FILE_TYPE": 415, "PDF_ENCRYPTED": 422, "EDIT_NOT_SUPPORTED": 422,
+              "TEXT_NOT_FOUND": 422, "EDIT_UNSUPPORTED_CHARACTERS": 422}.get(e.code, 400)
+        return JSONResponse({"error": {"code": e.code, "message": e.message, "details": e.details}}, status_code=st)
+
+    from fastapi.exceptions import RequestValidationError
+    @app.exception_handler(RequestValidationError)
+    async def _val(_, e):
+        return JSONResponse({"error": {"code": "VALIDATION_ERROR", "message": "Invalid request",
+                                       "details": {"errors": [{"loc": list(x["loc"]), "msg": x["msg"]} for x in e.errors()]}}}, status_code=422)
+
+    @app.exception_handler(Exception)
+    async def _any(_, e):  # never leak internals
+        return JSONResponse({"error": {"code": "INTERNAL_ERROR", "message": "Internal error", "details": {}}}, status_code=500)
+
+    def db():
+        s = SessionF()
+        try: yield s
+        finally: s.close()
+
+    def audit(s, org, user, action, target=None):
+        s.add(AuditEvent(org_id=org, user_id=user, action=action, target=target))
+
+    # ---------------- auth ----------------
+    def tokens(user_id, org_id):
+        t = int(time.time())
+        mk = lambda typ, ttl: jwt.encode({"sub": user_id, "org": org_id, "typ": typ, "iat": t, "exp": t + ttl, "jti": uid()},
+                                         settings.jwt_secret, algorithm="HS256")
+        return {"access_token": mk("access", settings.access_ttl), "refresh_token": mk("refresh", settings.refresh_ttl),
+                "token_type": "bearer", "expires_in": settings.access_ttl}
+
+    bearer = HTTPBearer(auto_error=False)
+
+    class Principal(BaseModel):
+        user_id: str; org_id: str; role: str
+
+    def principal(cred: HTTPAuthorizationCredentials | None = Depends(bearer), s=Depends(db)) -> Principal:
+        if cred is None: raise ApiError(401, "AUTH_REQUIRED", "Bearer token required")
+        try:
+            c = jwt.decode(cred.credentials, settings.jwt_secret, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError: raise ApiError(401, "TOKEN_EXPIRED", "Access token expired")
+        except jwt.PyJWTError: raise ApiError(401, "TOKEN_INVALID", "Invalid token")
+        if c.get("typ") != "access": raise ApiError(401, "TOKEN_INVALID", "Not an access token")
+        m = s.scalar(select(Membership).where(Membership.user_id == c["sub"], Membership.org_id == c["org"]))
+        if not m: raise ApiError(403, "NOT_A_MEMBER", "Membership revoked")
+        if s.get(Organization, c["org"]).suspended: raise ApiError(403, "ORG_SUSPENDED", "Organization suspended")
+        return Principal(user_id=c["sub"], org_id=c["org"], role=m.role)
+
+    def need(p: Principal, role: str):
+        if ROLE_RANK[p.role] < ROLE_RANK[role]: raise ApiError(403, "FORBIDDEN_ROLE", f"Requires role >= {role}")
+
+    class RegisterIn(BaseModel):
+        email: EmailStr; password: str = Field(min_length=10, max_length=128); org_name: str = Field(min_length=1, max_length=200)
+    class LoginIn(BaseModel):
+        email: EmailStr; password: str; org_id: str | None = None
+    class RefreshIn(BaseModel):
+        refresh_token: str
+    class TokenOut(BaseModel):
+        access_token: str; refresh_token: str; token_type: str; expires_in: int
+
+    @app.post("/auth/register", response_model=TokenOut, status_code=201, tags=["auth"])
+    def register(b: RegisterIn, s=Depends(db)):
+        if s.scalar(select(User).where(User.email == b.email.lower())): raise ApiError(409, "EMAIL_TAKEN", "Email already registered")
+        u = User(email=b.email.lower(), password_hash=bcrypt.hashpw(b.password.encode(), bcrypt.gensalt()).decode())
+        o = Organization(name=b.org_name); s.add_all([u, o]); s.flush()
+        s.add(Membership(org_id=o.id, user_id=u.id, role="owner")); audit(s, o.id, u.id, "auth.register"); s.commit()
+        return tokens(u.id, o.id)
+
+    @app.post("/auth/login", response_model=TokenOut, tags=["auth"])
+    def login(b: LoginIn, s=Depends(db)):
+        u = s.scalar(select(User).where(User.email == b.email.lower()))
+        if not u or not bcrypt.checkpw(b.password.encode(), u.password_hash.encode()):
+            raise ApiError(401, "INVALID_CREDENTIALS", "Invalid email or password")
+        q = select(Membership).where(Membership.user_id == u.id)
+        if b.org_id: q = q.where(Membership.org_id == b.org_id)
+        m = s.scalars(q).first()
+        if not m: raise ApiError(403, "NOT_A_MEMBER", "No membership for this organization")
+        audit(s, m.org_id, u.id, "auth.login"); s.commit()
+        return tokens(u.id, m.org_id)
+
+    @app.post("/auth/refresh", response_model=TokenOut, tags=["auth"])
+    def refresh(b: RefreshIn, s=Depends(db)):
+        try: c = jwt.decode(b.refresh_token, settings.jwt_secret, algorithms=["HS256"])
+        except jwt.PyJWTError: raise ApiError(401, "TOKEN_INVALID", "Invalid refresh token")
+        if c.get("typ") != "refresh": raise ApiError(401, "TOKEN_INVALID", "Not a refresh token")
+        if not s.scalar(select(Membership).where(Membership.user_id == c["sub"], Membership.org_id == c["org"])):
+            raise ApiError(403, "NOT_A_MEMBER", "Membership revoked")
+        return tokens(c["sub"], c["org"])
+
+    @app.get("/auth/me", tags=["auth"])
+    def me(p: Principal = Depends(principal)): return p.model_dump()
+
+    class MemberIn(BaseModel):
+        email: EmailStr; password: str = Field(min_length=10, max_length=128); role: Literal["admin", "member", "viewer"]
+
+    @app.post("/orgs/members", status_code=201, tags=["orgs"])
+    def add_member(b: MemberIn, p: Principal = Depends(principal), s=Depends(db)):
+        """Dev-stage invite: creates (or attaches) a user with a role in the caller's org. Admin+."""
+        need(p, "admin")
+        u = s.scalar(select(User).where(User.email == b.email.lower()))
+        if not u:
+            u = User(email=b.email.lower(), password_hash=bcrypt.hashpw(b.password.encode(), bcrypt.gensalt()).decode()); s.add(u); s.flush()
+        try:
+            s.add(Membership(org_id=p.org_id, user_id=u.id, role=b.role)); audit(s, p.org_id, p.user_id, "org.member_add", u.id); s.commit()
+        except IntegrityError: raise ApiError(409, "ALREADY_MEMBER", "User already a member")
+        return {"user_id": u.id, "role": b.role}
+
+    # ---------------- documents ----------------
+    class VersionOut(BaseModel):
+        version_id: str; number: int; sha256: str; size: int; operation: str; parent_version_id: str | None; created_at: str
+    class DocumentOut(BaseModel):
+        document_id: str; filename: str; current_version: int; version_id: str; created_at: str
+    class UploadOut(BaseModel):
+        document_id: str; version_id: str; version: int; sha256: str; size: int; page_count: int
+
+    def vout(v): return VersionOut(version_id=v.id, number=v.number, sha256=v.sha256, size=v.size, operation=v.operation,
+                                   parent_version_id=v.parent_version_id, created_at=v.created_at.isoformat())
+
+    def get_doc(s, p: Principal, doc_id: str) -> Document:
+        d = s.scalar(select(Document).where(Document.id == doc_id, Document.org_id == p.org_id, Document.deleted_at.is_(None)))
+        if not d: raise ApiError(404, "DOCUMENT_NOT_FOUND", "Document not found")  # same for other-tenant docs
+        return d
+
+    def get_ver(s, d: Document, number=None, version_id=None) -> DocumentVersion:
+        q = select(DocumentVersion).where(DocumentVersion.document_id == d.id, DocumentVersion.org_id == d.org_id)
+        q = q.where(DocumentVersion.id == version_id) if version_id else q.where(DocumentVersion.number == (number or d.current_version))
+        v = s.scalar(q)
+        if not v: raise ApiError(404, "VERSION_NOT_FOUND", "Version not found")
+        return v
+
+    def load(d, v): return store.get(v.storage_key)
+
+    def safe_name(n: str) -> str:
+        n = re.split(r"[\\/]", n or "")[-1]
+        n = re.sub(r"[^A-Za-z0-9._ -]", "_", n).strip(" .")[:200]
+        return n or "document.pdf"
+
+    def new_document(s, p, filename, data, op, params=None) -> tuple[Document, DocumentVersion]:
+        d = Document(org_id=p.org_id, filename=safe_name(filename), current_version=1, created_by=p.user_id); s.add(d); s.flush()
+        v = _store_version(s, p, d, data, 1, op, params, None); s.commit(); return d, v
+
+    def _store_version(s, p, d, data, number, op, params, parent):
+        vid = uid(); key = tenant_key(p.org_id, d.id, vid)
+        sha = store.put(key, data)
+        v = DocumentVersion(id=vid, org_id=p.org_id, document_id=d.id, number=number, sha256=sha, size=len(data),
+                            storage_key=key, operation=op, operation_params=json.dumps(params or {}), parent_version_id=parent,
+                            created_by=p.user_id)
+        s.add(v); audit(s, p.org_id, p.user_id, f"document.{op}", d.id); return v
+
+    def new_version(s, p, d: Document, expected: int, data: bytes, op, params) -> DocumentVersion:
+        """Optimistic concurrency: compare-and-swap on documents.current_version + unique(document_id, number)."""
+        if expected != d.current_version:
+            raise ApiError(409, "VERSION_CONFLICT", "Document changed since expected_version", {"current_version": d.current_version})
+        eng.open_pdf(data)  # verify output re-opens before committing
+        parent = get_ver(s, d).id
+        from sqlalchemy import update
+        r = s.execute(update(Document).where(Document.id == d.id, Document.current_version == expected).values(current_version=expected + 1))
+        if r.rowcount != 1:
+            s.rollback(); raise ApiError(409, "VERSION_CONFLICT", "Concurrent modification", {})
+        v = _store_version(s, p, d, data, expected + 1, op, params, parent)
+        try: s.commit()
+        except IntegrityError:
+            s.rollback(); raise ApiError(409, "VERSION_CONFLICT", "Concurrent modification", {})
+        return v
+
+    @app.post("/documents/upload", response_model=UploadOut, status_code=201, tags=["documents"])
+    async def upload(request: Request, file: UploadFile = File(...), p: Principal = Depends(principal), s=Depends(db)):
+        need(p, "member")
+        cl = request.headers.get("content-length")
+        if cl and int(cl) > settings.max_upload + 64 * 1024:
+            raise ApiError(413, "FILE_TOO_LARGE", "Upload exceeds size limit", {"max_bytes": settings.max_upload})
+        buf = bytearray()
+        while chunk := await file.read(1 << 20):
+            buf += chunk
+            if len(buf) > settings.max_upload:
+                raise ApiError(413, "FILE_TOO_LARGE", "Upload exceeds size limit", {"max_bytes": settings.max_upload})
+        data = bytes(buf)
+        if not data.startswith(b"%PDF-"): raise ApiError(415, "INVALID_FILE_TYPE", "File is not a PDF (magic bytes)")
+        pdf = eng.open_pdf(data)
+        d, v = new_document(s, p, file.filename, data, "upload")
+        return UploadOut(document_id=d.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=len(pdf.pages))
+
+    def dout(s, d): return DocumentOut(document_id=d.id, filename=d.filename, current_version=d.current_version,
+                                       version_id=get_ver(s, d).id, created_at=d.created_at.isoformat())
+
+    @app.get("/documents", response_model=list[DocumentOut], tags=["documents"])
+    def list_docs(limit: int = 50, offset: int = 0, p: Principal = Depends(principal), s=Depends(db)):
+        ds = s.scalars(select(Document).where(Document.org_id == p.org_id, Document.deleted_at.is_(None))
+                       .order_by(Document.created_at.desc()).limit(min(limit, 200)).offset(offset))
+        return [dout(s, d) for d in ds]
+
+    @app.get("/documents/{doc_id}", response_model=DocumentOut, tags=["documents"])
+    def get_document(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
+        return dout(s, get_doc(s, p, doc_id))
+
+    @app.get("/documents/{doc_id}/versions", response_model=list[VersionOut], tags=["documents"])
+    def versions(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
+        d = get_doc(s, p, doc_id)
+        return [vout(v) for v in s.scalars(select(DocumentVersion).where(DocumentVersion.document_id == d.id,
+                DocumentVersion.org_id == p.org_id).order_by(DocumentVersion.number))]
+
+    def stream_file(request, d, v):
+        data = store.get(v.storage_key); n = len(data)
+        hdr = {"Accept-Ranges": "bytes", "ETag": f'"{v.sha256}"', "X-Document-Version": str(v.number),
+               "Content-Disposition": f'attachment; filename="{d.filename}"'}
+        rng = request.headers.get("range")
+        if rng:
+            m = re.fullmatch(r"bytes=(\d*)-(\d*)", rng.strip())
+            if not m or (m[1] == "" and m[2] == ""):
+                return Response(status_code=416, headers={"Content-Range": f"bytes */{n}"})
+            if m[1] == "": start, end = max(0, n - int(m[2])), n - 1
+            else: start, end = int(m[1]), min(int(m[2]) if m[2] else n - 1, n - 1)
+            if start >= n or start > end: return Response(status_code=416, headers={"Content-Range": f"bytes */{n}"})
+            hdr["Content-Range"] = f"bytes {start}-{end}/{n}"
+            return Response(data[start:end + 1], status_code=206, media_type="application/pdf", headers=hdr)
+        return Response(data, media_type="application/pdf", headers=hdr)
+
+    @app.get("/documents/{doc_id}/versions/{version_id}/file", tags=["documents"],
+             responses={200: {"content": {"application/pdf": {}}}, 206: {"content": {"application/pdf": {}}}})
+    def download_version(doc_id: str, version_id: str, request: Request, p: Principal = Depends(principal), s=Depends(db)):
+        d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d, version_id=version_id))
+
+    @app.get("/documents/{doc_id}/download", tags=["documents"], responses={200: {"content": {"application/pdf": {}}}})
+    def download_current(doc_id: str, request: Request, p: Principal = Depends(principal), s=Depends(db)):
+        d = get_doc(s, p, doc_id); return stream_file(request, d, get_ver(s, d))
+
+    # ---------------- pdf ----------------
+    @app.get("/pdf/{doc_id}/metadata", tags=["pdf"])
+    def metadata(doc_id: str, version: int | None = None, p: Principal = Depends(principal), s=Depends(db)):
+        d = get_doc(s, p, doc_id); v = get_ver(s, d, number=version)
+        return {"document_id": d.id, "version": v.number, "version_id": v.id, **eng.inspect(load(d, v))}
+
+    @app.get("/pdf/{doc_id}/capabilities", tags=["pdf"])
+    def caps(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
+        d = get_doc(s, p, doc_id); v = get_ver(s, d)
+        c = eng.capabilities(load(d, v))
+        if p.role == "viewer": c["document_limitations"].append({"code": "ROLE_READ_ONLY", "message": "Viewer role cannot modify"})
+        return {"document_id": d.id, "version": v.number, "version_id": v.id, **c}
+
+    class VersionedOp(BaseModel):
+        document_id: str; expected_version: int = Field(ge=1)
+    class RotateIn(VersionedOp):
+        pages: list[int] | None = None; angle: Literal[90, 180, 270, -90]
+    class ReorderIn(VersionedOp):
+        order: list[int]
+    class ExtractIn(BaseModel):
+        document_id: str; pages: list[int] = Field(min_length=1); filename: str | None = None
+    class MergeIn(BaseModel):
+        document_ids: list[str] = Field(min_length=2, max_length=50); filename: str = "merged.pdf"
+    class SplitIn(BaseModel):
+        document_id: str; ranges: list[list[int]] = Field(min_length=1, max_length=100)
+    class EditOp(BaseModel):
+        op: Literal["text_replace", "text_insert", "text_delete", "image_replace", "image_move", "font_change", "link_change"]
+        page: int = Field(ge=1)
+        object_id: str | None = None
+        bbox: list[float] | None = None
+        find: str | None = None
+        replacement: str | None = None
+        occurrence: Literal["first", "all"] = "all"
+        formatting: dict | None = None
+    class EditIn(VersionedOp):
+        operations: list[EditOp] = Field(min_length=1, max_length=100)
+        revision_note: str | None = None
+    class VersionResult(BaseModel):
+        document_id: str; version_id: str; version: int; sha256: str; size: int; report: dict = {}
+    class CompressIn(VersionedOp):
+        preset: Literal["low", "balanced", "high"] = "balanced"; strip_metadata: bool = False
+
+    def vres(d, v, report=None): return VersionResult(document_id=d.id, version_id=v.id, version=v.number, sha256=v.sha256, size=v.size, report=report or {})
+
+    def writable(s, p, doc_id):
+        need(p, "member"); d = get_doc(s, p, doc_id); return d, load(d, get_ver(s, d))
+
+    @app.post("/pdf/pages/rotate", response_model=VersionResult, tags=["pdf"])
+    def rotate(b: RotateIn, p: Principal = Depends(principal), s=Depends(db)):
+        d, data = writable(s, p, b.document_id)
+        return vres(d, new_version(s, p, d, b.expected_version, eng.rotate(data, b.pages, b.angle), "rotate", b.model_dump()))
+
+    @app.post("/pdf/pages/reorder", response_model=VersionResult, tags=["pdf"])
+    def reorder(b: ReorderIn, p: Principal = Depends(principal), s=Depends(db)):
+        d, data = writable(s, p, b.document_id)
+        return vres(d, new_version(s, p, d, b.expected_version, eng.reorder(data, b.order), "reorder", b.model_dump()))
+
+    @app.post("/pdf/pages/extract", response_model=UploadOut, status_code=201, tags=["pdf"])
+    def extract(b: ExtractIn, p: Principal = Depends(principal), s=Depends(db)):
+        d, data = writable(s, p, b.document_id); out = eng.extract(data, b.pages)
+        nd, v = new_document(s, p, b.filename or f"extract-{d.filename}", out, "extract", b.model_dump())
+        return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=len(b.pages))
+
+    @app.post("/pdf/merge", response_model=UploadOut, status_code=201, tags=["pdf"])
+    def merge(b: MergeIn, p: Principal = Depends(principal), s=Depends(db)):
+        datas = [writable(s, p, i)[1] for i in b.document_ids]; out = eng.merge(datas)
+        nd, v = new_document(s, p, b.filename, out, "merge", b.model_dump())
+        return UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=len(eng.open_pdf(out).pages))
+
+    @app.post("/pdf/split", response_model=list[UploadOut], status_code=201, tags=["pdf"])
+    def split(b: SplitIn, p: Principal = Depends(principal), s=Depends(db)):
+        d, data = writable(s, p, b.document_id); res = []
+        for i, part in enumerate(eng.split(data, b.ranges)):
+            nd, v = new_document(s, p, f"part{i + 1}-{d.filename}", part, "split", {"range": b.ranges[i]})
+            res.append(UploadOut(document_id=nd.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, page_count=b.ranges[i][1] - b.ranges[i][0] + 1))
+        return res
+
+    @app.post("/pdf/edit", response_model=VersionResult, tags=["pdf"])
+    def edit(b: EditIn, p: Principal = Depends(principal), s=Depends(db)):
+        d, data = writable(s, p, b.document_id); applied = []
+        for o in b.operations:
+            if o.op != "text_replace":
+                raise ApiError(422, "EDIT_OP_NOT_IMPLEMENTED", f"Operation {o.op} not implemented yet",
+                               {"supported_ops": ["text_replace"]})
+            if not o.find or o.replacement is None:
+                raise ApiError(422, "VALIDATION_ERROR", "text_replace requires find and replacement")
+            data, n = eng.replace_text(data, o.page, o.find, o.replacement, o.occurrence)
+            applied.append({"op": o.op, "page": o.page, "replacements": n})
+        v = new_version(s, p, d, b.expected_version, data, "edit", b.model_dump())
+        return vres(d, v, {"applied": applied, "method": "content_stream_rewrite"})
+
+    @app.post("/pdf/compress", response_model=VersionResult, tags=["pdf"])
+    def compress(b: CompressIn, p: Principal = Depends(principal), s=Depends(db)):
+        d, data = writable(s, p, b.document_id); out, rep = eng.compress(data, b.preset, b.strip_metadata)
+        if out == data:
+            if b.expected_version != d.current_version:
+                raise ApiError(409, "VERSION_CONFLICT", "Document changed", {"current_version": d.current_version})
+            v = get_ver(s, d); return vres(d, v, {**rep, "new_version_created": False})
+        return vres(d, new_version(s, p, d, b.expected_version, out, "compress", b.model_dump()), {**rep, "new_version_created": True})
+
+    @app.get("/jobs/{job_id}", tags=["jobs"])
+    def job(job_id: str, p: Principal = Depends(principal), s=Depends(db)):
+        j = s.scalar(select(Job).where(Job.id == job_id, Job.org_id == p.org_id))
+        if not j: raise ApiError(404, "JOB_NOT_FOUND", "Job not found")
+        return {"job_id": j.id, "kind": j.kind, "status": j.status, "progress": j.progress,
+                "result": json.loads(j.result) if j.result else None, "error_code": j.error_code, "created_at": j.created_at.isoformat()}
+
+    @app.get("/health", tags=["ops"])
+    def health(): return {"status": "ok"}
+
+    return app
+
+
+app = create_app()

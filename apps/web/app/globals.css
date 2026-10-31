@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html, body { height: 100%; }
+.tp-hit { background: rgba(250, 204, 21, 0.45); color: transparent; border-radius: 2px; }
+.textLayer ::selection { background: rgba(79, 70, 229, 0.35); }
