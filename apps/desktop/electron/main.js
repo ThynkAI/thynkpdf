@@ -46,7 +46,7 @@ function stopServer() {
 function createWindow() {
   win = new BrowserWindow({ width: 1280, height: 860, minWidth: 900, minHeight: 600, title: "THYNKPDF", backgroundColor: "#0f0b1a",
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
-  win.loadURL(baseUrl + "/desktop/");
+  win.loadURL(baseUrl + "/");
   // Keep the app on our localhost origin; open anything else (e.g. release pages) in the real browser.
   const internal = (u) => u.startsWith(baseUrl + "/");
   win.webContents.setWindowOpenHandler(({ url }) => { if (!internal(url)) shell.openExternal(url); return { action: internal(url) ? "allow" : "deny" }; });
@@ -56,7 +56,7 @@ function createWindow() {
 function menu() {
   const tpl = [
     ...(process.platform === "darwin" ? [{ role: "appMenu" }] : []),
-    { label: "File", submenu: [{ label: "Home", accelerator: "CmdOrCtrl+H", click: () => win && win.loadURL(baseUrl + "/desktop/") },
+    { label: "File", submenu: [{ label: "Home", accelerator: "CmdOrCtrl+H", click: () => win && win.loadURL(baseUrl + "/") },
       { label: "Open data folder", click: () => shell.openPath(path.join(app.getPath("userData"), "data")) }, { type: "separator" },
       process.platform === "darwin" ? { role: "close" } : { role: "quit" }] },
     { role: "editMenu" }, { role: "viewMenu" },
