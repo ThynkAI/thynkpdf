@@ -5,12 +5,12 @@ import { useSession } from "@/lib/session";
 import { editGate } from "@/lib/gates";
 import { signOut, ensureText } from "@/lib/documents";
 import { TextEditPanel } from "./TextEditPanel";
+import { SignInForm } from "./SignInForm";
 
 export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
   const [q, setQ] = useState(query);
   const s = useSession();
-  const [user, setUser] = useState(""); const [pw, setPw] = useState("");
   const textReady = pagesText.length > 0 && pagesText.every((t) => t !== null);
   const perPage = new Map<number, number>();
   matches.forEach((m) => perPage.set(m.page, (perPage.get(m.page) ?? 0) + 1));
@@ -56,11 +56,7 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
         <p className="text-xs" data-testid="backend-status">{s.api.kind === "mock" ? "Mock API (in-browser, not persisted)" : s.backend === "online" ? (s.authed ? "Connected" : "Online — sign in to upload") : s.backend === "offline" ? "Offline — files open locally" : "Checking…"}</p>
         {s.api.kind === "http" && s.authed && <button className="mt-1 text-xs underline" onClick={() => void signOut()}>Sign out</button>}
         {s.api.kind === "http" && s.backend === "online" && !s.authed && (
-          <form className="mt-2 space-y-1" onSubmit={async (e) => { e.preventDefault(); try { await s.api.login(user, pw); s.set({ error: null, notice: null }); } catch (err) { s.set({ error: (err as Error).message }); } }}>
-            <input aria-label="Username" placeholder="Email" value={user} onChange={(e) => setUser(e.target.value)} className="w-full rounded border px-2 py-1 dark:bg-neutral-800" />
-            <input aria-label="Password" type="password" placeholder="Password" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded border px-2 py-1 dark:bg-neutral-800" />
-            <button className="rounded bg-brand-600 px-3 py-1 text-white">Sign in</button>
-          </form>
+          <SignInForm />
         )}
       </section>
     </aside>

@@ -27,7 +27,12 @@ export function EditorShell() {
 
   useEffect(() => {
     const { api, set } = useSession.getState();
-    api.health().then((ok) => { set({ backend: ok ? "online" : "offline" }); if (ok) void restoreSession(); });
+    api.health().then((ok) => { set({ backend: ok ? "online" : "offline" }); if (!ok) return;
+      const q = new URLSearchParams(window.location.search);
+      const doc = q.get("doc");
+      void restoreSession(doc ? { doc, version: q.get("version") ?? undefined, n: q.get("n") ? Number(q.get("n")) : undefined } : undefined);
+      if (doc) window.history.replaceState(null, "", "/");
+    });
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -72,6 +77,7 @@ export function EditorShell() {
         onDrop={(e) => { e.preventDefault(); setDragging(false); onFiles(e.dataTransfer.files); }}>
         <header className="flex h-11 items-center gap-3 border-b border-neutral-200 px-3 dark:border-neutral-800">
           <Wordmark />
+          <a href="/documents" className="rounded px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800">Documents</a>
           <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
         <Toolbar onOrganize={() => setOrganize(true)} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel(true); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />

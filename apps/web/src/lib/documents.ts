@@ -70,12 +70,21 @@ export async function openLatest(documentId: string, keepPage = false) {
 }
 
 /** Restore tokens + last server document after a page reload. */
-export async function restoreSession() {
+export async function restoreSession(target?: { doc: string; version?: string; n?: number }) {
   const s = useSession.getState();
   if (s.api.kind !== "http") return;
   const p = loadPersisted();
   if (!p.tokens) return;
   s.api.setTokens(p.tokens);
+  if (target) {
+    s.set({ busy: "Opening…" });
+    try {
+      if (target.version && target.n) await openVersionReadOnly(target.doc, target.version, target.n);
+      else await openLatest(target.doc);
+    } catch (e) { s.set({ error: `Could not open document: ${describeError(e)}` }); }
+    finally { s.set({ busy: null }); }
+    return;
+  }
   if (!p.lastDocumentId) return;
   s.set({ busy: "Restoring last document…" });
   try { await openLatest(p.lastDocumentId); }
@@ -149,4 +158,21 @@ export async function newDocOp<T>(label: string, fn: () => Promise<T>): Promise<
   try { return await fn(); }
   catch (e) { s.set({ error: `${label} failed: ${describeError(e)}` }); return null; }
   finally { s.set({ busy: null }); }
+}
+
+/** Open an older immutable version for viewing. Editing is disabled (edits always apply to the current version). */
+export async function openVersionReadOnly(documentId: string, versionId: string, number: number) {
+  const s = useSession.getState();
+  const d = await s.api.getDocument(documentId);
+  if (d.version_id === versionId) return openLatest(documentId);
+  const [src, meta] = await Promise.all([s.api.fileSource({ document_id: documentId, version_id: versionId }), s.api.getMetadata(documentId, number).catch(() => null)]);
+  await load(src, `${d.filename} (v${number})`, false, meta ? sizesFromMetadata(meta.pages) : undefined);
+  s.set({ ref: null, caps: null, source: s.api.kind === "mock" ? "mock" : "backend", notice: `Viewing v${number} of ${d.filename} — read-only (current is v${d.current_version}).` });
+  return d;
+}
+
+/** Restore tokens from sessionStorage without opening anything (dashboard). */
+export function bootstrapAuth() {
+  const s = useSession.getState();
+  if (s.api.kind === "http" && !s.api.getTokens()) { const p = loadPersisted(); if (p.tokens) s.api.setTokens(p.tokens); }
 }
