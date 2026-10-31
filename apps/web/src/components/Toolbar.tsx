@@ -4,10 +4,12 @@ import { IconButton } from "@thynkpdf/ui";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { rotateCurrentPage } from "@/lib/documents";
+import { editGate } from "@/lib/gates";
 
 export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme, dark }: { onOpen(): void; onToggleSidebar(): void; onTogglePanel(): void; onToggleTheme(): void; dark: boolean }) {
   const v = useViewerStore();
-  const ref = useSession((s) => s.ref);
+  const { ref, caps, capsError, busy } = useSession();
+  const rot = editGate("rotate", ref, caps, { busy: !!busy, capsError });
   const n = v.pageSizes.length;
   const [pageInput, setPageInput] = useState("1");
   useEffect(() => setPageInput(String(v.currentPage + 1)), [v.currentPage]);
@@ -35,7 +37,9 @@ export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme,
       </select>
       <IconButton label="Zoom in" shortcut="Ctrl+=" disabled={!has} onClick={v.zoomIn}>+</IconButton>
       <div className="mx-2 h-5 w-px bg-neutral-300 dark:bg-neutral-700" />
-      <IconButton label={ref ? "Rotate page clockwise" : "Rotate page (requires backend document)"} shortcut="Ctrl+Shift+R" disabled={!has || !ref} onClick={() => rotateCurrentPage(90)}>⟳</IconButton>
+      <span title={rot.reason ?? undefined} data-testid="rotate-wrap">
+        <IconButton label={rot.enabled ? "Rotate page clockwise" : `Rotate page — unavailable: ${rot.reason}`} shortcut="Ctrl+Shift+R" disabled={!has || !rot.enabled} onClick={() => rotateCurrentPage(90)}>⟳</IconButton>
+      </span>
       <div className="ml-auto flex items-center gap-1">
         <IconButton label="Search" shortcut="Ctrl+F" onClick={onTogglePanel}>⌕</IconButton>
         <IconButton label={dark ? "Switch to light theme" : "Switch to dark theme"} onClick={onToggleTheme}>{dark ? "☀" : "☾"}</IconButton>

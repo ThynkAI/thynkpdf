@@ -4,3 +4,4 @@
 html, body { height: 100%; }
 .tp-hit { background: rgba(250, 204, 21, 0.45); color: transparent; border-radius: 2px; }
 .textLayer ::selection { background: rgba(79, 70, 229, 0.35); }
+.tp-hit-active { background: rgba(234, 88, 12, 0.6); outline: 2px solid rgb(234, 88, 12); }

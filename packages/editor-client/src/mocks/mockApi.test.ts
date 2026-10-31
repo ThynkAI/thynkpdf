@@ -21,4 +21,12 @@ describe("MockEditorApi (mock layer)", () => {
   it("rejects non-PDF uploads", async () => {
     await expect(new MockEditorApi().upload(new Blob(["hello"]), "x.pdf")).rejects.toThrow();
   });
+  it("reorder produces the permuted document", async () => {
+    const api = new MockEditorApi();
+    const u = await api.upload(new Blob([fixture]), "s.pdf");
+    const r = await api.reorderPages({ document_id: u.document_id, version_id: u.version_id, version: 1 }, [3, 1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    const doc = await PDFDocument.load(((await api.fileSource(r)) as { data: Uint8Array }).data);
+    expect(doc.getPage(0).getWidth()).toBe(792); // page 3 of fixture is landscape
+    expect((await api.getCapabilities(u.document_id)).version).toBe(2);
+  });
 });

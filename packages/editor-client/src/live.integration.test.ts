@@ -32,5 +32,13 @@ describe.skipIf(!up)("live API: upload -> rotate -> reload", () => {
     expect(err.currentVersion).toBe(r.version);
     const doc = await api.getDocument(u.document_id);
     expect(doc.current_version).toBe(r.version);
+    const caps = await api.getCapabilities(u.document_id);
+    expect(caps.version).toBe(r.version);
+    expect(caps.page_ops.reorder).toBe(true);
+    const ro = await api.reorderPages({ ...r, version: r.version }, [3, 1, 2]);
+    expect(ro.version).toBe(r.version + 1);
+    const pdf2 = await PDFDocument.load(new Uint8Array(await (await fetch(((await api.fileSource(ro)) as { url: string }).url, { headers: src.httpHeaders })).arrayBuffer()));
+    expect(pdf2.getPage(1).getRotation().angle).toBe(0);
+    expect(pdf2.getPage(2).getRotation().angle).toBe(90); // old page 2 (rotated) is now page 3
   });
 });
