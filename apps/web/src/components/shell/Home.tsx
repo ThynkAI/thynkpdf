@@ -20,7 +20,7 @@ export function Home({ onTool, onOpen }: { onTool(t: ToolParam): void; onOpen():
           {TOOL_CATALOG.map(({ id, label, blurb, Icon, hue }) => (
             <li key={id}>
               <button data-testid={`home-tile-${id}`} onClick={() => onTool(id)}
-                className="group flex h-full w-full flex-col items-start gap-2 rounded-xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 dark:border-neutral-800 dark:bg-neutral-900">
+                className="group flex h-full w-full flex-col items-start gap-2 rounded-xl border border-neutral-200 bg-white p-4 text-left shadow-sm transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500 dark:border-neutral-800 dark:bg-neutral-900">
                 <span className={`grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br ${hue} text-white`}><Icon aria-hidden className="h-5 w-5" /></span>
                 <span className="font-medium text-neutral-900 dark:text-neutral-100">{label}</span>
                 <span className="text-xs text-neutral-600 dark:text-neutral-400">{blurb}</span>
