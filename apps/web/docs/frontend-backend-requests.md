@@ -90,3 +90,9 @@ New requests:
 - **WebKit locally:** `npx playwright install-deps webkit` and plain apt both fail on this box. The Debian mirror (deb.debian.org via
   198.18.0.1) returns 500 for trixie, trixie-updates and trixie-security, so the WebKit system libraries can't be installed. WebKit runs in
   CI instead: workflow at `packages/frontend-tests/ci/web-e2e.yml`, to be copied to `.github/workflows/` by someone whose token has the `workflow` scope (push was rejected without it).
+
+## Update after #15/#16 merged into main
+- R4.5 (rotated-page signatures): frontend workaround removed; server documents always use `POST /pdf/signatures/place`. Covered by e2e "signature on a rotated page".
+- R5.6 (typed SignerLink): casts removed; signer links are built from `token`.
+- R0.3 (optional defaulted fields): the client is now generated with `--default-non-nullable false`, so the `FieldSpec`/`EditOp` loosening is gone.
+- Static export / apps/desktop: public pages are `/sign/?token=` and `/shared/?token=`. The sidecar serves `/sign/{token}` and `/shared/{token}` as API routes, so those can't be pages. The launcher ids `merge` and `annotate` are accepted as aliases. **Backend request R6.1:** have `CreatedReqOut.signer_links[].path` and `ShareOut.url` return the query form, or return only the token, so clients don't need to rebuild the URLs.

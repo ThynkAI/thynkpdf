@@ -76,3 +76,16 @@ describe("?tool= deep links", () => {
     expect(toolAction("edit").panelSection).toBe("te-h");
   });
 });
+
+import { signerPageUrl, sharedPageUrl, tokenFromSearch } from "@/lib/publicLinks";
+describe("public links + launcher aliases", () => {
+  it("builds query-string public pages (static-export safe)", () => {
+    expect(signerPageUrl("a b", "http://h")).toBe("http://h/sign/?token=a%20b");
+    expect(sharedPageUrl("/shared/tok123", "http://h")).toBe("http://h/shared/?token=tok123");
+    expect(tokenFromSearch("?token=x")).toBe("x");
+  });
+  it("accepts the desktop launcher ids", () => {
+    expect(parseTool("?tool=merge")).toBe("merge-split");
+    expect(parseTool("?tool=annotate")).toBe("comment");
+  });
+});

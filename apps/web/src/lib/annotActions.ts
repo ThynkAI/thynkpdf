@@ -117,7 +117,7 @@ export async function eraseAnnotation(id: string) {
 export async function replyTo(t: Thread, text: string) {
   if (serverMode()) {
     const r = t.root.rect;
-    return serverChange("Reply", { add: [{ page: t.root.page + 1, type: "text", in_reply_to: t.root.id, contents: text, author: authorName(), rect: [r.x, r.y, r.x + 20, r.y + 20] } as never] });
+    return serverChange("Reply", { add: [{ page: t.root.page + 1, type: "text", in_reply_to: t.root.id, contents: text, author: authorName(), rect: [r.x, r.y, r.x + 20, r.y + 20] }] });
   }
   return applyEdit("Reply", async (b) => (await addReply(b, t.root.id, authorName(), text)).bytes);
 }

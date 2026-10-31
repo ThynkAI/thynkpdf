@@ -14,6 +14,12 @@ test("?tool= opens the matching tool; unknown values are ignored", async ({ page
   await page.goto("/?tool=forms");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await expect(page.locator("#forms-h")).toBeFocused();
+  await page.goto("/?tool=annotate"); // desktop launcher id
+  await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
+  await expect(page.getByRole("toolbar", { name: "Annotation tools" })).toBeVisible();
+  await page.goto("/?tool=merge"); // desktop launcher id
+  await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
+  await expect(page.getByRole("dialog", { name: "Organize pages" })).toBeVisible();
   await page.goto("/?tool=nonsense");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("toolbar", { name: "Annotation tools" })).toHaveCount(0);

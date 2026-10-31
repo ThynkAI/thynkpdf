@@ -1180,14 +1180,14 @@ export interface components {
              * External Processing
              * @default false
              */
-            external_processing: boolean;
+            external_processing?: boolean;
             /** Model */
             model: string;
             /**
              * Retrieval
              * @default bm25-lexical
              */
-            retrieval: string;
+            retrieval?: string;
             /**
              * Uncertain
              * @description true when the answer could not be verified against the document
@@ -1203,7 +1203,7 @@ export interface components {
              * @description must be true to enable external processing
              * @default false
              */
-            acknowledge_external_processing: boolean;
+            acknowledge_external_processing?: boolean;
             /** External Enabled */
             external_enabled: boolean;
             /**
@@ -1211,7 +1211,7 @@ export interface components {
              * @default stub
              * @enum {string}
              */
-            provider: "stub" | "openai_compatible";
+            provider?: "stub" | "openai_compatible";
         };
         /** AISettingsOut */
         AISettingsOut: {
@@ -1263,7 +1263,7 @@ export interface components {
              * @description false = foreign subtype (Link, Popup...) listed read-only
              * @default true
              */
-            supported: boolean;
+            supported?: boolean;
             /** Type */
             type: string;
         };
@@ -1364,12 +1364,12 @@ export interface components {
              * Add
              * @default []
              */
-            add: components["schemas"]["AnnotationIn"][];
+            add?: components["schemas"]["AnnotationIn"][];
             /**
              * Delete
              * @default []
              */
-            delete: string[];
+            delete?: string[];
             /** Document Id */
             document_id: string;
             /** Expected Version */
@@ -1378,7 +1378,7 @@ export interface components {
              * Update
              * @default []
              */
-            update: components["schemas"]["AnnotationIn"][];
+            update?: components["schemas"]["AnnotationIn"][];
         };
         /** Body_upload_documents_upload_post */
         Body_upload_documents_upload_post: {
@@ -1452,7 +1452,7 @@ export interface components {
              * Consent Text Version
              * @default v1
              */
-            consent_text_version: string;
+            consent_text_version?: string;
             /** Placements */
             placements: components["schemas"]["SignerPlacement"][];
         };
@@ -1467,12 +1467,12 @@ export interface components {
              * @default balanced
              * @enum {string}
              */
-            preset: "low" | "balanced" | "high";
+            preset?: "low" | "balanced" | "high";
             /**
              * Strip Metadata
              * @default false
              */
-            strip_metadata: boolean;
+            strip_metadata?: boolean;
         };
         /** CreateReqIn */
         CreateReqIn: {
@@ -1484,7 +1484,7 @@ export interface components {
              * Message
              * @default
              */
-            message: string;
+            message?: string;
             /** Signers */
             signers: components["schemas"]["ReqSigner"][];
             /** Title */
@@ -1498,11 +1498,9 @@ export interface components {
             request_id: string;
             /**
              * Signer Links
-             * @description [{signer_index,email,token}] returned ONCE — email delivery is not configured; deliver out-of-band
+             * @description Returned ONCE — email delivery is not configured; deliver out-of-band
              */
-            signer_links: {
-                [key: string]: unknown;
-            }[];
+            signer_links: components["schemas"]["SignerLink"][];
             /** Status */
             status: string;
         };
@@ -1516,7 +1514,7 @@ export interface components {
              * Field Name
              * @default ThynkSig1
              */
-            field_name: string;
+            field_name?: string;
             /** Location */
             location?: string | null;
             /** Page */
@@ -1532,7 +1530,7 @@ export interface components {
              * Reason
              * @default
              */
-            reason: string;
+            reason?: string;
         };
         /** DeleteIn */
         DeleteIn: {
@@ -1603,12 +1601,12 @@ export interface components {
              * Starred
              * @default false
              */
-            starred: boolean;
+            starred?: boolean;
             /**
              * Tags
              * @default []
              */
-            tags: string[];
+            tags?: string[];
             /** Trashed At */
             trashed_at?: string | null;
             /** Updated At */
@@ -1619,7 +1617,7 @@ export interface components {
              * Visibility
              * @default org
              */
-            visibility: string;
+            visibility?: string;
         };
         /** DocumentPage */
         DocumentPage: {
@@ -1640,7 +1638,7 @@ export interface components {
              * Position
              * @default after_each
              */
-            position: "after_each" | number;
+            position?: "after_each" | number;
         };
         /** EditIn */
         EditIn: {
@@ -1667,12 +1665,12 @@ export interface components {
              * Font
              * @default Helvetica
              */
-            font: string;
+            font?: string;
             /**
              * Font Size
              * @default 12
              */
-            font_size: number;
+            font_size?: number;
             /** Formatting */
             formatting?: {
                 [key: string]: unknown;
@@ -1684,7 +1682,7 @@ export interface components {
              * @default all
              * @enum {string}
              */
-            occurrence: "first" | "all";
+            occurrence?: "first" | "all";
             /**
              * Op
              * @enum {string}
@@ -1723,7 +1721,7 @@ export interface components {
              * Details
              * @default {}
              */
-            details: {
+            details?: {
                 [key: string]: unknown;
             };
             /** Message */
@@ -1797,14 +1795,14 @@ export interface components {
              * Font Size
              * @default 10
              */
-            font_size: number;
+            font_size?: number;
             /** Max Length */
             max_length?: number | null;
             /**
              * Multiline
              * @default false
              */
-            multiline: boolean;
+            multiline?: boolean;
             /** Name */
             name: string;
             /** Options */
@@ -1815,7 +1813,7 @@ export interface components {
              * Read Only
              * @default false
              */
-            read_only: boolean;
+            read_only?: boolean;
             /** Rect */
             rect?: number[] | null;
             /** Rects */
@@ -1824,7 +1822,7 @@ export interface components {
              * Required
              * @default false
              */
-            required: boolean;
+            required?: boolean;
             /**
              * Type
              * @enum {string}
@@ -1837,12 +1835,12 @@ export interface components {
              * Add
              * @default []
              */
-            add: components["schemas"]["FieldSpec"][];
+            add?: components["schemas"]["FieldSpec"][];
             /**
              * Delete
              * @default []
              */
-            delete: string[];
+            delete?: string[];
             /** Document Id */
             document_id: string;
             /** Expected Version */
@@ -1863,7 +1861,7 @@ export interface components {
              * Flatten
              * @default false
              */
-            flatten: boolean;
+            flatten?: boolean;
             /** Values */
             values?: {
                 [key: string]: unknown;
@@ -1936,7 +1934,7 @@ export interface components {
              * Multiline
              * @default false
              */
-            multiline: boolean;
+            multiline?: boolean;
             /** Name */
             name: string;
             /** Options */
@@ -1973,12 +1971,12 @@ export interface components {
              * @description Insert after this page (0 = at start)
              * @default 0
              */
-            after_page: number;
+            after_page?: number;
             /**
              * Count
              * @default 1
              */
-            count: number;
+            count?: number;
             /** Document Id */
             document_id: string;
             /** Expected Version */
@@ -2045,7 +2043,7 @@ export interface components {
              * Filename
              * @default merged.pdf
              */
-            filename: string;
+            filename?: string;
         };
         /** MetadataOut */
         MetadataOut: {
@@ -2122,19 +2120,19 @@ export interface components {
              * Delete
              * @default true
              */
-            delete: boolean;
+            delete?: boolean;
             /**
              * Duplicate
              * @default true
              */
-            duplicate: boolean;
+            duplicate?: boolean;
             /** Extract */
             extract: boolean;
             /**
              * Insert Blank
              * @default true
              */
-            insert_blank: boolean;
+            insert_blank?: boolean;
             /** Merge */
             merge: boolean;
             /** Reorder */
@@ -2288,7 +2286,7 @@ export interface components {
              * @default viewer
              * @enum {string}
              */
-            role: "viewer" | "editor";
+            role?: "viewer" | "editor";
         };
         /** ShareOut */
         ShareOut: {
@@ -2386,6 +2384,23 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** SignerLink */
+        SignerLink: {
+            /** Email */
+            email: string;
+            /**
+             * Path
+             * @description Relative signer URL, e.g. /sign/{token}
+             */
+            path: string;
+            /** Signer Index */
+            signer_index: number;
+            /**
+             * Token
+             * @description Secret signer token (shown once; stored only as a hash)
+             */
+            token: string;
+        };
         /** SignerOut */
         SignerOut: {
             /** Consent At */
@@ -2436,7 +2451,7 @@ export interface components {
              * @default short
              * @enum {string}
              */
-            length: "short" | "long";
+            length?: "short" | "long";
             /** Page Range */
             page_range?: number[] | null;
             /** Version */
@@ -2508,7 +2523,7 @@ export interface components {
              * Report
              * @default {}
              */
-            report: {
+            report?: {
                 [key: string]: unknown;
             };
             /** Sha256 */

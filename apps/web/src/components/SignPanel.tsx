@@ -39,7 +39,7 @@ export function SignPanel() {
   const server = !!s.ref && s.api.kind === "http";
   const apply = async () => {
     if (!image || !placement) return;
-    if (server && (await pageInfo(await currentBytes(), placement.page)).rotation % 360 === 0) {
+    if (server) {
       // Versioned server path: PNG asset upload + POST /pdf/signatures/place (expected_version). Visual only (report.visual_only).
       try {
         const bytes = await currentBytes();
@@ -53,8 +53,7 @@ export function SignPanel() {
       } catch (e) { s.set({ error: `Signing failed: ${describeError(e)}` }); }
       return;
     }
-    // Local files, and rotated server pages (the server's stamp does not counter-rotate yet — backend request R4.5):
-    // stamp upright in the browser, then save (server docs → new version via POST /documents/{id}/versions).
+    // Local files: stamp upright in the browser (rotation-aware), then reopen as a downloadable copy.
     try {
       const bytes = await currentBytes();
       const info = await pageInfo(bytes, placement.page);

@@ -126,13 +126,13 @@ export function Dashboard() {
                 <tbody>
                   {(docs ?? []).map((d) => {
                     const p = open?.id === d.document_id ? open.panel : null;
-                    const toggle = (panel: NonNullable<typeof open>["panel"]) => { setOpen(p === panel ? null : { id: d.document_id, panel }); setTagInput(d.tags.join(", ")); setNameInput(d.filename); };
+                    const toggle = (panel: NonNullable<typeof open>["panel"]) => { setOpen(p === panel ? null : { id: d.document_id, panel }); setTagInput((d.tags ?? []).join(", ")); setNameInput(d.filename); };
                     return (
                     <tr key={d.document_id} className="border-t align-top dark:border-neutral-800" data-testid="doc-row">
                       <td className="py-2">
                         {trash ? <span className="font-medium">{d.filename}</span> : <a className="font-medium hover:underline" href={`/?doc=${d.document_id}`}>{d.filename}</a>}
                         {d.starred && <span className="ml-1 text-amber-600" aria-label="starred">★</span>}
-                        {d.tags.map((t) => <span key={t} className="ml-1 rounded bg-neutral-100 px-1 text-xs dark:bg-neutral-800">#{t}</span>)}
+                        {(d.tags ?? []).map((t) => <span key={t} className="ml-1 rounded bg-neutral-100 px-1 text-xs dark:bg-neutral-800">#{t}</span>)}
                         {p === "versions" && (
                           <div className="mt-2 rounded border p-2 text-xs dark:border-neutral-700" data-testid="versions">
                             <p className="mb-1 font-semibold">Version history</p>

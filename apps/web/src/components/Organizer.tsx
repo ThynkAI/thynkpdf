@@ -114,7 +114,7 @@ export function Organizer({ onClose, focus: initialFocus = "pages" }: { onClose(
             setCompressMsg(null);
             let rep: Record<string, unknown> | null = null;
             const before = s.ref?.version;
-            const ok = await runVersionedOp("Compress", async (r) => { const v = await http().compress(r, preset); rep = v.report; return v; });
+            const ok = await runVersionedOp("Compress", async (r) => { const v = await http().compress(r, preset); rep = v.report ?? null; return v; });
             if (ok && rep) { const r = rep as { new_version_created?: boolean; original_size?: number; final_size?: number };
               setCompressMsg(r.new_version_created ? `Compressed${r.original_size && r.final_size ? `: ${Math.round(r.original_size / 1024)} KB → ${Math.round(r.final_size / 1024)} KB` : ""} (now v${useSession.getState().ref?.version}).` : `Already compact — no smaller version could be made (still v${before}).`); }
           }}>Compress</button>

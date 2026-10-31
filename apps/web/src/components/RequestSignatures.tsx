@@ -6,6 +6,7 @@ import { useSession } from "@/lib/session";
 import { useSignature } from "@/lib/signature";
 import { describeError, http, openLatest } from "@/lib/documents";
 import { buildRequestFields, isEmail } from "@/lib/requestFields";
+import { signerPageUrl } from "@/lib/publicLinks";
 import { getGeom } from "@/lib/pageGeom";
 import { displayBoxToPdfRect } from "@/lib/geometry";
 
@@ -43,8 +44,8 @@ export function RequestSignatures() {
         signers: signers.map((x, i) => ({ name: x.name.trim(), email: x.email.trim(), ...(sequential ? { order: i + 1 } : {}) })),
         fields: buildRequestFields(signers.length, page + 1, base, withDate, g?.width ?? sz.width),
       });
-      const raw = out.signer_links as unknown as { signer_index: number; email: string; path: string }[];
-      setLinks(raw.map((l) => ({ signer_index: l.signer_index, email: l.email, url: new URL(l.path, window.location.origin).href })));
+      // Built from the token (not `path`): the signer page is /sign?token=…, which also works in the static desktop build, where /sign/{token} is the API.
+      setLinks(out.signer_links.map((l) => ({ signer_index: l.signer_index, email: l.email, url: signerPageUrl(l.token, window.location.origin) })));
       load();
     } catch (e) { setErr(describeError(e)); }
   };

@@ -56,7 +56,7 @@ describe.skipIf(!up)("live API phase 2", () => {
     expect((v.report as { visual_only: boolean }).visual_only).toBe(true);
     const req = await api.createSignatureRequest({ document_id: ref.document_id, version: v.version, message: "", title: "T",
       signers: [{ name: "Signer One", email: "signer.one@example.com" }], fields: [{ signer_index: 0, page: 1, rect: [300, 72, 450, 112], type: "signature" }, { signer_index: 0, page: 1, rect: [460, 72, 560, 92], type: "date" }] });
-    const link = (req.signer_links as unknown as { token: string; path: string }[])[0];
+    const link = req.signer_links[0];
     expect(link.path).toBe(`/sign/${link.token}`);
     const pub = new HttpEditorApi({ baseUrl: BASE });
     const sess = await pub.getSignSession(link.token);

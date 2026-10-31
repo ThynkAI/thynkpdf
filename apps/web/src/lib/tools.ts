@@ -1,8 +1,11 @@
 /** ?tool= deep links. Unknown values are ignored. */
 export const TOOLS = ["edit", "merge-split", "compress", "sign", "forms", "comment", "ai", "documents"] as const;
 export type ToolParam = (typeof TOOLS)[number];
+/** Ids used by the desktop launcher (apps/desktop/launcher). */
+const ALIASES: Record<string, ToolParam> = { merge: "merge-split", split: "merge-split", annotate: "comment", comments: "comment" };
 export function parseTool(search: string): ToolParam | null {
-  const v = new URLSearchParams(search).get("tool")?.trim().toLowerCase() ?? "";
+  const raw = new URLSearchParams(search).get("tool")?.trim().toLowerCase() ?? "";
+  const v = ALIASES[raw] ?? raw;
   return (TOOLS as readonly string[]).includes(v) ? (v as ToolParam) : null;
 }
 /** What the editor opens for each tool: a right-panel section (heading id), the organizer, annotation mode, or the dashboard. */
