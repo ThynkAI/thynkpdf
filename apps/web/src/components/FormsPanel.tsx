@@ -1,0 +1,69 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useViewerStore } from "@thynkpdf/pdf-viewer";
+import { useSession } from "@/lib/session";
+import { currentBytes, saveModifiedCopy } from "@/lib/copies";
+import { listFields, fillFields, addField, type FieldInfo } from "@/lib/pdfWrite";
+import { describeError } from "@/lib/documents";
+
+export function FormsPanel() {
+  const { docKey, currentPage, pageSizes } = useViewerStore();
+  const s = useSession();
+  const [fields, setFields] = useState<FieldInfo[] | null>(null);
+  const [vals, setVals] = useState<Record<string, string | boolean>>({});
+  const [err, setErr] = useState<string | null>(null);
+  const [newName, setNewName] = useState(""); const [newType, setNewType] = useState<"text" | "checkbox">("text");
+  useEffect(() => {
+    setFields(null); setVals({}); setErr(null);
+    if (!pageSizes.length) return;
+    let live = true;
+    currentBytes().then(listFields).then((f) => { if (live) setFields(f); }, (e) => { if (live) setErr(describeError(e)); });
+    return () => { live = false; };
+  }, [docKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!pageSizes.length) return null;
+  const input = "w-full rounded border px-2 py-1 dark:border-neutral-700 dark:bg-neutral-800";
+  return (
+    <section aria-labelledby="forms-h">
+      <h2 id="forms-h" className="mb-1 font-semibold">Form fields</h2>
+      {err && <p role="alert" className="text-xs text-red-600">{err}</p>}
+      {fields === null && !err && <p className="text-xs text-neutral-500">Reading form…</p>}
+      {fields && fields.length === 0 && <p className="text-xs text-neutral-500" data-testid="no-fields">This PDF has no form fields.</p>}
+      {fields && fields.length > 0 && (
+        <form className="space-y-1 text-xs" data-testid="form-fields" onSubmit={async (e) => {
+          e.preventDefault();
+          try { await saveModifiedCopy(await fillFields(await currentBytes(), vals), "filled"); } catch (x) { s.set({ error: `Fill failed: ${describeError(x)}` }); }
+        }}>
+          {fields.map((f) => {
+            const v = vals[f.name] ?? f.value;
+            return (
+              <label key={f.name} className="block">
+                <span className="text-neutral-500">{f.name}{f.readOnly ? " (read-only)" : ""}</span>
+                {f.type === "checkbox" ? <input type="checkbox" className="ml-2" aria-label={f.name} disabled={f.readOnly} checked={!!v} onChange={(e) => setVals({ ...vals, [f.name]: e.target.checked })} />
+                  : f.type === "dropdown" || f.type === "radio" ? (
+                    <select aria-label={f.name} className={input} disabled={f.readOnly} value={String(v)} onChange={(e) => setVals({ ...vals, [f.name]: e.target.value })}>
+                      <option value="">—</option>{f.options?.map((o) => <option key={o}>{o}</option>)}
+                    </select>)
+                  : f.type === "text" ? <input aria-label={f.name} className={input} disabled={f.readOnly} value={String(v)} onChange={(e) => setVals({ ...vals, [f.name]: e.target.value })} />
+                  : <span className="ml-2 text-neutral-500">unsupported field type</span>}
+              </label>);
+          })}
+          <button className="rounded bg-brand-600 px-3 py-1 text-white disabled:opacity-40" disabled={!Object.keys(vals).length || !!s.busy}>Save filled copy</button>
+        </form>)}
+      <form className="mt-2 flex flex-wrap items-center gap-1 text-xs" onSubmit={async (e) => {
+        e.preventDefault();
+        const sz = pageSizes[currentPage];
+        try {
+          const bytes = await currentBytes();
+          const rect = newType === "text" ? { x: 72, y: sz.height / 2, width: Math.min(220, sz.width - 144), height: 22 } : { x: 72, y: sz.height / 2, width: 16, height: 16 };
+          await saveModifiedCopy(await addField(bytes, { name: newName.trim(), type: newType, pageIndex: currentPage, rect }), "form");
+          setNewName("");
+        } catch (x) { s.set({ error: `Add field failed: ${describeError(x)}` }); }
+      }}>
+        <input aria-label="New field name" placeholder="New field name" value={newName} onChange={(e) => setNewName(e.target.value)} className="min-w-0 flex-1 rounded border px-2 py-1 dark:border-neutral-700 dark:bg-neutral-800" />
+        <select aria-label="New field type" value={newType} onChange={(e) => setNewType(e.target.value as "text" | "checkbox")} className="rounded border py-1 dark:bg-neutral-800"><option value="text">Text</option><option value="checkbox">Checkbox</option></select>
+        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!newName.trim() || !!s.busy}>Add to page {currentPage + 1}</button>
+      </form>
+      <p className="mt-1 text-[11px] text-neutral-500">Fields are written with pdf-lib in your browser; server docs are saved as a new document.</p>
+    </section>
+  );
+}

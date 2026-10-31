@@ -6,6 +6,8 @@ import { editGate } from "@/lib/gates";
 import { signOut, ensureText } from "@/lib/documents";
 import { TextEditPanel } from "./TextEditPanel";
 import { SignInForm } from "./SignInForm";
+import { SignPanel } from "./SignPanel";
+import { FormsPanel } from "./FormsPanel";
 
 export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
@@ -35,6 +37,8 @@ export const RightPanel = forwardRef<HTMLInputElement>(function RightPanel(_p, s
         </ul>
       </section>
       <TextEditPanel />
+      <SignPanel />
+      <FormsPanel />
       <section>
         <h2 className="mb-2 font-semibold">Document</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
