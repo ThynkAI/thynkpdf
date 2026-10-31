@@ -101,7 +101,7 @@ def register(app, c):
     # ---------- owner side ----------
     @app.post("/signing-requests", response_model=CreatedOut, status_code=201, tags=["signing"])
     def create(b: CreateIn, p=Depends(c.principal), s=Depends(c.db)):
-        c.need(p, "member"); d = c.get_doc(s, p, b.document_id)
+        d, _ = c.writable(s, p, b.document_id)
         if b.expected_version != d.current_version:
             raise c.ApiError(409, "VERSION_CONFLICT", "Document changed", {"current_version": d.current_version})
         v = c.get_ver(s, d); data = c.load(d, v); pages = eng.inspect(data)["page_count"]
