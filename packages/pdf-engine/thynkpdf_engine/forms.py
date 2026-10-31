@@ -231,3 +231,25 @@ def parse_csv_values(text: str, fields: list[dict]) -> dict:
         k = kinds.get(n)
         out[n] = (v.lower() == "true") if k == "checkbox" else (v.split("|") if k == "listbox" and "|" in v else v)
     return out
+
+
+def delete_fields(data: bytes, names: list[str]) -> bytes:
+    pdf = open_pdf(data); acro = pdf.Root.get("/AcroForm")
+    if acro is None: raise EngineError("FORM_FIELD_NOT_FOUND", "Document has no form", {"fields": names})
+    byname = dict(_walk(acro.get("/Fields", [])))
+    missing = [n for n in names if n not in byname]
+    if missing: raise EngineError("FORM_FIELD_NOT_FOUND", "Unknown fields", {"fields": missing})
+    kill = set()
+    for n in names:
+        f = byname[n]; kill.add(f.objgen); kill |= {w.objgen for w in _widgets(f)}
+    def prune(arr):
+        out = Array()
+        for x in arr:
+            if x.objgen in kill: continue
+            if "/Kids" in x and "/T" in x: x.Kids = prune(x.Kids)
+            out.append(x)
+        return out
+    acro.Fields = prune(acro.Fields)
+    for pg in pdf.pages:
+        if "/Annots" in pg.obj: pg.obj.Annots = Array([x for x in pg.obj.Annots if x.objgen not in kill])
+    return _save(pdf)

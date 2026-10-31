@@ -14,3 +14,4 @@ settings.signing_cert = os.getenv("THYNKPDF_SIGNING_CERT", "")
 settings.signing_key = os.getenv("THYNKPDF_SIGNING_KEY", "")
 settings.signing_key_pass = os.getenv("THYNKPDF_SIGNING_KEY_PASSPHRASE", "")
 settings.signing_cert_trusted = os.getenv("THYNKPDF_SIGNING_CERT_TRUSTED", "false").lower() == "true"
+settings.cookie_samesite = os.getenv("THYNKPDF_COOKIE_SAMESITE", "strict").lower()

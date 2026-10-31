@@ -93,12 +93,13 @@ Upload fixture → GET capabilities → edit → confirm `version` incremented �
 Scope note: THYNKPDF is free — no billing/paywall endpoints will be built.
 
 ## PR-1 contract changes (auth cookie, filename, capabilities schema, edit + page ops)
-- **Refresh cookie**: `/auth/register`, `/auth/login`, `/auth/refresh` now also set `thynkpdf_refresh` (httpOnly, SameSite=Lax, Path=/auth, Max-Age = refresh TTL; `Secure` when `THYNKPDF_COOKIE_SECURE=true`, required in prod/HTTPS). JSON body still contains `refresh_token` for non-browser clients — the web app should ignore it and rely on the cookie.
+- **Refresh cookie**: `/auth/register`, `/auth/login`, `/auth/refresh` now also set `thynkpdf_rt` (httpOnly, SameSite=Strict (env `THYNKPDF_COOKIE_SAMESITE`), Path=/auth, Max-Age = refresh TTL; `Secure` when `THYNKPDF_COOKIE_SECURE=true`, required in prod/HTTPS). JSON body still contains `refresh_token` for non-browser clients — the web app should ignore it and rely on the cookie.
 - `POST /auth/refresh` body is optional; reads the cookie when no body. Call with `fetch(url, {method:"POST", credentials:"include"})`.
 - **Refresh rotation**: each refresh token is single-use. Reusing one → 401 `TOKEN_REVOKED`. Serialize refresh calls in the client (one in-flight refresh).
 - `POST /auth/logout` (credentials: include) → 204, revokes the refresh token and clears the cookie. Idempotent.
 - CORS: `allow_credentials=true` for `http://localhost:3000` (exact origin, no wildcard).
-- `UploadOut` (upload/extract/merge/split) now includes `filename` (sanitized basename).
+- `UploadOut` and `VersionResult` now include `filename` (sanitized basename).
+- **`POST /documents/{id}/versions`** multipart: `file` (PDF) + form field `expected_version` → 201 `VersionResult` (`report.page_count`). Same validation as upload (magic bytes 415, malformed 422, size 413); stale → 409 `VERSION_CONFLICT`. Use this to save client-side modified bytes.
 - `GET /pdf/{id}/capabilities` has a typed schema `CapabilitiesOut` (`PageOps`, `EditOps`, `PageCapability`, `Limitation`) and `GET /pdf/{id}/metadata` → `MetadataOut`. New fields: `edit_ops{text_replace,text_delete,text_move,text_insert}`, per-page same booleans, `page_ops.insert_blank|delete|duplicate`, `annotations`, `forms`.
 
 ### /pdf/edit operations
@@ -110,44 +111,23 @@ Scope note: THYNKPDF is free — no billing/paywall endpoints will be built.
 | text_insert | text, x, y, font?(std-14 Latin, default Helvetica), font_size?(12) | appends a real BT/Tj/ET text object; WinAnsi only (`EDIT_UNSUPPORTED_CHARACTERS`, `EDIT_UNSUPPORTED_FONT`) |
 Delete/move/replace require the font to be listed in `pages[n].editable_fonts`. Coordinates are PDF user space, origin bottom-left, unrotated page.
 
-### Page structure (each → new version, needs expected_version)
-- `POST /pdf/pages/insert-blank {document_id, expected_version, after(0..n), count, width?, height?}` (size defaults to neighbour page)
-- `POST /pdf/pages/delete {document_id, expected_version, pages}` (cannot delete all; old versions remain → recovery via rollback)
-- `POST /pdf/pages/duplicate {document_id, expected_version, page, count}` (annotations are NOT duplicated)
+### Page structure (each → new version, needs expected_version) — matches frontend R1.x
+- `POST /pdf/pages/delete {document_id, expected_version, pages}` → 400 `INVALID_PAGE`, 400 `CANNOT_DELETE_ALL_PAGES`
+- `POST /pdf/pages/duplicate {document_id, expected_version, pages:[int], position?: "after_each"|int(0..n)}` (annotations are NOT duplicated)
+- `POST /pdf/pages/insert-blank {document_id, expected_version, after_page(0=start), count=1, width?, height?}` (size defaults to neighbour page)
+- `POST /pdf/pages/insert-from {document_id, expected_version, source_document_id, source_pages?, after_page}` (source must be in the same org; it is not modified)
 
-## PR-2: annotations + forms (all writes → new version, need expected_version)
-### Annotations (stored in the PDF `/Annots` with generated `/AP` appearance streams, readable by any viewer)
-- `GET /pdf/{id}/annotations?page=` → `[Annotation{id, page, type, subtype, rect, contents, author, color, editable, ink?}]`. `id` = `/NM` (ours are `thynk-<hex>`); pre-existing annots without NM get `p{page}-i{index}` (index-based → may change after edits; refetch).
-- `POST /pdf/annotations {document_id, expected_version, type: highlight|note|ink|rectangle|ellipse|line, page, rect?, ink?, color?[r,g,b 0..1], width?, contents?}` → VersionResult + `annotation_id`. `ink` = list of strokes `[x1,y1,x2,y2,...]`; line uses `rect` as endpoints.
-- `PATCH /pdf/annotations/{annotation_id} {document_id, expected_version, rect?, ink?, color?, contents?, width?}`
-- `DELETE /pdf/annotations/{annotation_id}?document_id=&expected_version=` (also removes its popup)
-- Other subtypes (Link, FreeText, Stamp…) are listed with `editable:false`; PATCH → `EDIT_NOT_SUPPORTED`. Errors: `ANNOTATION_NOT_FOUND` (404).
-### Forms (AcroForm; PDF JavaScript is never executed — `has_actions`/`calculated` are reported only)
-- `GET /pdf/{id}/forms` → `[FormField{name,type,value,required,read_only,options,max_length,page,rect,has_actions,calculated}]`
-- `POST /pdf/forms {document_id, expected_version, fields:[{name, type: text|multiline|checkbox|radio|dropdown|listbox|signature, page, rect | rects(radio), options?, default?, required?, read_only?, max_length?, font_size?}]}` → `FORM_FIELD_EXISTS` (409) on duplicate names.
-- `POST /pdf/forms/fill {document_id, expected_version, values:{name:value} | csv:"name,value\n...", flatten?}` → report `{filled, missing_required, flattened?}`. checkbox=bool, radio=option name, listbox=list. Invalid values → 422 `VALIDATION_ERROR` with `details.fields{name: max_length|invalid_option|expected_boolean|read_only}`; unknown → `FORM_FIELD_NOT_FOUND`.
-- `POST /pdf/forms/flatten {document_id, expected_version, confirm:true}` → burns widgets AND all annotations into content, removes AcroForm. `confirm:false` → `CONFIRMATION_REQUIRED`. Recover via earlier version.
-- `GET /pdf/{id}/forms/export?format=json|csv` (CSV cells starting with = + - @ are prefixed with `'`).
-
-## PR-3: e-sign workflow, cryptographic signatures, audit
-Legal note: no claim of legal enforceability in any jurisdiction; pending legal review.
-### TYPE A — e-sign workflow
-Owner side (Bearer auth, member+):
-- `POST /signing-requests {document_id, expected_version, title, message?, sequential(default true), signers:[{email,name,order,page,rect}]}` → 201 `CreatedOut`; each signer includes `signing_token` **only in this response** (stored hashed). No email provider is configured: deliver the link/token out-of-band (event `notification_queued` with `delivered:false`).
-- `GET /signing-requests`, `GET /signing-requests/{id}` (status `in_progress|completed|declined|cancelled`; signer status `pending|consented|signed|declined`)
-- `GET /signing-requests/{id}/events` → `{chain_valid, first_invalid_seq, head_hash, events[{seq,type,actor,data,at,prev_hash,hash}]}`; `hash = sha256(prev_hash || canonical_json(event))`, genesis = 64×"0". Types: request_created, signer_invited, notification_queued, document_viewed, consent_given, signer_signed, signer_declined, request_cancelled, document_finalizing, request_completed.
-- `POST /signing-requests/{id}/cancel`
-- `POST /signing-requests/{id}/complete` → requires all signed and document still at the source version (else `SIGNING_INCOMPLETE` / `VERSION_CONFLICT`). Produces a NEW VERSION of the document: typed signatures stamped as real text in each signer's rect, an appended "Electronic Signature Certificate" page (signers, consent times, event hashes, chain head), then a server pyHanko signature over everything.
-Signer side (no account; header `X-Signer-Token: <token>`; suggested web route `/sign?token=`):
-- `GET /signing/session` → `{title, message, signer, can_sign, blocked_reason(waiting_for_previous_signers|already_signed|request_cancelled...), consent_text, consent_text_version:"v1", document_sha256, page_count}`
-- `GET /signing/session/document` → source PDF
-- `POST /signing/session/consent {accept:true, consent_text_version:"v1"}` → then `POST /signing/session/sign {signature_text}` (Latin/WinAnsi) or `POST /signing/session/decline {reason}`.
-Errors: SIGNER_TOKEN_REQUIRED/INVALID (401), CONSENT_REQUIRED, SIGNING_NOT_ALLOWED, SIGNING_INVALID_STATE, SIGNING_INCOMPLETE (409), SIGNING_REQUEST_NOT_FOUND (404).
-### TYPE B — cryptographic signatures (pyHanko)
-- `GET /pdf/signatures/certificate` → `{subject, issuer, serial, not_after, trusted_identity, dev_untrusted, sha256_fingerprint}`. Private keys are never returned. In dev the server auto-generates a self-signed cert with CN "THYNKPDF DEV TEST CERTIFICATE - UNTRUSTED - NOT AN IDENTITY"; it is always reported `trusted:false`. Production: set `THYNKPDF_SIGNING_CERT`, `THYNKPDF_SIGNING_KEY`, `THYNKPDF_SIGNING_KEY_PASSPHRASE`, `THYNKPDF_SIGNING_CERT_TRUSTED=true` (CA-issued only).
-- `POST /pdf/signatures/sign {document_id, expected_version, field_name?, reason?, location?, page?, rect?}` → new version, incremental signature (earlier signatures stay intact). `report.warnings` flags untrusted dev cert. The signing identity is the server certificate, not the end user.
-- `GET /pdf/{id}/signatures?version=` → `signatures[{field, intact, crypto_valid, trusted, coverage, modification_level, docmdp_ok, signing_time, signer_subject, modified_after_signing}]`. Show "Signed, identity not verified" when `trusted:false`.
-- Signed documents: rotate/reorder/edit/annotations/forms/compress/page ops → 409 `DOCUMENT_SIGNED` (extract/merge/split into a new document still allowed). Capabilities report `SIGNED_DOCUMENT`.
-- No timestamp authority (TSA) configured → signing_time is signer-reported.
-### Audit
-- `GET /audit?action=<prefix>&target=&user_id=&since=&until=&limit=&offset=` (admin+, org-scoped) → `[{id, action, user_id, target, created_at}]`.
+## PR-2: annotations (with comment threads) + forms — matches frontend §2/§3
+### Annotations (real `/Annots` entries with generated `/AP` appearance streams)
+- `GET /pdf/{id}/annotations?version=N&page=` → `{document_id, version, annotations: Annotation[]}`
+  `Annotation = {id, page, type: highlight|underline|strikeout|ink|text|freetext|square|circle|line|arrow|stamp, rect, quad_points?, ink_list?: [[[x,y],...],...], color, opacity?, border_width?, contents?, author?, created_at, modified_at, stamp_name?, line?, in_reply_to?, state?: open|resolved, supported}`. Foreign subtypes (Link, Popup…) appear with `supported:false` and are read-only.
+- `POST /pdf/annotations {document_id, expected_version, add?: Annotation[] (no id), update?: [{id, ...changed}], delete?: [id]}` → `VersionResult` with `report.ids` (new ids, add order). Atomic; order = delete → update → add.
+- Threads: reply = `{type:"text", in_reply_to:<id>}` (written as `/IRT`); resolve = `update:[{id, state:"resolved"}]` (written as `/StateModel Review /State Completed` on the annotation — simplified vs. the spec's state-reply model). Deleting a parent deletes its replies.
+- ids are `/NM` (`thynk-<hex>` for ours). Pre-existing annotations without `/NM` get positional ids `p{page}-i{index}` — refetch after each version.
+- `stamp_name` ∈ Approved, NotApproved, Draft, Final, Confidential, ForComment, Expired, Experimental, AsIs, Sold, Departmental, ForPublicRelease, NotForPublicRelease, TopSecret. `freetext` uses `contents` (WinAnsi) and optional `font_size`.
+- Errors: `ANNOTATION_NOT_FOUND` (404), `INVALID_REQUEST` (400, bad rect/quad/ink/stamp), `EDIT_NOT_SUPPORTED`. Moving an annotation across pages = delete + add.
+### Forms (PDF JavaScript is never executed; `has_actions`/`calculated` are only reported)
+- `GET /pdf/{id}/forms?version=N` → `{document_id, version, fields:[{name, type: text|checkbox|radio|dropdown|listbox|signature, multiline, page, rect, value, options?, required, read_only, max_length?, has_actions, calculated}]}`
+- `POST /pdf/forms/fields {document_id, expected_version, add:[{name, type, page, rect | rects (radio, one per option), options?, required?, default?, multiline?, read_only?, max_length?}], delete?:[name]}` → `VersionResult` (`FORM_FIELD_EXISTS` 409, `FORM_FIELD_NOT_FOUND`).
+- `POST /pdf/forms/fill {document_id, expected_version, values:{name: string|boolean|string[]}, flatten?}` → `VersionResult` (`report.missing_required`). Also accepts `csv` instead of `values`. Invalid → 422 `VALIDATION_ERROR` with `details.fields`.
+- `POST /pdf/forms/flatten {document_id, expected_version, confirm:true}`; `GET /pdf/{id}/forms/export?format=json|csv`.
