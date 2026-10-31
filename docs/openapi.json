@@ -1,6 +1,114 @@
 {
  "components": {
   "schemas": {
+   "AIOut": {
+    "properties": {
+     "answer": {
+      "title": "Answer",
+      "type": "string"
+     },
+     "citations": {
+      "items": {
+       "$ref": "#/components/schemas/Citation"
+      },
+      "title": "Citations",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "external_processing": {
+      "default": false,
+      "title": "External Processing",
+      "type": "boolean"
+     },
+     "model": {
+      "title": "Model",
+      "type": "string"
+     },
+     "retrieval": {
+      "default": "bm25-lexical",
+      "title": "Retrieval",
+      "type": "string"
+     },
+     "uncertain": {
+      "description": "true when the answer could not be verified against the document",
+      "title": "Uncertain",
+      "type": "boolean"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "answer",
+     "citations",
+     "model",
+     "uncertain",
+     "document_id",
+     "version"
+    ],
+    "title": "AIOut",
+    "type": "object"
+   },
+   "AISettingsIn": {
+    "properties": {
+     "acknowledge_external_processing": {
+      "default": false,
+      "description": "must be true to enable external processing",
+      "title": "Acknowledge External Processing",
+      "type": "boolean"
+     },
+     "external_enabled": {
+      "title": "External Enabled",
+      "type": "boolean"
+     },
+     "provider": {
+      "default": "stub",
+      "enum": [
+       "stub",
+       "openai_compatible"
+      ],
+      "title": "Provider",
+      "type": "string"
+     }
+    },
+    "required": [
+     "external_enabled"
+    ],
+    "title": "AISettingsIn",
+    "type": "object"
+   },
+   "AISettingsOut": {
+    "properties": {
+     "external_configured": {
+      "title": "External Configured",
+      "type": "boolean"
+     },
+     "external_enabled": {
+      "title": "External Enabled",
+      "type": "boolean"
+     },
+     "provider": {
+      "title": "Provider",
+      "type": "string"
+     },
+     "rate_limit_per_minute": {
+      "title": "Rate Limit Per Minute",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "external_enabled",
+     "provider",
+     "external_configured",
+     "rate_limit_per_minute"
+    ],
+    "title": "AISettingsOut",
+    "type": "object"
+   },
    "Annotation": {
     "properties": {
      "author": {
@@ -453,6 +561,52 @@
     "title": "AnnotationsOut",
     "type": "object"
    },
+   "AskIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "page_range": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Page Range"
+     },
+     "question": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Question",
+      "type": "string"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     }
+    },
+    "required": [
+     "document_id",
+     "question"
+    ],
+    "title": "AskIn",
+    "type": "object"
+   },
    "AssetOut": {
     "properties": {
      "asset_id": {
@@ -755,6 +909,24 @@
      "sha256_fingerprint"
     ],
     "title": "CertOut",
+    "type": "object"
+   },
+   "Citation": {
+    "properties": {
+     "page": {
+      "title": "Page",
+      "type": "integer"
+     },
+     "quote": {
+      "title": "Quote",
+      "type": "string"
+     }
+    },
+    "required": [
+     "page",
+     "quote"
+    ],
+    "title": "Citation",
     "type": "object"
    },
    "CompleteIn": {
@@ -3607,6 +3779,54 @@
     "title": "SplitIn",
     "type": "object"
    },
+   "SummarizeIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "length": {
+      "default": "short",
+      "enum": [
+       "short",
+       "long"
+      ],
+      "title": "Length",
+      "type": "string"
+     },
+     "page_range": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Page Range"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     }
+    },
+    "required": [
+     "document_id"
+    ],
+    "title": "SummarizeIn",
+    "type": "object"
+   },
    "TokenOut": {
     "properties": {
      "access_token": {
@@ -3820,6 +4040,460 @@
  },
  "openapi": "3.1.0",
  "paths": {
+  "/ai/ask": {
+   "post": {
+    "description": "Answers from the document with page citations. Document text is untrusted data. 429 RATE_LIMITED (details.retry_after).",
+    "operationId": "ask_ai_ask_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AskIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AIOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Ask",
+    "tags": [
+     "ai"
+    ]
+   }
+  },
+  "/ai/settings": {
+   "get": {
+    "operationId": "get_settings_ai_settings_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AISettingsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Get Settings",
+    "tags": [
+     "ai"
+    ]
+   },
+   "put": {
+    "description": "Admin+. External processing sends document text to a third party: requires explicit acknowledgement.",
+    "operationId": "put_settings_ai_settings_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AISettingsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AISettingsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Put Settings",
+    "tags": [
+     "ai"
+    ]
+   }
+  },
+  "/ai/summarize": {
+   "post": {
+    "operationId": "summarize_ai_summarize_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SummarizeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AIOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Summarize",
+    "tags": [
+     "ai"
+    ]
+   }
+  },
   "/audit": {
    "get": {
     "description": "Org-scoped audit trail (admin+). `action` matches a prefix, e.g. `document.` or `auth.login`.",
