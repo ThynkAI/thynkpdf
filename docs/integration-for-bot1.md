@@ -116,3 +116,18 @@ Delete/move/replace require the font to be listed in `pages[n].editable_fonts`. 
 - `POST /pdf/pages/duplicate {document_id, expected_version, pages:[int], position?: "after_each"|int(0..n)}` (annotations are NOT duplicated)
 - `POST /pdf/pages/insert-blank {document_id, expected_version, after_page(0=start), count=1, width?, height?}` (size defaults to neighbour page)
 - `POST /pdf/pages/insert-from {document_id, expected_version, source_document_id, source_pages?, after_page}` (source must be in the same org; it is not modified)
+
+## PR-2: annotations (with comment threads) + forms — matches frontend §2/§3
+### Annotations (real `/Annots` entries with generated `/AP` appearance streams)
+- `GET /pdf/{id}/annotations?version=N&page=` → `{document_id, version, annotations: Annotation[]}`
+  `Annotation = {id, page, type: highlight|underline|strikeout|ink|text|freetext|square|circle|line|arrow|stamp, rect, quad_points?, ink_list?: [[[x,y],...],...], color, opacity?, border_width?, contents?, author?, created_at, modified_at, stamp_name?, line?, in_reply_to?, state?: open|resolved, supported}`. Foreign subtypes (Link, Popup…) appear with `supported:false` and are read-only.
+- `POST /pdf/annotations {document_id, expected_version, add?: Annotation[] (no id), update?: [{id, ...changed}], delete?: [id]}` → `VersionResult` with `report.ids` (new ids, add order). Atomic; order = delete → update → add.
+- Threads: reply = `{type:"text", in_reply_to:<id>}` (written as `/IRT`); resolve = `update:[{id, state:"resolved"}]` (written as `/StateModel Review /State Completed` on the annotation — simplified vs. the spec's state-reply model). Deleting a parent deletes its replies.
+- ids are `/NM` (`thynk-<hex>` for ours). Pre-existing annotations without `/NM` get positional ids `p{page}-i{index}` — refetch after each version.
+- `stamp_name` ∈ Approved, NotApproved, Draft, Final, Confidential, ForComment, Expired, Experimental, AsIs, Sold, Departmental, ForPublicRelease, NotForPublicRelease, TopSecret. `freetext` uses `contents` (WinAnsi) and optional `font_size`.
+- Errors: `ANNOTATION_NOT_FOUND` (404), `INVALID_REQUEST` (400, bad rect/quad/ink/stamp), `EDIT_NOT_SUPPORTED`. Moving an annotation across pages = delete + add.
+### Forms (PDF JavaScript is never executed; `has_actions`/`calculated` are only reported)
+- `GET /pdf/{id}/forms?version=N` → `{document_id, version, fields:[{name, type: text|checkbox|radio|dropdown|listbox|signature, multiline, page, rect, value, options?, required, read_only, max_length?, has_actions, calculated}]}`
+- `POST /pdf/forms/fields {document_id, expected_version, add:[{name, type, page, rect | rects (radio, one per option), options?, required?, default?, multiline?, read_only?, max_length?}], delete?:[name]}` → `VersionResult` (`FORM_FIELD_EXISTS` 409, `FORM_FIELD_NOT_FOUND`).
+- `POST /pdf/forms/fill {document_id, expected_version, values:{name: string|boolean|string[]}, flatten?}` → `VersionResult` (`report.missing_required`). Also accepts `csv` instead of `values`. Invalid → 422 `VALIDATION_ERROR` with `details.fields`.
+- `POST /pdf/forms/flatten {document_id, expected_version, confirm:true}`; `GET /pdf/{id}/forms/export?format=json|csv`.

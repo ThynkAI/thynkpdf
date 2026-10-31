@@ -2,5 +2,5 @@
 from .engine import *  # noqa
 from .edit import *  # noqa
 from .engine import EngineError, open_pdf
-from .annots import list_annotations, add_annotation, update_annotation, delete_annotation  # noqa
-from .forms import list_fields, create_fields, fill_fields, flatten, export_values, parse_csv_values  # noqa
+from .annots import list_annotations, apply_annotations  # noqa
+from .forms import list_fields, create_fields, delete_fields, fill_fields, flatten, export_values, parse_csv_values  # noqa

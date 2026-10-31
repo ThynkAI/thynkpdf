@@ -1,179 +1,20 @@
 {
  "components": {
   "schemas": {
-   "AnnotIn": {
+   "Annotation": {
     "properties": {
-     "color": {
+     "author": {
       "anyOf": [
        {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Color"
-     },
-     "contents": {
-      "anyOf": [
-       {
-        "maxLength": 10000,
         "type": "string"
        },
        {
         "type": "null"
        }
       ],
-      "title": "Contents"
+      "title": "Author"
      },
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "ink": {
-      "anyOf": [
-       {
-        "items": {
-         "items": {
-          "type": "number"
-         },
-         "type": "array"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "description": "ink strokes [[x1,y1,x2,y2,...],...]",
-      "title": "Ink"
-     },
-     "page": {
-      "minimum": 1.0,
-      "title": "Page",
-      "type": "integer"
-     },
-     "rect": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "description": "[x0,y0,x1,y1]; for line: endpoints [x0,y0,x1,y1]",
-      "title": "Rect"
-     },
-     "type": {
-      "enum": [
-       "highlight",
-       "note",
-       "ink",
-       "rectangle",
-       "ellipse",
-       "line"
-      ],
-      "title": "Type",
-      "type": "string"
-     },
-     "width": {
-      "default": 1.5,
-      "exclusiveMinimum": 0.0,
-      "maximum": 50.0,
-      "title": "Width",
-      "type": "number"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version",
-     "type",
-     "page"
-    ],
-    "title": "AnnotIn",
-    "type": "object"
-   },
-   "AnnotPatch": {
-    "properties": {
-     "color": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Color"
-     },
-     "contents": {
-      "anyOf": [
-       {
-        "maxLength": 10000,
-        "type": "string"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Contents"
-     },
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "ink": {
-      "anyOf": [
-       {
-        "items": {
-         "items": {
-          "type": "number"
-         },
-         "type": "array"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Ink"
-     },
-     "rect": {
-      "anyOf": [
-       {
-        "items": {
-         "type": "number"
-        },
-        "type": "array"
-       },
-       {
-        "type": "null"
-       }
-      ],
-      "title": "Rect"
-     },
-     "width": {
+     "border_width": {
       "anyOf": [
        {
         "type": "number"
@@ -182,65 +23,7 @@
         "type": "null"
        }
       ],
-      "title": "Width"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version"
-    ],
-    "title": "AnnotPatch",
-    "type": "object"
-   },
-   "AnnotResult": {
-    "properties": {
-     "annotation_id": {
-      "title": "Annotation Id",
-      "type": "string"
-     },
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "report": {
-      "additionalProperties": true,
-      "default": {},
-      "title": "Report",
-      "type": "object"
-     },
-     "sha256": {
-      "title": "Sha256",
-      "type": "string"
-     },
-     "size": {
-      "title": "Size",
-      "type": "integer"
-     },
-     "version": {
-      "title": "Version",
-      "type": "integer"
-     },
-     "version_id": {
-      "title": "Version Id",
-      "type": "string"
-     }
-    },
-    "required": [
-     "document_id",
-     "version_id",
-     "version",
-     "sha256",
-     "size",
-     "annotation_id"
-    ],
-    "title": "AnnotResult",
-    "type": "object"
-   },
-   "Annotation": {
-    "properties": {
-     "author": {
-      "title": "Author",
-      "type": "string"
+      "title": "Border Width"
      },
      "color": {
       "items": {
@@ -250,23 +33,51 @@
       "type": "array"
      },
      "contents": {
-      "title": "Contents",
-      "type": "string"
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contents"
      },
-     "editable": {
-      "title": "Editable",
-      "type": "boolean"
+     "created_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Created At"
      },
      "id": {
       "title": "Id",
       "type": "string"
      },
-     "ink": {
+     "in_reply_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "In Reply To"
+     },
+     "ink_list": {
       "anyOf": [
        {
         "items": {
          "items": {
-          "type": "number"
+          "items": {
+           "type": "number"
+          },
+          "type": "array"
          },
          "type": "array"
         },
@@ -276,11 +87,61 @@
         "type": "null"
        }
       ],
-      "title": "Ink"
+      "title": "Ink List"
+     },
+     "line": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Line"
+     },
+     "modified_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Modified At"
+     },
+     "opacity": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opacity"
      },
      "page": {
       "title": "Page",
       "type": "integer"
+     },
+     "quad_points": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quad Points"
      },
      "rect": {
       "items": {
@@ -289,9 +150,37 @@
       "title": "Rect",
       "type": "array"
      },
-     "subtype": {
-      "title": "Subtype",
-      "type": "string"
+     "stamp_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stamp Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "enum": [
+         "open",
+         "resolved"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "supported": {
+      "default": true,
+      "description": "false = foreign subtype (Link, Popup...) listed read-only",
+      "title": "Supported",
+      "type": "boolean"
      },
      "type": {
       "title": "Type",
@@ -302,14 +191,312 @@
      "id",
      "page",
      "type",
-     "subtype",
      "rect",
-     "contents",
-     "author",
-     "color",
-     "editable"
+     "color"
     ],
     "title": "Annotation",
+    "type": "object"
+   },
+   "AnnotationIn": {
+    "properties": {
+     "author": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Author"
+     },
+     "border_width": {
+      "anyOf": [
+       {
+        "maximum": 50.0,
+        "minimum": 0.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Border Width"
+     },
+     "color": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Color"
+     },
+     "contents": {
+      "anyOf": [
+       {
+        "maxLength": 20000,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Contents"
+     },
+     "font_size": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "maximum": 200.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Font Size"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "required for update, omitted for add",
+      "title": "Id"
+     },
+     "in_reply_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "In Reply To"
+     },
+     "ink_list": {
+      "anyOf": [
+       {
+        "items": {
+         "items": {
+          "items": {
+           "type": "number"
+          },
+          "type": "array"
+         },
+         "type": "array"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Ink List"
+     },
+     "line": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Line"
+     },
+     "opacity": {
+      "anyOf": [
+       {
+        "exclusiveMinimum": 0.0,
+        "maximum": 1.0,
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Opacity"
+     },
+     "page": {
+      "anyOf": [
+       {
+        "minimum": 1.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Page"
+     },
+     "quad_points": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quad Points"
+     },
+     "rect": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Rect"
+     },
+     "stamp_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Stamp Name"
+     },
+     "state": {
+      "anyOf": [
+       {
+        "enum": [
+         "open",
+         "resolved"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "State"
+     },
+     "type": {
+      "anyOf": [
+       {
+        "enum": [
+         "highlight",
+         "underline",
+         "strikeout",
+         "ink",
+         "text",
+         "freetext",
+         "square",
+         "circle",
+         "line",
+         "arrow",
+         "stamp"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Type"
+     }
+    },
+    "title": "AnnotationIn",
+    "type": "object"
+   },
+   "AnnotationsOut": {
+    "properties": {
+     "annotations": {
+      "items": {
+       "$ref": "#/components/schemas/Annotation"
+      },
+      "title": "Annotations",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "annotations"
+    ],
+    "title": "AnnotationsOut",
+    "type": "object"
+   },
+   "BatchIn": {
+    "properties": {
+     "add": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/AnnotationIn"
+      },
+      "maxItems": 500,
+      "title": "Add",
+      "type": "array"
+     },
+     "delete": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Delete",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "update": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/AnnotationIn"
+      },
+      "maxItems": 500,
+      "title": "Update",
+      "type": "array"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "BatchIn",
     "type": "object"
    },
    "Body_upload_documents_upload_post": {
@@ -453,35 +640,6 @@
      "expected_version"
     ],
     "title": "CompressIn",
-    "type": "object"
-   },
-   "CreateIn": {
-    "properties": {
-     "document_id": {
-      "title": "Document Id",
-      "type": "string"
-     },
-     "expected_version": {
-      "minimum": 1.0,
-      "title": "Expected Version",
-      "type": "integer"
-     },
-     "fields": {
-      "items": {
-       "$ref": "#/components/schemas/FieldSpec"
-      },
-      "maxItems": 500,
-      "minItems": 1,
-      "title": "Fields",
-      "type": "array"
-     }
-    },
-    "required": [
-     "document_id",
-     "expected_version",
-     "fields"
-    ],
-    "title": "CreateIn",
     "type": "object"
    },
    "DeleteIn": {
@@ -909,6 +1067,11 @@
       ],
       "title": "Max Length"
      },
+     "multiline": {
+      "default": false,
+      "title": "Multiline",
+      "type": "boolean"
+     },
      "name": {
       "pattern": "^[A-Za-z0-9_\\-]{1,100}$",
       "title": "Name",
@@ -994,6 +1157,43 @@
      "page"
     ],
     "title": "FieldSpec",
+    "type": "object"
+   },
+   "FieldsIn": {
+    "properties": {
+     "add": {
+      "default": [],
+      "items": {
+       "$ref": "#/components/schemas/FieldSpec"
+      },
+      "maxItems": 500,
+      "title": "Add",
+      "type": "array"
+     },
+     "delete": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "maxItems": 500,
+      "title": "Delete",
+      "type": "array"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "FieldsIn",
     "type": "object"
    },
    "FillIn": {
@@ -1135,6 +1335,11 @@
       ],
       "title": "Max Length"
      },
+     "multiline": {
+      "default": false,
+      "title": "Multiline",
+      "type": "boolean"
+     },
      "name": {
       "title": "Name",
       "type": "string"
@@ -1180,6 +1385,16 @@
       "type": "boolean"
      },
      "type": {
+      "enum": [
+       "text",
+       "checkbox",
+       "radio",
+       "dropdown",
+       "listbox",
+       "signature",
+       "pushbutton",
+       "unknown"
+      ],
       "title": "Type",
       "type": "string"
      },
@@ -1197,6 +1412,32 @@
      "calculated"
     ],
     "title": "FormField",
+    "type": "object"
+   },
+   "FormsOut": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "fields": {
+      "items": {
+       "$ref": "#/components/schemas/FormField"
+      },
+      "title": "Fields",
+      "type": "array"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "document_id",
+     "version",
+     "fields"
+    ],
+    "title": "FormsOut",
     "type": "object"
    },
    "InsertBlankIn": {
@@ -3752,12 +3993,13 @@
   },
   "/pdf/annotations": {
    "post": {
-    "operationId": "create_pdf_annotations_post",
+    "description": "Atomic add/update/delete \u2192 one new version. report.ids = new ids in add order.\nReplies: type \"text\" + in_reply_to (/IRT). Resolve: state \"resolved\". Deleting a parent deletes its replies.",
+    "operationId": "batch_pdf_annotations_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/AnnotIn"
+        "$ref": "#/components/schemas/BatchIn"
        }
       }
      },
@@ -3768,7 +4010,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/AnnotResult"
+         "$ref": "#/components/schemas/VersionResult"
         }
        }
       },
@@ -3860,268 +4102,7 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Create",
-    "tags": [
-     "annotations"
-    ]
-   }
-  },
-  "/pdf/annotations/{annotation_id}": {
-   "delete": {
-    "operationId": "delete_pdf_annotations__annotation_id__delete",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "annotation_id",
-      "required": true,
-      "schema": {
-       "title": "Annotation Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "query",
-      "name": "document_id",
-      "required": true,
-      "schema": {
-       "title": "Document Id",
-       "type": "string"
-      }
-     },
-     {
-      "in": "query",
-      "name": "expected_version",
-      "required": true,
-      "schema": {
-       "minimum": 1,
-       "title": "Expected Version",
-       "type": "integer"
-      }
-     }
-    ],
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/AnnotResult"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Delete",
-    "tags": [
-     "annotations"
-    ]
-   },
-   "patch": {
-    "operationId": "update_pdf_annotations__annotation_id__patch",
-    "parameters": [
-     {
-      "in": "path",
-      "name": "annotation_id",
-      "required": true,
-      "schema": {
-       "title": "Annotation Id",
-       "type": "string"
-      }
-     }
-    ],
-    "requestBody": {
-     "content": {
-      "application/json": {
-       "schema": {
-        "$ref": "#/components/schemas/AnnotPatch"
-       }
-      }
-     },
-     "required": true
-    },
-    "responses": {
-     "200": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/AnnotResult"
-        }
-       }
-      },
-      "description": "Successful Response"
-     },
-     "400": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Bad Request"
-     },
-     "401": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unauthorized"
-     },
-     "403": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Forbidden"
-     },
-     "404": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Not Found"
-     },
-     "409": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Conflict"
-     },
-     "413": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Content Too Large"
-     },
-     "415": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unsupported Media Type"
-     },
-     "422": {
-      "content": {
-       "application/json": {
-        "schema": {
-         "$ref": "#/components/schemas/ErrorResponse"
-        }
-       }
-      },
-      "description": "Unprocessable Content"
-     }
-    },
-    "security": [
-     {
-      "HTTPBearer": []
-     }
-    ],
-    "summary": "Update",
+    "summary": "Batch",
     "tags": [
      "annotations"
     ]
@@ -4359,14 +4340,15 @@
     ]
    }
   },
-  "/pdf/forms": {
+  "/pdf/forms/fields": {
    "post": {
-    "operationId": "create_pdf_forms_post",
+    "description": "Atomic: delete listed fields (and their widgets), then add new ones. One new version.",
+    "operationId": "edit_fields_pdf_forms_fields_post",
     "requestBody": {
      "content": {
       "application/json": {
        "schema": {
-        "$ref": "#/components/schemas/CreateIn"
+        "$ref": "#/components/schemas/FieldsIn"
        }
       }
      },
@@ -4469,7 +4451,7 @@
       "HTTPBearer": []
      }
     ],
-    "summary": "Create",
+    "summary": "Edit Fields",
     "tags": [
      "forms"
     ]
@@ -5773,6 +5755,22 @@
      },
      {
       "in": "query",
+      "name": "version",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Version"
+      }
+     },
+     {
+      "in": "query",
       "name": "page",
       "required": false,
       "schema": {
@@ -5793,11 +5791,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "items": {
-          "$ref": "#/components/schemas/Annotation"
-         },
-         "title": "Response List  Pdf  Doc Id  Annotations Get",
-         "type": "array"
+         "$ref": "#/components/schemas/AnnotationsOut"
         }
        }
       },
@@ -6024,6 +6018,22 @@
        "title": "Doc Id",
        "type": "string"
       }
+     },
+     {
+      "in": "query",
+      "name": "version",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Version"
+      }
      }
     ],
     "responses": {
@@ -6031,11 +6041,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "items": {
-          "$ref": "#/components/schemas/FormField"
-         },
-         "title": "Response Fields Pdf  Doc Id  Forms Get",
-         "type": "array"
+         "$ref": "#/components/schemas/FormsOut"
         }
        }
       },
