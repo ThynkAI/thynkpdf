@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 import thynkpdf_engine as eng
 from thynkpdf_storage import LocalStorage, tenant_key
 from .config import settings
-from .db import make_session_factory, User, Organization, Membership, Document, DocumentVersion, AuditEvent, Job, RevokedToken, uid
+from .db import make_session_factory, User, Organization, Membership, Document, DocumentVersion, AuditEvent, Job, RevokedToken, ShareGrant, DocumentTag, DocumentStar, uid, now as db_now
 from . import schemas as S
 
 ROLE_RANK = {"viewer": 0, "member": 1, "admin": 2, "owner": 3}
@@ -197,16 +197,42 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         version_id: str; number: int; sha256: str; size: int; operation: str; parent_version_id: str | None; created_at: str
     class DocumentOut(BaseModel):
         document_id: str; filename: str; current_version: int; version_id: str; created_at: str
+        folder_id: str | None = None; tags: list[str] = []; visibility: str = "org"; created_by: str | None = None
+        starred: bool = False; trashed_at: str | None = None; updated_at: str | None = None; size: int | None = None
+        page_count: int | None = None
     class UploadOut(BaseModel):
         document_id: str; version_id: str; version: int; sha256: str; size: int; page_count: int; filename: str
 
     def vout(v): return VersionOut(version_id=v.id, number=v.number, sha256=v.sha256, size=v.size, operation=v.operation,
                                    parent_version_id=v.parent_version_id, created_at=v.created_at.isoformat())
 
-    def get_doc(s, p: Principal, doc_id: str) -> Document:
-        d = s.scalar(select(Document).where(Document.id == doc_id, Document.org_id == p.org_id, Document.deleted_at.is_(None)))
-        if not d: raise ApiError(404, "DOCUMENT_NOT_FOUND", "Document not found")  # same for other-tenant docs
+    def grant_of(s, p, d):
+        from sqlalchemy import or_
+        return s.scalar(select(ShareGrant).where(ShareGrant.document_id == d.id, ShareGrant.user_id == p.user_id, ShareGrant.org_id == p.org_id,
+                                                 or_(ShareGrant.expires_at.is_(None), ShareGrant.expires_at > db_now())))
+
+    def can_read(s, p, d):
+        return d.visibility == "org" or ROLE_RANK[p.role] >= ROLE_RANK["admin"] or d.created_by == p.user_id or grant_of(s, p, d) is not None
+
+    def can_write(s, p, d):
+        if ROLE_RANK[p.role] < ROLE_RANK["member"]:
+            g = grant_of(s, p, d); return g is not None and g.permission == "edit" and d.visibility == "restricted"
+        if d.visibility == "org" or ROLE_RANK[p.role] >= ROLE_RANK["admin"] or d.created_by == p.user_id: return True
+        g = grant_of(s, p, d); return g is not None and g.permission == "edit"
+
+    def get_doc(s, p: Principal, doc_id: str, include_deleted=False) -> Document:
+        q = select(Document).where(Document.id == doc_id, Document.org_id == p.org_id, Document.purged_at.is_(None))
+        if not include_deleted: q = q.where(Document.deleted_at.is_(None))
+        d = s.scalar(q)
+        if not d or not can_read(s, p, d): raise ApiError(404, "DOCUMENT_NOT_FOUND", "Document not found")  # same for other-tenant/restricted
         return d
+
+    def visible_filter(p):
+        from sqlalchemy import or_, exists
+        if ROLE_RANK[p.role] >= ROLE_RANK["admin"]: return Document.org_id == p.org_id
+        return (Document.org_id == p.org_id) & or_(Document.visibility == "org", Document.created_by == p.user_id,
+                exists().where(ShareGrant.document_id == Document.id, ShareGrant.user_id == p.user_id,
+                               or_(ShareGrant.expires_at.is_(None), ShareGrant.expires_at > db_now())))
 
     def get_ver(s, d: Document, number=None, version_id=None) -> DocumentVersion:
         q = select(DocumentVersion).where(DocumentVersion.document_id == d.id, DocumentVersion.org_id == d.org_id)
@@ -229,7 +255,10 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     def _store_version(s, p, d, data, number, op, params, parent):
         vid = uid(); key = tenant_key(p.org_id, d.id, vid)
         sha = store.put(key, data)
-        v = DocumentVersion(id=vid, org_id=p.org_id, document_id=d.id, number=number, sha256=sha, size=len(data),
+        try: pc = len(eng.open_pdf(data).pages)
+        except Exception: pc = None
+        d.updated_at = db_now()
+        v = DocumentVersion(id=vid, org_id=p.org_id, document_id=d.id, number=number, sha256=sha, size=len(data), page_count=pc,
                             storage_key=key, operation=op, operation_params=json.dumps(params or {}), parent_version_id=parent,
                             created_by=p.user_id)
         s.add(v); audit(s, p.org_id, p.user_id, f"document.{op}", d.id, document_id=d.id, version=number); return v
@@ -271,18 +300,48 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
         d, v = new_document(s, p, file.filename, data, "upload")
         return UploadOut(document_id=d.id, version_id=v.id, version=1, sha256=v.sha256, size=v.size, filename=d.filename, page_count=npages)
 
-    def dout(s, d): return DocumentOut(document_id=d.id, filename=d.filename, current_version=d.current_version,
-                                       version_id=get_ver(s, d).id, created_at=d.created_at.isoformat())
+    def dout(s, d, p=None):
+        v = get_ver(s, d)
+        starred = bool(p and s.scalar(select(DocumentStar.id).where(DocumentStar.document_id == d.id, DocumentStar.user_id == p.user_id)))
+        return DocumentOut(document_id=d.id, filename=d.filename, current_version=d.current_version, version_id=v.id,
+                           created_at=d.created_at.isoformat(), folder_id=d.folder_id,
+                           tags=sorted(s.scalars(select(DocumentTag.tag).where(DocumentTag.document_id == d.id))),
+                           visibility=d.visibility, created_by=d.created_by, starred=starred,
+                           trashed_at=d.deleted_at.isoformat() if d.deleted_at else None,
+                           updated_at=(d.updated_at or d.created_at).isoformat(), size=v.size, page_count=v.page_count)
 
-    @app.get("/documents", response_model=list[DocumentOut], tags=["documents"])
-    def list_docs(limit: int = 50, offset: int = 0, p: Principal = Depends(principal), s=Depends(db)):
-        ds = s.scalars(select(Document).where(Document.org_id == p.org_id, Document.deleted_at.is_(None))
-                       .order_by(Document.created_at.desc()).limit(min(limit, 200)).offset(offset))
-        return [dout(s, d) for d in ds]
+    class DocumentPage(BaseModel):
+        items: list[DocumentOut]; next_cursor: str | None
+
+    @app.get("/documents", response_model=DocumentPage, tags=["documents"])
+    def list_docs(q: str | None = None, folder_id: str | None = None, tag: str | None = None, starred: bool | None = None,
+                  trashed: bool = False, sort: Literal["updated_at", "name", "created_at"] = "updated_at",
+                  order: Literal["asc", "desc"] = "desc", limit: int = 50, cursor: str | None = None,
+                  p: Principal = Depends(principal), s=Depends(db)):
+        """Documents visible to the caller. folder_id="root" = unfiled. trashed=true lists the trash. cursor is opaque."""
+        import base64
+        from sqlalchemy import func
+        limit = min(max(limit, 1), 200)
+        try: offset = int(base64.urlsafe_b64decode(cursor.encode()).decode()) if cursor else 0
+        except Exception: raise ApiError(422, "VALIDATION_ERROR", "Invalid cursor")
+        qq = select(Document).where(visible_filter(p), Document.purged_at.is_(None),
+                                    Document.deleted_at.is_not(None) if trashed else Document.deleted_at.is_(None))
+        if folder_id: qq = qq.where(Document.folder_id.is_(None) if folder_id == "root" else Document.folder_id == folder_id)
+        if tag: qq = qq.where(Document.id.in_(select(DocumentTag.document_id).where(DocumentTag.tag == tag.lower(), DocumentTag.org_id == p.org_id)))
+        if q: qq = qq.where(Document.filename.ilike(f"%{q.replace('%', '').replace('_', '')}%"))
+        if starred is not None:
+            sub = select(DocumentStar.document_id).where(DocumentStar.user_id == p.user_id)
+            qq = qq.where(Document.id.in_(sub) if starred else Document.id.not_in(sub))
+        col = {"name": func.lower(Document.filename), "created_at": Document.created_at,
+               "updated_at": func.coalesce(Document.updated_at, Document.created_at)}[sort]
+        qq = qq.order_by(col.asc() if order == "asc" else col.desc(), Document.id)
+        ds = list(s.scalars(qq.limit(limit + 1).offset(offset)))
+        nxt = base64.urlsafe_b64encode(str(offset + limit).encode()).decode() if len(ds) > limit else None
+        return DocumentPage(items=[dout(s, d, p) for d in ds[:limit]], next_cursor=nxt)
 
     @app.get("/documents/{doc_id}", response_model=DocumentOut, tags=["documents"])
     def get_document(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
-        return dout(s, get_doc(s, p, doc_id))
+        return dout(s, get_doc(s, p, doc_id), p)
 
     @app.get("/documents/{doc_id}/versions", response_model=list[VersionOut], tags=["documents"])
     def versions(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
@@ -368,7 +427,9 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     def vres(d, v, report=None): return VersionResult(document_id=d.id, version_id=v.id, version=v.number, sha256=v.sha256, size=v.size, filename=d.filename, report=report or {})
 
     def writable(s, p, doc_id, allow_signed=False):
-        need(p, "member"); d = get_doc(s, p, doc_id); data = load(d, get_ver(s, d))
+        d = get_doc(s, p, doc_id)
+        if not can_write(s, p, d): need(p, "member"); raise ApiError(403, "FORBIDDEN_SHARE", "No edit permission on this document")
+        data = load(d, get_ver(s, d))
         if not allow_signed:
             m = eng.inspect(data)
             if m["has_signatures"]:
@@ -452,7 +513,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/health", tags=["ops"])
     def health(): return {"status": "ok"}
 
-    ctx = SimpleNamespace(**{k: v for k, v in locals().items() if k != "ctx"}, ApiError=ApiError, settings=settings)
+    ctx = SimpleNamespace(**{k: v for k, v in locals().items() if k != "ctx"}, ApiError=ApiError, settings=settings, ROLE_RANK=ROLE_RANK)
     from . import features
     features.register_all(app, ctx)
     return app

@@ -152,3 +152,12 @@ Visual signatures are NOT cryptographic/PAdES. No claim of legal enforceability;
 ### R4.4 Audit
 - `GET /documents/{id}/audit?limit=` → `[{at, actor_email, action, version, ip?, user_agent?, details}]`; actions include upload, view (each download / signer view), sign, request_sent, request_cancelled, declined, completed, and every versioned op (rotate, annotations, form_fill, signature_place, esign_complete…).
 - `GET /audit?action=&target=&user_id=&since=&until=` (admin+, org-wide).
+
+## PR-4: document management — matches frontend §5
+- **BREAKING:** `GET /documents?q=&folder_id=(id|root)&tag=&starred=&trashed=&sort=updated_at|name|created_at&order=asc|desc&limit(≤200)=&cursor=` → `{items: DocumentOut[], next_cursor}` (opaque cursor). `DocumentOut` now has `folder_id, tags, starred (per caller), trashed_at, updated_at, size, page_count, visibility, created_by`.
+- `PATCH /documents/{id} {filename?, folder_id? ("root" to unfile), tags? (replaces set; a-z0-9_-), starred?, visibility?: org|restricted}` → DocumentOut. `starred` is personal and allowed for viewers; other fields need edit rights; `visibility` needs creator/admin.
+- `DELETE /documents/{id}` → trash (DocumentOut with `trashed_at`); `POST /documents/{id}/restore`; `DELETE /documents/{id}?permanent=true` → 204, only from trash (`NOT_IN_TRASH`), blocked by pending signature requests (`SIGNING_IN_PROGRESS`); irreversibly deletes all stored version bytes (metadata + audit kept). Show a confirmation dialog.
+- Folders: `GET/POST /folders {name, parent_id?}`, `PATCH /folders/{id} {name?, parent_id? ("root")}`, `DELETE /folders/{id}` (`FOLDER_NOT_EMPTY`, `FOLDER_EXISTS`, `FOLDER_CYCLE`). `GET /tags`.
+- Sharing: `POST /documents/{id}/shares {email|null, role: viewer|editor, expires_at?}` → `{share_id, kind:user|link, email, role, expires_at, created_at, url?}`. email must be a member of the same org (`USER_NOT_IN_ORG`; cross-org sharing not supported) — grants matter for `visibility:"restricted"` docs. `email:null` → public **view-only** link, `url:"/shared/<token>"` returned once (`LINK_EDITOR_NOT_SUPPORTED` for editor). `GET /documents/{id}/shares`, `DELETE /shares/{id}`.
+- Public link (no auth): `GET /shared/{token}` → `{filename, version, size, page_count, expires_at, file_path}`; `GET /shared/{token}/file` (PDF, Range supported; audited as view by "public-link").
+- `POST /documents/{id}/versions/{version_id}/restore {expected_version?}` → VersionResult (new version with the old bytes; history kept). The earlier `/documents/{id}/rollback` was replaced by this.

@@ -5,7 +5,7 @@ def test_cross_tenant_denied(client, orgA, orgB):
     for path in [f"/documents/{doc}", f"/documents/{doc}/versions", f"/documents/{doc}/download",
                  f"/documents/{doc}/versions/{vid}/file", f"/pdf/{doc}/metadata", f"/pdf/{doc}/capabilities"]:
         r = client.get(path, headers=orgB); assert r.status_code == 404 and r.json()["error"]["code"] == "DOCUMENT_NOT_FOUND", path
-    assert client.get("/documents", headers=orgB).json() == []
+    assert client.get("/documents", headers=orgB).json()["items"] == []
     for path, body in [("/pdf/pages/rotate", {"document_id": doc, "expected_version": 1, "angle": 90}),
                        ("/pdf/pages/reorder", {"document_id": doc, "expected_version": 1, "order": [1, 2, 3]}),
                        ("/pdf/pages/extract", {"document_id": doc, "pages": [1]}),
@@ -39,7 +39,7 @@ def test_bad_uploads(client, orgA):
     r = upload(client, orgA, "not-a-pdf.pdf"); assert r.status_code == 415 and r.json()["error"]["code"] == "INVALID_FILE_TYPE"
     r = upload(client, orgA, "malformed.pdf"); assert r.status_code == 422 and r.json()["error"]["code"] == "PDF_MALFORMED"
     r = upload(client, orgA, "big.pdf", b"%PDF-1.7\n" + b"0" * 300_000); assert r.status_code == 413 and r.json()["error"]["code"] == "FILE_TOO_LARGE"
-    assert client.get("/documents", headers=orgA).json() == []
+    assert client.get("/documents", headers=orgA).json()["items"] == []
 
 def test_path_traversal(client, orgA, tmp_path):
     r = upload(client, orgA, "../../../etc/passwd.pdf", (FIX / "simple-1page.pdf").read_bytes()); assert r.status_code == 201
