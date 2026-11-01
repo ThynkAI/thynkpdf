@@ -26,13 +26,21 @@ export class HttpEditorApi implements EditorApi {
   getTokens() { return this.tokens; }
   setTokens(t: TokenResponse | null) { this.tokens = t; this.onTokensChanged?.(t); }
   private url(p: string) { return this.opts.baseUrl.replace(/\/$/, "") + p; }
+  /** Headers sent with every request (desktop: the per-launch X-Thynkpdf-Key from the Electron preload). */
+  extraHeaders: Record<string, string> = {};
+  /** No-account identity: returns fresh tokens (POST /session/local). When set, refresh() and 401 retries use it. */
+  sessionProvider?: () => Promise<TokenResponse>;
   private authHeaders(): Record<string, string> {
-    return this.tokens ? { Authorization: `Bearer ${this.tokens.access_token}` } : {};
+    return { ...this.extraHeaders, ...(this.tokens ? { Authorization: `Bearer ${this.tokens.access_token}` } : {}) };
+  }
+  /** POST /session/local (desktop: needs extraHeaders key; hosted: per-browser key). */
+  localSession(browserKey?: string) {
+    return this.req<TokenResponse>("/session/local", this.json(browserKey ? { browser_key: browserKey } : {}), false);
   }
   /** Raw authenticated fetch with one cookie-refresh retry on 401. credentials:"include" so the httpOnly thynkpdf_rt cookie flows. */
   async raw(path: string, init: RequestInit = {}, retry = true): Promise<Response> {
     const res = await this.f(this.url(path), { credentials: "include", ...init, headers: { ...this.authHeaders(), ...(init.headers as Record<string, string> | undefined) } });
-    if (res.status === 401 && retry && !path.startsWith("/auth/") && this.tokens) {
+    if (res.status === 401 && retry && !path.startsWith("/auth/") && !path.startsWith("/session/") && (this.tokens || this.sessionProvider)) {
       await this.refresh();
       return this.raw(path, init, false);
     }
@@ -55,7 +63,7 @@ export class HttpEditorApi implements EditorApi {
   private json(body: unknown): RequestInit { return { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }; }
 
   async health() {
-    try { return (await this.f(this.url("/health"))).ok; } catch { return false; }
+    try { return (await this.f(this.url("/health"), { headers: this.extraHeaders })).ok; } catch { return false; }
   }
   async login(email: string, password: string) {
     this.setTokens(this.strip(await this.req<TokenResponse>("/auth/login", this.json({ email, password }), false)));
@@ -68,7 +76,7 @@ export class HttpEditorApi implements EditorApi {
    */
   refresh(): Promise<TokenResponse> {
     if (!this.inflight) {
-      this.inflight = this.req<TokenResponse>("/auth/refresh", { method: "POST" }, false)
+      this.inflight = (this.sessionProvider ? this.sessionProvider() : this.req<TokenResponse>("/auth/refresh", { method: "POST" }, false))
         .then((t) => { this.setTokens(this.strip(t)); return this.tokens!; })
         .catch((e) => { this.setTokens(null); throw e; })
         .finally(() => { this.inflight = null; });

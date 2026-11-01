@@ -40,7 +40,7 @@ test("editor with a document, organizer and signature dialogs have no axe violat
   await axe(page, '[role="dialog"]');
 });
 
-test("documents dashboard (signed-out view) has no axe violations", async ({ page }) => {
+test("documents dashboard has no axe violations", async ({ page }) => {
   await page.goto("/documents");
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
   await axe(page);

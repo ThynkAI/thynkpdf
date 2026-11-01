@@ -1,10 +1,10 @@
 {
   "name": "thynkpdf-desktop",
   "productName": "THYNKPDF",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "description": "THYNKPDF desktop app",
   "author": "ThynkAI",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "main": "electron/main.js",
   "scripts": {

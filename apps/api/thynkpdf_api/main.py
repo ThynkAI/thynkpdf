@@ -29,7 +29,8 @@ class ErrorResponse(BaseModel):
     error: ErrorBody
 
 
-def create_app(database_url=None, storage_root=None) -> FastAPI:
+def create_app(database_url=None, storage_root=None, auth_mode=None) -> FastAPI:
+    auth_mode = (auth_mode or settings.auth_mode).lower()
     app = FastAPI(title="THYNKPDF API", version="0.1.0",
                   responses={400: {"model": ErrorResponse}, 401: {"model": ErrorResponse}, 403: {"model": ErrorResponse},
                              404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}, 413: {"model": ErrorResponse},
@@ -37,7 +38,8 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True,
                        allow_methods=["*"], allow_headers=["*"],
                        expose_headers=["Content-Range", "Accept-Ranges", "Content-Length", "ETag", "X-Document-Version"])
-    SessionF = make_session_factory(database_url or settings.database_url)
+    SessionF = make_session_factory(database_url or settings.database_url, create_tables=not settings.managed_schema)
+    app.state.auth_mode = auth_mode
     store = LocalStorage(storage_root or settings.storage_root)
     app.state.sessions, app.state.storage = SessionF, store
 
@@ -122,8 +124,37 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     class TokenOut(BaseModel):
         access_token: str; refresh_token: str; token_type: str; expires_in: int
 
+    def accounts_only():
+        if auth_mode != "accounts": raise ApiError(403, "ACCOUNTS_DISABLED", "THYNKPDF has no accounts; the app opens a local workspace automatically")
+
+    class LocalSessionIn(BaseModel):
+        browser_key: str | None = Field(None, min_length=32, max_length=200)
+
+    LOCAL_EMAILS = ("local@desktop.thynkpdf.app",)  # v0.1.7 desktop account: keep its documents
+
+    @app.post("/session/local", response_model=TokenOut, tags=["auth"])
+    def local_session(b: LocalSessionIn | None = None, s=Depends(db)):
+        """No-account identity. desktop: the single local workspace (the per-launch secret is enforced by the desktop guard).
+        anonymous: one private workspace per browser key. Idempotent: the same caller always gets the same workspace."""
+        if auth_mode == "desktop":
+            u = s.scalar(select(User).where(User.email.in_(LOCAL_EMAILS))) or s.scalars(select(User).order_by(User.created_at)).first()
+            email, org_name = LOCAL_EMAILS[0], "This computer"
+        elif auth_mode == "anonymous":
+            if not b or not b.browser_key: raise ApiError(422, "VALIDATION_ERROR", "browser_key required")
+            email = f"anon-{hashlib.sha256(b.browser_key.encode()).hexdigest()[:40]}@browser.thynkpdf.invalid"; org_name = "My documents"
+            u = s.scalar(select(User).where(User.email == email))
+        else: raise ApiError(404, "NOT_FOUND", "Not available in accounts mode")
+        if u is None:
+            import secrets as _sec
+            u = User(email=email, password_hash=bcrypt.hashpw(_sec.token_bytes(32), bcrypt.gensalt()).decode())  # unusable password
+            o = Organization(name=org_name); s.add_all([u, o]); s.flush()
+            s.add(Membership(org_id=o.id, user_id=u.id, role="owner")); audit(s, o.id, u.id, "session.local_provision"); s.commit()
+        m = s.scalars(select(Membership).where(Membership.user_id == u.id)).first()
+        return tokens(u.id, m.org_id)
+
     @app.post("/auth/register", response_model=TokenOut, status_code=201, tags=["auth"])
     def register(b: RegisterIn, response: Response, s=Depends(db)):
+        accounts_only()
         if s.scalar(select(User).where(User.email == b.email.lower())): raise ApiError(409, "EMAIL_TAKEN", "Email already registered")
         u = User(email=b.email.lower(), password_hash=bcrypt.hashpw(b.password.encode(), bcrypt.gensalt()).decode())
         o = Organization(name=b.org_name); s.add_all([u, o]); s.flush()
@@ -132,6 +163,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
 
     @app.post("/auth/login", response_model=TokenOut, tags=["auth"])
     def login(b: LoginIn, response: Response, s=Depends(db)):
+        accounts_only()
         u = s.scalar(select(User).where(User.email == b.email.lower()))
         if not u or not bcrypt.checkpw(b.password.encode(), u.password_hash.encode()):
             raise ApiError(401, "INVALID_CREDENTIALS", "Invalid email or password")
@@ -184,6 +216,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.post("/orgs/members", status_code=201, tags=["orgs"])
     def add_member(b: MemberIn, p: Principal = Depends(principal), s=Depends(db)):
         """Dev-stage invite: creates (or attaches) a user with a role in the caller's org. Admin+."""
+        accounts_only()
         need(p, "admin")
         u = s.scalar(select(User).where(User.email == b.email.lower()))
         if not u:
@@ -513,6 +546,15 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
 
     @app.get("/health", tags=["ops"])
     def health(): return {"status": "ok"}
+
+    if auth_mode == "desktop":
+        @app.middleware("http")
+        async def desktop_local_only(request: Request, call_next):
+            """BD-06: links/requests for other people would be http://127.0.0.1:<random port> URLs, which never work for them."""
+            path = request.url.path
+            if request.method == "POST" and (path == "/signature-requests" or re.fullmatch(r"/documents/[^/]+/shares", path)):
+                return JSONResponse({"error": {"code": "DESKTOP_LOCAL_ONLY", "message": "Share links and signature requests need a hosted THYNKPDF server", "details": {}}}, status_code=403)
+            return await call_next(request)
 
     ctx = SimpleNamespace(**{k: v for k, v in locals().items() if k != "ctx"}, ApiError=ApiError, settings=settings, ROLE_RANK=ROLE_RANK)
     from . import features

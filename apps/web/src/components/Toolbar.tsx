@@ -4,7 +4,7 @@ import { IconButton } from "@thynkpdf/ui";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { rotateCurrentPage } from "@/lib/documents";
-import { editGate } from "@/lib/gates";
+import { editGate, readOnlyView } from "@/lib/gates";
 import { PanelLeft, FolderOpen, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Highlighter, LayoutGrid, Search, Sun, Moon, Undo2, Redo2, Keyboard, Settings } from "lucide-react";
 import { useHistory, undo, redo } from "@/lib/history";
 import { keyLabel } from "@/lib/shortcuts";
@@ -12,8 +12,8 @@ const I = "h-[18px] w-[18px] shrink-0";
 
 export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme, dark, onOrganize, onAnnotate, annotating, onHelp, onSettings }: { onHelp?(): void; onSettings?(): void; onAnnotate?(): void; annotating?: boolean; onOrganize(): void; onOpen(): void; onToggleSidebar(): void; onTogglePanel(): void; onToggleTheme(): void; dark: boolean }) {
   const v = useViewerStore();
-  const { ref, caps, capsError, busy } = useSession();
-  const rot = editGate("rotate", ref, caps, { busy: !!busy, capsError });
+  const { ref, caps, capsError, busy, source } = useSession();
+  const rot = editGate("rotate", ref, caps, { busy: !!busy, capsError, readOnly: readOnlyView({ ref, source }) });
   const n = v.pageSizes.length;
   const [pageInput, setPageInput] = useState("1");
   useEffect(() => setPageInput(String(v.currentPage + 1)), [v.currentPage]);

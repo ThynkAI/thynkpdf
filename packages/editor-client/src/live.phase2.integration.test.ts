@@ -11,7 +11,7 @@ const fixture = readFileSync(new URL("../../backend-tests/fixtures/simple-3page.
 const r = (v: VersionResult): DocumentRef => ({ document_id: v.document_id, version_id: v.version_id, version: v.version });
 async function fresh(name = "p2.pdf") {
   const api = new HttpEditorApi({ baseUrl: BASE });
-  await api.login(process.env.THYNKPDF_DEV_EMAIL ?? "dev@thynkpdf.dev", process.env.THYNKPDF_DEV_PASSWORD ?? "ThynkDev-2026!");
+  api.setTokens(await api.localSession("live-test-browser-key-0123456789abcdef"));  // no accounts: anonymous workspace
   const u = await api.upload(new Blob([fixture], { type: "application/pdf" }), name);
   return { api, ref: { document_id: u.document_id, version_id: u.version_id, version: u.version } };
 }
@@ -101,14 +101,13 @@ describe.skipIf(!up)("live API phase 2", () => {
     expect(a.external_processing).toBe(false);
     expect(a.citations.every((c) => c.page >= 1 && c.page <= 3)).toBe(true);
   });
-  it("refresh uses the cookie (raw check: login Set-Cookie thynkpdf_rt, refresh without body)", async () => {
-    const res = await fetch(BASE + "/auth/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: "dev@thynkpdf.dev", password: "ThynkDev-2026!" }) });
-    const ck = res.headers.get("set-cookie") ?? "";
-    expect(ck).toMatch(/thynkpdf_rt=.*HttpOnly/i);
-    const rt = ck.split(";")[0];
-    const r1 = await fetch(BASE + "/auth/refresh", { method: "POST", headers: { cookie: rt } });
-    expect(r1.status).toBe(200);
-    const again = await fetch(BASE + "/auth/refresh", { method: "POST", headers: { cookie: rt } });
-    expect(again.status).toBe(401); // single-use
+  it("no accounts: register/login are disabled; a browser key always maps to the same private workspace", async () => {
+    const reg = await fetch(BASE + "/auth/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: "x@y.example.com", password: "correct-horse-1", org_name: "o" }) });
+    expect(reg.status).toBe(403);
+    const other = new HttpEditorApi({ baseUrl: BASE });
+    other.setTokens(await other.localSession("another-browser-key-0123456789abcdef-" + Date.now()));
+    const { api } = await fresh("mine.pdf");
+    const mine = await api.listDocuments({}); const theirs = await other.listDocuments({});
+    expect(theirs.items.length).toBe(0); expect(mine.items.length).toBeGreaterThan(0);
   });
 });

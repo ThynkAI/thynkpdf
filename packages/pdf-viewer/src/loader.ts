@@ -23,6 +23,13 @@ export function sizesFromMetadata(pages: { width: number; height: number; rotati
 
 export async function openPdf(src: PdfSource, knownSizes?: Size[]): Promise<{ doc: PDFDocumentProxy; sizes: Size[] }> {
   const pdfjs = await getPdfjs();
+  // PDF.js only sends httpHeaders over http(s). The desktop app serves the UI from app://thynkpdf (stable origin), so
+  // fetch the bytes here with the headers instead of letting PDF.js range-load (the engine is on this computer anyway).
+  if ("url" in src && !/^https?:/i.test(new URL(src.url, globalThis.location?.href).protocol)) {
+    const r = await fetch(src.url, { headers: src.httpHeaders });
+    if (!r.ok) throw new Error(`Unexpected server response (${r.status}) while retrieving PDF`);
+    src = { data: new Uint8Array(await r.arrayBuffer()) };
+  }
   // enableXfa: dynamic XFA forms (LiveCycle/AEM) otherwise show only their "Please wait… open in Adobe Reader" placeholder page.
   const doc = await pdfjs.getDocument({ ...src, disableAutoFetch: true, isEvalSupported: false, enableXfa: true } as Parameters<typeof pdfjs.getDocument>[0]).promise;
   // Pure-XFA page count/sizes come from the XFA layout, not the placeholder page the backend metadata describes.

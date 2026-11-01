@@ -45,7 +45,7 @@ def register(app, c):
         pages = ai.extract_pages(c.load(d, v))
         chunks = ai.chunk_pages(pages, page_range=page_range)
         if not chunks:
-            raise c.ApiError(422, "NO_TEXT_LAYER", "No extractable text (scanned?). OCR is not available on this server yet.")
+            raise c.ApiError(422, "NO_TEXT_LAYER", "No extractable text (scanned?). Text recognition (OCR) is not supported.")
         ctx = [ch for _, ch in ai.rank(chunks, query, k=6)] if query else chunks
         out, n = [], 0
         for ch in ctx:

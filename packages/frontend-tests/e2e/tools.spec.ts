@@ -1,12 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { apiUp, signInAndUpload, LOCAL_FIXTURE } from "./helpers";
+import { apiUp, openWorkspaceAndUpload, LOCAL_FIXTURE, offline } from "./helpers";
 
 test("?tool= opens the matching tool; unknown values are ignored", async ({ page }) => {
+  await offline(page);
   await page.goto("/?tool=merge-split");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await expect(page.getByRole("dialog", { name: "Organize pages" })).toBeVisible();
   await page.goto("/?tool=compress");
-  await expect(page.getByTestId("compress-section")).toContainText("sign in and open a server document");
+  await expect(page.getByTestId("compress-section")).toContainText("Compression runs in the THYNKPDF engine");
   await page.goto("/?tool=comment");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await expect(page.getByRole("toolbar", { name: "Annotation tools" })).toBeVisible();
@@ -30,7 +31,7 @@ test("?tool= opens the matching tool; unknown values are ignored", async ({ page
 test.describe("live backend", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
   test("?tool=compress compresses a server document as a new version", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.goto("/?tool=compress");
     await expect(page.getByTestId("doc-title")).toHaveText("simple-3page.pdf"); // session + last doc restored
     const sec = page.getByTestId("compress-section");

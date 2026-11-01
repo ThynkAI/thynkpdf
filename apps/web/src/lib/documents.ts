@@ -54,8 +54,8 @@ export async function openFile(file: File) {
   s.set({ busy: "Opening…", error: null, notice: null });
   clearHistory();
   try {
-    // Desktop: the shell provisions a local session (refresh cookie) for the bundled engine, so no sign-in is ever shown.
-    if (s.backend === "online" && !s.authed && isDesktop()) await bootstrapAuth();
+    // No accounts: the app opens its local workspace automatically (desktop: per-launch key; web: per-browser key).
+    if (s.backend === "online" && !s.authed) await bootstrapAuth();
     if (s.backend === "online" && useSession.getState().authed) {
       s.set({ busy: "Uploading…" });
       const up = await s.api.upload(file, file.name);
@@ -96,8 +96,7 @@ export async function restoreSession(target?: { doc: string; version?: string; n
   s.set({ busy: "Restoring last document…" });
   try { await openLatest(p.lastDocumentId); }
   catch (e) {
-    if (!s.api.getTokens()) s.set({ notice: "Your session expired. Please sign in again." });
-    else { savePersisted({ lastDocumentId: null }); s.set({ notice: `Could not reopen last document: ${(e as Error).message}` }); }
+    savePersisted({ lastDocumentId: null }); s.set({ notice: `Could not reopen last document: ${(e as Error).message}` });
   } finally { s.set({ busy: null }); }
 }
 
@@ -153,7 +152,7 @@ export async function localBytesOp(label: string, fn: (b: Uint8Array) => Promise
   const s = useSession.getState();
   const { localBytesRef } = await import("./copies");
   const before = localBytesRef.current;
-  if (!before) return false;
+  if (!before || s.source !== "local") { s.set({ error: `${label}: this view is read-only.` }); return false; }
   const name = useViewerStore.getState().fileName ?? "document.pdf";
   s.set({ busy: `${label}…`, error: null, notice: null });
   try {
@@ -186,12 +185,6 @@ export async function reorderPage(from: number, to: number) {
   if (isIdentity(order)) return;
   await reorderTo(order);
   if (!useSession.getState().error) useViewerStore.getState().goToPage(to);
-}
-
-export async function signOut() {
-  const s = useSession.getState();
-  if (s.api instanceof HttpEditorApi) await s.api.logout(); else s.api.setTokens(null);
-  savePersisted({ lastDocumentId: null });
 }
 
 /** Find/replace text on a page via backend content-stream rewrite (POST /pdf/edit). Returns number of replacements or null. */
@@ -238,12 +231,36 @@ export async function openVersionReadOnly(documentId: string, versionId: string,
   return d;
 }
 
-/** Re-establish the session after reload via the httpOnly refresh cookie. Returns true when authenticated. Concurrent calls share one refresh. */
+/** Per-browser key for the hosted web build's anonymous workspace (no accounts, no email). */
+function browserKey(): string {
+  try {
+    let k = localStorage.getItem("tp-browser-key");
+    if (!k) { const b = new Uint8Array(32); crypto.getRandomValues(b); k = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join(""); localStorage.setItem("tp-browser-key", k); }
+    return k;
+  } catch { const b = new Uint8Array(32); crypto.getRandomValues(b); return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join(""); }
+}
+
+/**
+ * Open the local workspace — there is no sign-in. Desktop: the Electron preload hands this window the per-launch key,
+ * which the local engine requires on every call. Web: an anonymous workspace tied to this browser. Tokens are renewed
+ * silently on 401 (no session-expiry UI). Returns true when the engine accepted us.
+ */
 export async function bootstrapAuth(): Promise<boolean> {
   const s = useSession.getState();
   if (s.api.kind !== "http") return true;
   if (s.api.getTokens()) return true;
-  try { await s.api.refresh(); return true; } catch { return false; }
+  const api = s.api as HttpEditorApi;
+  if (!api.sessionProvider) {
+    const desk = typeof window !== "undefined" ? (window as unknown as { thynkpdf?: { desktop?: boolean; apiKey?: () => Promise<string> } }).thynkpdf : undefined;
+    if (desk?.desktop && desk.apiKey) {
+      try { api.extraHeaders = { "X-Thynkpdf-Key": await desk.apiKey() }; } catch { return false; }
+      api.sessionProvider = () => api.localSession();
+    } else {
+      const k = browserKey();
+      api.sessionProvider = () => api.localSession(k);
+    }
+  }
+  try { await api.refresh(); return true; } catch { return false; }
 }
 
 /** Run a versioned server op from outside documents.ts (annotations, forms, signing, page ops). */

@@ -90,9 +90,9 @@ class Job(Base):
     created_by: Mapped[str] = mapped_column(String(36))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
-def make_session_factory(url):
+def make_session_factory(url, create_tables=True):
     eng = create_engine(url, connect_args={"check_same_thread": False} if url.startswith("sqlite") else {})
-    Base.metadata.create_all(eng)
+    if create_tables: Base.metadata.create_all(eng)  # tests/dev only; desktop runs Alembic first (BD-04)
     return sessionmaker(eng, expire_on_commit=False)
 
 class RevokedToken(Base):

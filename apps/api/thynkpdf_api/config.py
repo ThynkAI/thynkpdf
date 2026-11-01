@@ -36,3 +36,9 @@ settings.ai_external_base_url = os.getenv("THYNKPDF_AI_EXTERNAL_BASE_URL", "")
 settings.ai_external_api_key = os.getenv("THYNKPDF_AI_EXTERNAL_API_KEY", "")
 settings.ai_external_model = os.getenv("THYNKPDF_AI_EXTERNAL_MODEL", "")
 settings.ai_max_context_chars = int(os.getenv("THYNKPDF_AI_MAX_CONTEXT_CHARS", "12000"))
+# Identity mode. "desktop": one local user, every API call needs the per-launch secret (set by the Electron shell).
+# "anonymous": hosted web build, one private workspace per browser (random browser key), no accounts or email.
+# "accounts": legacy email/password API, opt-in only (test suite, API integrations). Default: anonymous.
+settings.auth_mode = os.getenv("THYNKPDF_AUTH_MODE", "anonymous").lower()
+settings.desktop_secret = os.getenv("THYNKPDF_DESKTOP_SECRET", "")
+settings.managed_schema = os.getenv("THYNKPDF_MANAGED_SCHEMA", "false").lower() == "true"  # Alembic owns the schema (desktop)

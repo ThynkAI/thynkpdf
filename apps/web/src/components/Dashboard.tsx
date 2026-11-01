@@ -5,7 +5,6 @@ import type { DocumentInfo, VersionInfo, Folder } from "@thynkpdf/editor-client"
 import { useSession } from "@/lib/session";
 import { bootstrapAuth, describeError, http } from "@/lib/documents";
 import { toQuery, parseTags, type SortKey, type View } from "@/lib/docFilter";
-import { SignInForm } from "./SignInForm";
 import { SharePanel } from "./SharePanel";
 
 const utc = (s: string) => new Date(s + (/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? "" : "Z"));
@@ -29,8 +28,7 @@ export function Dashboard() {
   const isHttp = s.api.kind === "http";
 
   useEffect(() => {
-    void bootstrapAuth();
-    s.api.health().then((ok) => s.set({ backend: ok ? "online" : "offline" }));
+    s.api.health().then((ok) => { s.set({ backend: ok ? "online" : "offline" }); if (ok) void bootstrapAuth(); });
   }, [s.api]); // eslint-disable-line react-hooks/exhaustive-deps
   const loadSide = useCallback(async () => {
     if (!isHttp) return;
@@ -105,8 +103,7 @@ export function Dashboard() {
         <main className="min-w-0 flex-1 p-4">
           {!s.authed ? (
             <section className="max-w-sm">
-              <p className="text-sm" data-testid="dash-backend">{s.backend === "offline" ? "The THYNKPDF server is offline. You can still open files locally in the editor." : "Sign in to see your documents."}</p>
-              {s.backend === "online" && <SignInForm />}
+              <p className="text-sm" data-testid="dash-backend">{s.backend === "offline" ? "The THYNKPDF engine is offline. You can still open files locally in the editor." : s.backend === "online" ? "Opening your documents…" : "Starting…"}</p>
             </section>
           ) : (
             <>

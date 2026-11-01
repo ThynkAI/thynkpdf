@@ -113,15 +113,27 @@ def duplicate_page(data: bytes, page: int, count: int = 1) -> bytes:
     if not (1 <= count <= 100): raise EngineError("INVALID_REQUEST", "count must be 1..100")
     src = pdf.pages[page - 1]
     for i in range(count):
-        cp = Dictionary(  # annotations are not duplicated (popup/parent refs); documented
-            {k: v for k, v in src.obj.items() if k not in ("/Annots", "/Parent")})
-        pdf.pages.insert(page + i, pikepdf.Page(pdf.make_indirect(cp)))
+        pdf.pages.insert(page + i, _clone_page(pdf, src))
     return _save(pdf)
 
 
 def _clone_page(pdf, src):
-    cp = Dictionary({k: v for k, v in src.obj.items() if k not in ("/Annots", "/Parent")})  # annotations not duplicated
-    return pikepdf.Page(pdf.make_indirect(cp))
+    """Copy a page with its annotations and links (BD-09). Form widgets are not copied (a copied widget would share or
+    duplicate the field); popups are dropped and re-created by viewers; reply links (/IRT) are not carried over."""
+    import uuid
+    cp = pdf.make_indirect(Dictionary({k: v for k, v in src.obj.items() if k not in ("/Annots", "/Parent")}))
+    annots = []
+    for a in (src.obj.get("/Annots") or []):
+        try:
+            if a.get("/Subtype") in (Name.Widget, Name.Popup): continue
+            na = Dictionary({k: v for k, v in a.items() if k not in ("/P", "/Popup", "/IRT", "/Parent")})
+            na[Name.P] = cp
+            if "/NM" in a: na[Name.NM] = pikepdf.String(uuid.uuid4().hex)
+            annots.append(pdf.make_indirect(na))
+        except Exception:
+            continue
+    if annots: cp[Name.Annots] = pikepdf.Array(annots)
+    return pikepdf.Page(cp)
 
 
 def duplicate_pages(data: bytes, pages: list[int], position="after_each") -> bytes:

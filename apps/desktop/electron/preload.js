@@ -2,6 +2,8 @@
 const { contextBridge, ipcRenderer } = require("electron");
 contextBridge.exposeInMainWorld("thynkpdf", {
   desktop: true,
+  /** Per-launch key the local engine requires on every API call (main process only answers this app's own origin). */
+  apiKey: () => ipcRenderer.invoke("desktop:apiKey").then((r) => { if (!r.ok) throw new Error(r.error); return r.value; }),
   ai: {
     getConfig: () => ipcRenderer.invoke("ai:getConfig"),
     saveProvider: (p) => ipcRenderer.invoke("ai:saveProvider", p),

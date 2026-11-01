@@ -12,12 +12,17 @@ sep = os.pathsep
 args = [sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean", "--onedir", "--name", "thynkpdf-server",
         "--distpath", str(DESK / "sidecar"), "--workpath", str(DESK / "build/.pyi-work"), "--specpath", str(DESK / "build/.pyi-work"),
         "--add-data", f"{WEB}{sep}web", "--add-data", f"{DESK / 'launcher'}{sep}launcher",
-        "--collect-submodules", "thynkpdf_api", "--collect-submodules", "uvicorn", "--collect-data", "pyhanko",
+        "--add-data", f"{ROOT / 'migrations'}{sep}migrations",
+        "--collect-submodules", "thynkpdf_api", "--collect-submodules", "thynkpdf_api.features", "--collect-submodules", "alembic",
+        "--collect-data", "alembic", "--hidden-import", "logging.config", "--collect-submodules", "uvicorn", "--collect-data", "pyhanko",
         "--collect-data", "pyhanko_certvalidator", "--collect-data", "reportlab", "--copy-metadata", "pyhanko",
         "--hidden-import", "thynkpdf_engine", "--hidden-import", "thynkpdf_storage", "--hidden-import", "thynkpdf_signatures",
         "--hidden-import", "thynkpdf_ai", "--hidden-import", "email_validator", "--hidden-import", "multipart",
         "--hidden-import", "python_multipart", "--exclude-module", "tkinter", "--exclude-module", "pytest"]
 for p in paths: args += ["--paths", str(ROOT / p)]
+# BD-01: every feature router explicitly (features/__init__.py also imports them statically)
+for m in sorted(f.stem for f in (ROOT / "apps/api/thynkpdf_api/features").glob("*.py") if f.stem != "__init__"):
+    args += ["--hidden-import", f"thynkpdf_api.features.{m}"]
 args.append(str(DESK / "server/desktop_server.py"))
 subprocess.run(args, check=True)
 print("sidecar:", DESK / "sidecar/thynkpdf-server")
