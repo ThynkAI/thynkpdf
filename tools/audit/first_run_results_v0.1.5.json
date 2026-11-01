@@ -1,0 +1,98 @@
+{
+ "startup_seconds_cold": 0.9,
+ "url": "http://127.0.0.1:48239",
+ "users_after_first_start": 0,
+ "alembic_version_table": [],
+ "index_status": 200,
+ "documents_without_token": [
+  401,
+  {
+   "error": {
+    "code": "AUTH_REQUIRED",
+    "message": "Bearer token required",
+    "details": {}
+   }
+  }
+ ],
+ "login_with_no_accounts": [
+  401,
+  {
+   "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "Invalid email or password",
+    "details": {}
+   }
+  }
+ ],
+ "register_via_api_status": 201,
+ "upload": [
+  201,
+  {
+   "version": 1,
+   "page_count": 3
+  }
+ ],
+ "rotate": [
+  200,
+  2
+ ],
+ "edit": [
+  200,
+  3
+ ],
+ "download_bytes": [
+  200,
+  2342
+ ],
+ "share_create": [
+  405,
+  null
+ ],
+ "sign_request": [
+  405,
+  {
+   "detail": "Method Not Allowed"
+  }
+ ],
+ "route_count": 23,
+ "route_present /pdf/annotations": false,
+ "route_present /pdf/forms/fill": false,
+ "route_present /pdf/signatures/place": false,
+ "route_present /pdf/pages/delete": false,
+ "route_present /signature-requests": false,
+ "route_present /folders": false,
+ "route_present /ai/ask": false,
+ "desktop_share_url_as_ui_builds_it": "http://127.0.0.1:48239/shared/?token=<redacted>",
+ "host_header_attacker_accepted": 200,
+ "cors_preflight_foreign_origin": [
+  400,
+  null
+ ],
+ "simple_post_foreign_origin_host_register": 201,
+ "login_bruteforce_30_attempts_401s_no_lockout": 30,
+ "stop_exit": 0,
+ "startup_seconds_warm": 0.98,
+ "port_changed": true,
+ "refresh_after_restart": 200,
+ "docs_after_restart": [
+  200,
+  1
+ ],
+ "versions_after_restart": [
+  200,
+  3
+ ],
+ "old_origin_reachable_after_restart": "refused (port closed; new random port)",
+ "modes": {
+  "data_dir": "0o755",
+  "db": "0o644",
+  "objects": "0o755",
+  "jwt-secret": "0o600",
+  "dev-signing-dir": []
+ },
+ "data_dir_listing": [
+  "jwt-secret",
+  "objects",
+  "thynkpdf.db"
+ ]
+}
