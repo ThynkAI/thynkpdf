@@ -55,7 +55,7 @@ export function AiPanel({ onSettings }: { onSettings?: () => void }) {
     <section aria-labelledby="ai-h">
       <h2 id="ai-h" className="mb-1 font-semibold">Ask this document</h2>
       <p className="mb-1 rounded bg-neutral-100 px-1 text-[11px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300" data-testid="ai-mode">
-        {own ? `Your AI: ${own.label} · ${own.model}` : stub ? "Excerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text." : `Model: ${ans!.model}`}
+        {own ? `Your AI: ${own.label} · ${own.model}` : stub ? "Excerpt mode (stub): built-in answers are quoted passages found by keyword search, not AI-written text." : `Model: ${ans!.model}`}
         {onSettings && <button className="ml-1 underline" onClick={onSettings} data-testid="ai-connect">{own ? "Change" : "Connect your own AI"}</button>}
       </p>
       <form className="flex gap-1 text-xs" onSubmit={(e) => { e.preventDefault(); if (q.trim()) void run(() => ask(q.trim())); }}>
