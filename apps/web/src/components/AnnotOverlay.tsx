@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAnnot, MARKUP } from "@/lib/annotState";
 import { authorName, annotate, eraseAnnotation } from "@/lib/annotActions";
-import type { NewAnnot } from "@/lib/annotWrite";
+import type { NewAnnot, ParsedAnnot } from "@/lib/annotWrite";
 import { displayToPdf, displayBoxToPdfRect, pdfToDisplay, type PageGeom } from "@/lib/geometry";
 import { getGeom } from "@/lib/pageGeom";
 
@@ -17,6 +17,7 @@ export function AnnotOverlay({ pageIndex, scale }: { pageIndex: number; scale: n
   const ref = useRef<HTMLDivElement>(null);
   const down = useRef(false);
   useEffect(() => { void getGeom(pageIndex).then(setGeom); }, [pageIndex]);
+  if (tool === "none" && geom) return <SelectLayer pageIndex={pageIndex} scale={scale} geom={geom} all={all} />;
   if (tool === "none" || MARKUP.includes(tool) || !geom) return null;
 
   const local = (e: React.PointerEvent): P => { const r = ref.current!.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
@@ -66,6 +67,42 @@ export function AnnotOverlay({ pageIndex, scale }: { pageIndex: number; scale: n
         {erasable.map((x) => { const p1 = pdfToDisplay(x.rect.x, x.rect.y, geom, scale), p2 = pdfToDisplay(x.rect.x + x.rect.width, x.rect.y + x.rect.height, geom, scale);
           return <rect key={x.id} x={Math.min(p1[0], p2[0])} y={Math.min(p1[1], p2[1])} width={Math.abs(p1[0] - p2[0])} height={Math.abs(p1[1] - p2[1])} fill="rgba(239,68,68,0.08)" stroke="rgb(239,68,68)" strokeDasharray="3" />; })}
       </svg>
+    </div>
+  );
+}
+
+/**
+ * Select tool (the default when no drawing tool is active): every annotation on the page gets a hit box. Click selects it
+ * (visible red outline), Shift/Ctrl-click toggles it in a multi-selection; Delete/Backspace, Ctrl+C/X/V act on the selection.
+ * Only the annotation boxes take pointer events, so text selection elsewhere on the page keeps working.
+ */
+function SelectLayer({ pageIndex, scale, geom, all }: { pageIndex: number; scale: number; geom: PageGeom; all: ParsedAnnot[] }) {
+  const selected = useAnnot((a) => a.selected);
+  const items = all.filter((x) => x.page === pageIndex && !x.inReplyTo && x.subtype !== "Popup");
+  if (!items.length) return null;
+  return (
+    <div className="pointer-events-none absolute inset-0 z-[5]" data-testid={`select-layer-${pageIndex + 1}`}>
+      {items.map((x) => {
+        const p1 = pdfToDisplay(x.rect.x, x.rect.y, geom, scale), p2 = pdfToDisplay(x.rect.x + x.rect.width, x.rect.y + x.rect.height, geom, scale);
+        const pad = 3, on = selected.includes(x.id);
+        const left = Math.min(p1[0], p2[0]) - pad, top = Math.min(p1[1], p2[1]) - pad;
+        return (
+          <button key={x.id} type="button" data-annot-id={x.id} data-selected={on || undefined} aria-pressed={on}
+            aria-label={`${x.subtype || "Annotation"}${x.contents ? `: ${x.contents.slice(0, 60)}` : ""}${on ? " (selected)" : ""}`}
+            title={on ? "Selected — Delete to remove, Ctrl+C to copy" : "Click to select (Shift-click to add)"}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              const cur = useAnnot.getState().selected;
+              const multi = e.shiftKey || e.ctrlKey || e.metaKey;
+              useAnnot.getState().set({ selected: multi ? (cur.includes(x.id) ? cur.filter((i) => i !== x.id) : [...cur, x.id]) : [x.id] });
+              (document.activeElement as HTMLElement | null)?.blur?.();
+            }}
+            className={`tp-annot-hit pointer-events-auto absolute rounded-sm ${on ? "outline outline-2 outline-offset-1 outline-[#E8141C] bg-[#E8141C]/10" : "hover:outline hover:outline-1 hover:outline-[#E8141C]/60"}`}
+            style={{ left, top, width: Math.abs(p1[0] - p2[0]) + pad * 2, height: Math.abs(p1[1] - p2[1]) + pad * 2 }}>
+            {on && <span aria-hidden className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[#E8141C]" />}
+          </button>);
+      })}
     </div>
   );
 }

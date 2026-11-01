@@ -33,6 +33,6 @@ describe("page structure gates", () => {
   it("follows capabilities", () => {
     expect(editGate("duplicate", ref, caps).enabled).toBe(true);
     expect(editGate("delete", ref, caps)).toEqual({ enabled: false, reason: "This document does not allow delete." });
-    expect(editGate("insert_blank", null, caps).enabled).toBe(false);
+    expect(editGate("insert_blank", null, caps).enabled).toBe(true); // local docs: done in the browser
   });
 });

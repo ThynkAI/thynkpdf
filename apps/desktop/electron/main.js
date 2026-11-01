@@ -1,11 +1,49 @@
 // THYNKPDF desktop shell: starts the bundled backend sidecar on a free localhost port,
 // opens the launcher, and stops the sidecar when the app quits.
-const { app, BrowserWindow, shell, dialog, Menu } = require("electron");
+const { app, BrowserWindow, shell, dialog, Menu, ipcMain, session } = require("electron");
+const crypto = require("node:crypto");
+const { createAi } = require("./ai");
 const { spawn } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
 
-let server = null, win = null, baseUrl = null;
+let server = null, win = null, baseUrl = null, ai = null;
+
+/**
+ * Desktop = no sign-in UI. Provision a private local account on the bundled engine (random password kept in the
+ * app-data folder, 0600) and hand the renderer only the httpOnly refresh cookie; the web app's normal cookie refresh
+ * then authenticates it. The hosted web version keeps its regular sign-in.
+ */
+async function provisionLocalSession() {
+  const dataDir = path.join(app.getPath("userData"), "data");
+  const pwFile = path.join(dataDir, "local-user.secret");
+  if (!fs.existsSync(pwFile)) fs.writeFileSync(pwFile, crypto.randomBytes(32).toString("base64url"), { mode: 0o600 });
+  const password = fs.readFileSync(pwFile, "utf8").trim();
+  const email = "local@desktop.thynkpdf.app";
+  const post = (p, body) => fetch(baseUrl + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  let r = await post("/auth/login", { email, password });
+  if (r.status === 401) r = await post("/auth/register", { email, password, org_name: "This computer" });
+  if (!r.ok) throw new Error(`local session: HTTP ${r.status}`);
+  const t = await r.json();
+  await session.defaultSession.cookies.set({ url: baseUrl + "/auth", name: "thynkpdf_rt", value: t.refresh_token, path: "/auth",
+    httpOnly: true, secure: false, sameSite: "strict", expirationDate: Math.floor(Date.now() / 1000) + 30 * 24 * 3600 });
+}
+
+/** AI IPC: only our own localhost page may call it; errors are returned as plain messages (never containing keys). */
+function registerAiIpc() {
+  ai = createAi(app.getPath("userData"));
+  const guard = (fn) => async (e, arg) => {
+    const url = (e.senderFrame && e.senderFrame.url) || "";
+    if (!baseUrl || !url.startsWith(baseUrl + "/")) return { ok: false, error: "Not allowed" };
+    try { return { ok: true, value: await fn(arg) }; } catch (err) { return { ok: false, error: String((err && err.message) || err).slice(0, 400) }; }
+  };
+  ipcMain.handle("ai:getConfig", guard(() => ai.publicConfig()));
+  ipcMain.handle("ai:saveProvider", guard((p) => ai.saveProvider(p)));
+  ipcMain.handle("ai:removeKey", guard((k) => ai.removeKey(k)));
+  ipcMain.handle("ai:setActive", guard((k) => ai.setActive(k)));
+  ipcMain.handle("ai:test", guard((k) => ai.test(k)));
+  ipcMain.handle("ai:ask", guard((r) => ai.ask(r)));
+}
 
 function sidecarPath() {
   const exe = process.platform === "win32" ? "thynkpdf-server.exe" : "thynkpdf-server";
@@ -44,8 +82,8 @@ function stopServer() {
 }
 
 function createWindow() {
-  win = new BrowserWindow({ width: 1280, height: 860, minWidth: 900, minHeight: 600, title: "THYNKPDF", backgroundColor: "#0f0b1a",
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  win = new BrowserWindow({ width: 1280, height: 860, minWidth: 900, minHeight: 600, title: "THYNKPDF", backgroundColor: "#0B0B0C",
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload: path.join(__dirname, "preload.js") } });
   win.loadURL(baseUrl + "/");
   // Keep the app on our localhost origin; open anything else (e.g. release pages) in the real browser.
   const internal = (u) => u.startsWith(baseUrl + "/");
@@ -53,14 +91,20 @@ function createWindow() {
   win.webContents.on("will-navigate", (e, url) => { if (!internal(url)) { e.preventDefault(); shell.openExternal(url); } });
 }
 
+// Undo/redo are handled by the page's own Ctrl/Cmd+Z handler (command history); the menu items only show the keys
+// (registerAccelerator: false) and, when clicked, ask the page to run the same command.
+const send = (what) => win && win.webContents.executeJavaScript(`window.dispatchEvent(new CustomEvent("thynkpdf:${what}"))`);
+
 function menu() {
   const tpl = [
     ...(process.platform === "darwin" ? [{ role: "appMenu" }] : []),
     { label: "File", submenu: [{ label: "Home", accelerator: "CmdOrCtrl+H", click: () => win && win.loadURL(baseUrl + "/") },
       { label: "Open data folder", click: () => shell.openPath(path.join(app.getPath("userData"), "data")) }, { type: "separator" },
       process.platform === "darwin" ? { role: "close" } : { role: "quit" }] },
-    { role: "editMenu" }, { role: "viewMenu" },
-    { label: "Help", submenu: [{ label: "Check for updates", click: () => shell.openExternal("https://github.com/ThynkAI/thynkpdf/releases/latest") }] },
+    { label: "Edit", submenu: [{ label: "Undo", accelerator: "CmdOrCtrl+Z", registerAccelerator: false, click: () => send("undo") },
+      { label: "Redo", accelerator: process.platform === "darwin" ? "Cmd+Shift+Z" : "Ctrl+Y", registerAccelerator: false, click: () => send("redo") },
+      { type: "separator" }, { role: "cut" }, { role: "copy" }, { role: "paste" }, { role: "selectAll" }] }, { role: "viewMenu" },
+    { label: "Help", submenu: [{ label: "Keyboard shortcuts", accelerator: "Shift+/", registerAccelerator: false, click: () => send("help") }, { label: "Settings — AI Providers", accelerator: "CmdOrCtrl+,", registerAccelerator: false, click: () => send("settings") },{ label: "Check for updates", click: () => shell.openExternal("https://github.com/ThynkAI/thynkpdf/releases/latest") }] },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(tpl));
 }
@@ -70,7 +114,8 @@ else {
   app.on("second-instance", () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
   app.whenReady().then(async () => {
     try { await startServer(); } catch (e) { dialog.showErrorBox("THYNKPDF could not start", String(e.message || e)); app.quit(); return; }
-    menu(); createWindow();
+    try { await provisionLocalSession(); } catch (e) { fs.appendFileSync(path.join(app.getPath("userData"), "data", "server.log"), `[desktop] ${e.message}\n`); }
+    registerAiIpc(); menu(); createWindow();
     app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
   });
   app.on("before-quit", () => { app.isQuitting = true; stopServer(); });

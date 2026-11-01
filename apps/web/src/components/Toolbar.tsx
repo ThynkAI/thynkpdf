@@ -5,10 +5,12 @@ import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { rotateCurrentPage } from "@/lib/documents";
 import { editGate } from "@/lib/gates";
-import { PanelLeft, FolderOpen, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Highlighter, LayoutGrid, Search, Sun, Moon } from "lucide-react";
+import { PanelLeft, FolderOpen, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw, Highlighter, LayoutGrid, Search, Sun, Moon, Undo2, Redo2, Keyboard, Settings } from "lucide-react";
+import { useHistory, undo, redo } from "@/lib/history";
+import { keyLabel } from "@/lib/shortcuts";
 const I = "h-[18px] w-[18px] shrink-0";
 
-export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme, dark, onOrganize, onAnnotate, annotating }: { onAnnotate?(): void; annotating?: boolean; onOrganize(): void; onOpen(): void; onToggleSidebar(): void; onTogglePanel(): void; onToggleTheme(): void; dark: boolean }) {
+export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme, dark, onOrganize, onAnnotate, annotating, onHelp, onSettings }: { onHelp?(): void; onSettings?(): void; onAnnotate?(): void; annotating?: boolean; onOrganize(): void; onOpen(): void; onToggleSidebar(): void; onTogglePanel(): void; onToggleTheme(): void; dark: boolean }) {
   const v = useViewerStore();
   const { ref, caps, capsError, busy } = useSession();
   const rot = editGate("rotate", ref, caps, { busy: !!busy, capsError });
@@ -16,10 +18,14 @@ export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme,
   const [pageInput, setPageInput] = useState("1");
   useEffect(() => setPageInput(String(v.currentPage + 1)), [v.currentPage]);
   const has = n > 0;
+  const h = useHistory();
   return (
     <div role="toolbar" aria-label="Document toolbar" className="flex h-11 items-center gap-1 overflow-x-auto overflow-y-hidden whitespace-nowrap border-b border-neutral-200 bg-white px-2 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <IconButton label="Toggle thumbnails" onClick={onToggleSidebar}><PanelLeft aria-hidden strokeWidth={2} className={I} /></IconButton>
       <IconButton label="Open PDF" shortcut="Ctrl+O" onClick={onOpen}><FolderOpen aria-hidden strokeWidth={2} className={I} /><span className="ml-1 hidden sm:inline">Open</span></IconButton>
+      <div className="mx-2 h-5 w-px bg-neutral-300 dark:bg-neutral-700" />
+      <IconButton label={h.undoLabel ? `Undo ${h.undoLabel}` : "Undo"} shortcut={keyLabel("Mod+Z")} disabled={!h.canUndo || !!busy} onClick={() => void undo()} data-testid="undo-btn"><Undo2 aria-hidden strokeWidth={2} className={I} /></IconButton>
+      <IconButton label={h.redoLabel ? `Redo ${h.redoLabel}` : "Redo"} shortcut={keyLabel("Mod+Shift+Z")} disabled={!h.canRedo || !!busy} onClick={() => void redo()} data-testid="redo-btn"><Redo2 aria-hidden strokeWidth={2} className={I} /></IconButton>
       <div className="mx-2 h-5 w-px bg-neutral-300 dark:bg-neutral-700" />
       <IconButton label="Previous page" shortcut="K" disabled={!has || v.currentPage === 0} onClick={() => v.goToPage(v.currentPage - 1)}><ChevronLeft aria-hidden strokeWidth={2} className={I} /></IconButton>
       <form onSubmit={(e) => { e.preventDefault(); const p = parseInt(pageInput, 10); if (!isNaN(p)) v.goToPage(p - 1); }} className="flex items-center gap-1 text-sm">
@@ -45,6 +51,8 @@ export function Toolbar({ onOpen, onToggleSidebar, onTogglePanel, onToggleTheme,
       {onAnnotate && <IconButton label="Annotate" active={annotating} disabled={!has} onClick={onAnnotate}><Highlighter aria-hidden strokeWidth={2} className={I} /><span className="ml-1 hidden sm:inline">Annotate</span></IconButton>}
       <IconButton label="Organize pages" disabled={!has} onClick={onOrganize}><LayoutGrid aria-hidden strokeWidth={2} className={I} /><span className="ml-1 hidden sm:inline">Organize</span></IconButton>
       <div className="ml-auto flex items-center gap-1">
+        {onHelp && <IconButton label="Keyboard shortcuts" shortcut="?" onClick={onHelp}><Keyboard aria-hidden strokeWidth={2} className={I} /></IconButton>}
+        {onSettings && <IconButton label="Settings — AI Providers" shortcut={keyLabel("Mod+,")} onClick={onSettings} data-testid="settings-btn"><Settings aria-hidden strokeWidth={2} className={I} /></IconButton>}
         <IconButton label="Search" shortcut="Ctrl+F" onClick={onTogglePanel}><Search aria-hidden strokeWidth={2} className={I} /></IconButton>
         <IconButton label={dark ? "Switch to light theme" : "Switch to dark theme"} onClick={onToggleTheme}>{dark ? <Sun aria-hidden strokeWidth={2} className={I} /> : <Moon aria-hidden strokeWidth={2} className={I} />}</IconButton>
       </div>

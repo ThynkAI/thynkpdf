@@ -14,10 +14,12 @@ export interface Working { originRef: DocumentRef | null; baseName: string; orig
 export interface AnnotState {
   open: boolean; tool: Tool; color: [number, number, number]; stamp: string; text: string; author: string;
   working: Working | null; threads: Thread[]; all: ParsedAnnot[]; downloadUrl: string | null; downloadName: string | null;
+  /** Ids of annotations selected with the Select tool (click / Shift-click). */
+  selected: string[];
   set(p: Partial<AnnotState>): void;
 }
 const savedAuthor = () => { try { return localStorage.getItem("tp-author") ?? ""; } catch { return ""; } };
 export const useAnnot = create<AnnotState>((set) => ({
   open: false, tool: "none", color: COLORS[0].rgb, stamp: STAMPS[0], text: "", author: savedAuthor(),
-  working: null, threads: [], all: [], downloadUrl: null, downloadName: null, set: (p) => set(p),
+  working: null, threads: [], all: [], downloadUrl: null, downloadName: null, selected: [], set: (p) => set(p),
 }));

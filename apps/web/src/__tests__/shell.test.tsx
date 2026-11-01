@@ -16,7 +16,7 @@ describe("app shell", () => {
     expect(screen.getByLabelText("Next page")).toBeDisabled();
     expect(screen.getByTestId("status-page")).toHaveTextContent("No document");
   });
-  it("navigates pages and reflects in status bar; rotate disabled for local docs", async () => {
+  it("navigates pages and reflects in status bar; rotate enabled for local docs (no sign-in)", async () => {
     useViewerStore.getState().setDocument({} as never, "a.pdf", sizes);
     renderToolbar();
     await userEvent.click(screen.getByLabelText("Next page"));
@@ -24,6 +24,6 @@ describe("app shell", () => {
     const input = screen.getByLabelText("Page number");
     await userEvent.clear(input); await userEvent.type(input, "3{enter}");
     expect(screen.getByTestId("status-page")).toHaveTextContent("Page 3 of 3");
-    expect(screen.getByLabelText(/Rotate page/)).toBeDisabled();
+    expect(screen.getByLabelText(/Rotate page/)).toBeEnabled();
   });
 });

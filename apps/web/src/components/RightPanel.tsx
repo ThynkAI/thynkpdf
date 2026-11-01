@@ -3,7 +3,7 @@ import { forwardRef, useState } from "react";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { editGate } from "@/lib/gates";
-import { signOut, ensureText } from "@/lib/documents";
+import { signOut, ensureText, isDesktop } from "@/lib/documents";
 import { TextEditPanel } from "./TextEditPanel";
 import { SignInForm } from "./SignInForm";
 import { SignPanel } from "./SignPanel";
@@ -13,10 +13,11 @@ import { AiPanel } from "./AiPanel";
 import { ToolsPane } from "./shell/ToolsPane";
 import type { ToolParam } from "@/lib/tools";
 
-export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; activeTool?: ToolParam | null; onTool?: (t: ToolParam) => void }>(function RightPanel({ onClose, activeTool = null, onTool }, searchRef) {
+export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; activeTool?: ToolParam | null; onTool?: (t: ToolParam) => void; onSettings?: () => void }>(function RightPanel({ onClose, activeTool = null, onTool, onSettings }, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
   const [q, setQ] = useState(query);
   const s = useSession();
+  const desktop = isDesktop();
   const textReady = pagesText.length > 0 && pagesText.every((t) => t !== null);
   const perPage = new Map<number, number>();
   matches.forEach((m) => perPage.set(m.page, (perPage.get(m.page) ?? 0) + 1));
@@ -46,7 +47,7 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; a
       <TextEditPanel />
       <SignPanel />
       <FormsPanel />
-      {s.api.kind === "http" && <AiPanel />}
+      <AiPanel onSettings={onSettings} />
       <section>
         <h2 className="mb-2 font-semibold">Document</h2>
         <dl className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1 text-xs">
@@ -64,11 +65,13 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; a
         </ul>
       </section>
       <section>
-        <h2 className="mb-2 font-semibold">Backend</h2>
-        <p className="text-xs" data-testid="backend-status">{s.api.kind === "mock" ? "Mock API (in-browser, not persisted)" : s.backend === "online" ? (s.authed ? "Connected" : "Online — sign in to upload") : s.backend === "offline" ? "Offline — files open locally" : "Checking…"}</p>
-        {s.api.kind === "http" && s.authed && <button className="mt-1 text-xs underline" onClick={() => void signOut()}>Sign out</button>}
-        {s.api.kind === "http" && s.backend === "online" && !s.authed && (
-          <SignInForm />
+        <h2 className="mb-2 font-semibold">{desktop ? "Engine" : "Backend"}</h2>
+        <p className="text-xs" data-testid="backend-status">{s.api.kind === "mock" ? "Mock API (in-browser, not persisted)"
+          : desktop ? (s.backend === "online" ? "Local engine on this computer — works offline, no sign-in needed" : s.backend === "offline" ? "Local engine unavailable — editing in the browser" : "Starting local engine…")
+          : s.backend === "online" ? (s.authed ? "Connected to the THYNKPDF server" : "Files open and edit locally in your browser") : s.backend === "offline" ? "Offline — files open and edit locally" : "Checking…"}</p>
+        {!desktop && s.api.kind === "http" && s.authed && <button className="mt-1 text-xs underline" onClick={() => void signOut()}>Sign out</button>}
+        {!desktop && s.api.kind === "http" && s.backend === "online" && !s.authed && (
+          <details className="mt-1 text-xs"><summary className="cursor-pointer text-neutral-500">Cloud sync (optional)</summary><SignInForm /></details>
         )}
       </section>
     </aside>
