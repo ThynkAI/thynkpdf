@@ -25,7 +25,7 @@ import { copyAction, cutAction, pasteAction, deleteSelection, selectAllPageText,
 import { saveAnnotations } from "@/lib/annotActions";
 import { ShortcutsDialog } from "./ShortcutsDialog";
 import { SettingsDialog } from "./SettingsDialog";
-import { editGate } from "@/lib/gates";
+import { editGate, readOnlyView } from "@/lib/gates";
 import { resolveShortcut } from "@/lib/shortcuts";
 
 export function EditorShell() {
@@ -72,9 +72,9 @@ export function EditorShell() {
   }, []);
   const fileName = useViewerStore((s) => s.fileName);
   const hasDoc = useViewerStore((s) => s.pageSizes.length > 0);
-  const { ref, caps, capsError, busy } = useSession();
+  const { ref, caps, capsError, busy, source } = useSession();
   useEffect(() => { if (fileName) setShowHome(false); }, [fileName]);
-  const reorderGate = editGate("reorder", ref, caps, { busy: !!busy, capsError });
+  const reorderGate = editGate("reorder", ref, caps, { busy: !!busy, capsError, readOnly: readOnlyView({ ref, source }) });
 
   useEffect(() => {
     const { api, set } = useSession.getState();
@@ -106,7 +106,7 @@ export function EditorShell() {
         case "prevPage": v.goToPage(v.currentPage - 1); break;
         case "firstPage": v.goToPage(0); break;
         case "lastPage": v.goToPage(v.pageSizes.length - 1); break;
-        case "rotate": case "rotateCcw": { const ss = useSession.getState(); if (v.pageSizes.length && editGate("rotate", ss.ref, ss.caps, { busy: !!ss.busy, capsError: ss.capsError }).enabled) void rotateCurrentPage(a === "rotate" ? 90 : -90); break; }
+        case "rotate": case "rotateCcw": { const ss = useSession.getState(); if (v.pageSizes.length && editGate("rotate", ss.ref, ss.caps, { busy: !!ss.busy, capsError: ss.capsError, readOnly: readOnlyView(ss) }).enabled) void rotateCurrentPage(a === "rotate" ? 90 : -90); break; }
         case "toggleTheme": toggleTheme(); break;
         case "undo": if (!useSession.getState().busy) void undo(); break;
         case "redo": if (!useSession.getState().busy) void redo(); break;

@@ -68,10 +68,13 @@ test("search across pages with highlights and next/prev", async ({ page }) => {
   expect(bg).toBe("rgba(234, 88, 12, 0.6)"); // inactive hits are rgba(250, 204, 21, 0.45)
 });
 
-test("local documents show why editing is disabled", async ({ page }) => {
+test("local documents can be edited in the browser without sign-in", async ({ page }) => {
   await openLocal(page);
-  await expect(page.getByTestId("rotate-wrap")).toHaveAttribute("title", /requires a document opened through the THYNKPDF server/);
-  await expect(page.getByTestId("thumb-1")).toHaveAttribute("draggable", "false");
+  await expect(page.getByLabel("Rotate page clockwise")).toBeEnabled();
+  await expect(page.getByTestId("thumb-1")).toHaveAttribute("draggable", "true");
+  await expect(page.locator("body")).not.toContainText("Editing requires a document opened through the THYNKPDF server");
+  await page.getByLabel("Rotate page clockwise").click();
+  await expect(page.getByTestId("undo-btn")).toBeEnabled();
 });
 
 test("drag and drop opens a PDF", async ({ page }) => {
