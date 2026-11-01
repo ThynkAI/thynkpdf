@@ -64,6 +64,22 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npx electron-builder --${{ matrix.target }} --publish never
+      - name: Verify mac bundle (arch + ad-hoc signature)
+        if: matrix.target == 'mac'
+        working-directory: apps/desktop
+        shell: bash
+        run: |
+          APP=$(find dist -maxdepth 2 -name '*.app' | head -1)
+          echo "app: $APP"
+          lipo -archs "$APP/Contents/MacOS/THYNKPDF"
+          lipo -archs "$APP/Contents/Resources/thynkpdf-server/thynkpdf-server"
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            lipo -archs "$APP/Contents/Resources/thynkpdf-server/thynkpdf-server" | grep -qw arm64
+          fi
+          codesign -dv --verbose=4 "$APP" 2>&1
+          codesign -dv --verbose=4 "$APP/Contents/Resources/thynkpdf-server/thynkpdf-server" 2>&1
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl --assess --type execute -vv "$APP" || echo "spctl rejects (expected for ad-hoc / not notarized)"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}

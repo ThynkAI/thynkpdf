@@ -1,7 +1,7 @@
 {
   "name": "thynkpdf-desktop",
   "productName": "THYNKPDF",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "THYNKPDF desktop app",
   "author": "ThynkAI",
   "license": "UNLICENSED",
@@ -21,14 +21,60 @@
   "build": {
     "appId": "ai.thynk.thynkpdf",
     "productName": "THYNKPDF",
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["electron/**", "package.json"],
-    "extraResources": [{ "from": "sidecar/thynkpdf-server", "to": "thynkpdf-server", "filter": ["**/*"] }],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "sidecar/thynkpdf-server",
+        "to": "thynkpdf-server",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "asar": true,
-    "linux": { "target": ["AppImage"], "category": "Office", "icon": "build/icon.png" },
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "build/icon.png" },
-    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "shortcutName": "THYNKPDF" },
-    "mac": { "target": ["dmg"], "category": "public.app-category.productivity", "icon": "build/icon.png", "identity": null },
-    "dmg": { "title": "THYNKPDF" }
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office",
+      "icon": "build/icon.png"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "THYNKPDF"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.png",
+      "identity": null
+    },
+    "dmg": {
+      "title": "THYNKPDF"
+    },
+    "afterPack": "build/adhoc-sign.js"
   }
 }
