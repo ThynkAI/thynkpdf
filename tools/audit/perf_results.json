@@ -1,0 +1,31 @@
+{
+ "startup_s": 1.19,
+ "idle_rss_mib": 99,
+ "upload_2000p_s": 0.14,
+ "merge_2x2000p": {
+  "seconds": 1.41,
+  "peak_rss_mib": 153,
+  "health_p_max_ms": 863,
+  "status": 201
+ },
+ "compress_2000p_balanced": {
+  "seconds": 1.14,
+  "peak_rss_mib": 165,
+  "health_p_max_ms": 204,
+  "status": 200
+ },
+ "bomb_upload_status": 201,
+ "bomb_compress": {
+  "seconds": 10.7,
+  "peak_rss_mib": 193,
+  "health_p_max_ms": 6498,
+  "status": 200
+ },
+ "bomb_capabilities": {
+  "seconds": 0.01,
+  "peak_rss_mib": 166,
+  "health_p_max_ms": 4,
+  "status": 200
+ },
+ "rss_after_mib": 166
+}
