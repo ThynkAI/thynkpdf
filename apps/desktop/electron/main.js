@@ -1,33 +1,12 @@
 // THYNKPDF desktop shell: starts the bundled backend sidecar on a free localhost port,
 // opens the launcher, and stops the sidecar when the app quits.
-const { app, BrowserWindow, shell, dialog, Menu, ipcMain, session } = require("electron");
-const crypto = require("node:crypto");
+const { app, BrowserWindow, shell, dialog, Menu, ipcMain } = require("electron");
 const { createAi } = require("./ai");
 const { spawn } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs");
 
 let server = null, win = null, baseUrl = null, ai = null;
-
-/**
- * Desktop = no sign-in UI. Provision a private local account on the bundled engine (random password kept in the
- * app-data folder, 0600) and hand the renderer only the httpOnly refresh cookie; the web app's normal cookie refresh
- * then authenticates it. The hosted web version keeps its regular sign-in.
- */
-async function provisionLocalSession() {
-  const dataDir = path.join(app.getPath("userData"), "data");
-  const pwFile = path.join(dataDir, "local-user.secret");
-  if (!fs.existsSync(pwFile)) fs.writeFileSync(pwFile, crypto.randomBytes(32).toString("base64url"), { mode: 0o600 });
-  const password = fs.readFileSync(pwFile, "utf8").trim();
-  const email = "local@desktop.thynkpdf.app";
-  const post = (p, body) => fetch(baseUrl + p, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  let r = await post("/auth/login", { email, password });
-  if (r.status === 401) r = await post("/auth/register", { email, password, org_name: "This computer" });
-  if (!r.ok) throw new Error(`local session: HTTP ${r.status}`);
-  const t = await r.json();
-  await session.defaultSession.cookies.set({ url: baseUrl + "/auth", name: "thynkpdf_rt", value: t.refresh_token, path: "/auth",
-    httpOnly: true, secure: false, sameSite: "strict", expirationDate: Math.floor(Date.now() / 1000) + 30 * 24 * 3600 });
-}
 
 /** AI IPC: only our own localhost page may call it; errors are returned as plain messages (never containing keys). */
 function registerAiIpc() {
@@ -114,7 +93,6 @@ else {
   app.on("second-instance", () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
   app.whenReady().then(async () => {
     try { await startServer(); } catch (e) { dialog.showErrorBox("THYNKPDF could not start", String(e.message || e)); app.quit(); return; }
-    try { await provisionLocalSession(); } catch (e) { fs.appendFileSync(path.join(app.getPath("userData"), "data", "server.log"), `[desktop] ${e.message}\n`); }
     registerAiIpc(); menu(); createWindow();
     app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
   });

@@ -6,9 +6,8 @@ export interface Gate { enabled: boolean; reason: string | null }
 /** Decide whether an edit action is available, with a human reason when it is not. Pure; unit-tested. */
 export function editGate(action: EditAction, ref: DocumentRef | null, caps: Capabilities | null, opts: { busy?: boolean; capsError?: string | null } = {}): Gate {
   const no = (reason: string): Gate => ({ enabled: false, reason });
+  if (!ref) return no("Editing requires a document opened through the THYNKPDF server (sign in, then open).");
   if (opts.busy) return no("Another operation is in progress.");
-  // No server document: page operations run in the browser with pdf-lib (offline, no sign-in needed).
-  if (!ref) return { enabled: true, reason: null };
   if (opts.capsError) return no(`Could not check edit capabilities: ${opts.capsError}`);
   if (!caps || caps.document_id !== ref.document_id || caps.version !== ref.version) return no("Checking what can be edited…");
   if (!caps.page_ops[action]) {
@@ -19,7 +18,6 @@ export function editGate(action: EditAction, ref: DocumentRef | null, caps: Capa
 }
 
 export function textEditGate(page: number, ref: DocumentRef | null, caps: Capabilities | null, opts: { busy?: boolean; capsError?: string | null } = {}): Gate {
-  if (!ref) return { enabled: false, reason: "Text replacement runs in the THYNKPDF engine; it is not available for this offline copy." };
   const base = editGate("rotate", ref, caps, opts);
   if (!base.enabled && (!ref || opts.busy || opts.capsError || !caps || caps.version !== ref.version)) return base;
   if (!caps!.text_replace) return { enabled: false, reason: caps!.document_limitations.map((l) => l.message).join(" ") || "Text editing is not available for this document." };
