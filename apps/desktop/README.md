@@ -29,6 +29,8 @@ run (download them as artifacts). Pushing a `v*` tag also creates a **draft** Gi
 - **macOS Gatekeeper:** "THYNKPDF can't be opened because Apple cannot check it for malicious software" (on recent macOS:
   "…is damaged" for downloaded unsigned apps). Fix: **right-click → Open**, or System Settings → Privacy & Security → **Open Anyway**.
   If macOS says it is "damaged", run `xattr -dr com.apple.quarantine /Applications/THYNKPDF.app`.
+  Since v0.1.3 the mac builds are **ad-hoc signed** (`build/adhoc-sign.js`, afterPack hook), so on Apple silicon macOS shows the
+  normal "unidentified developer" prompt instead of "damaged"; first launch still needs Open Anyway (or the `xattr` command above).
 
 ## To remove the warnings (code signing)
 - **Windows:** an Authenticode code-signing certificate. The options are an OV/EV certificate from a CA (DigiCert, Sectigo, SSL.com),
