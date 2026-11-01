@@ -15,7 +15,7 @@ export function XfaBanner() {
       : "This document is an XFA form that could not be fully rendered here, so only its placeholder page is shown. Open it in Adobe Acrobat Reader to view or fill the full form.";
   return (
     <div role={xfa === "unrendered" ? "alert" : "status"} data-testid="xfa-banner" data-xfa={xfa}
-      className={`absolute inset-x-0 top-0 z-10 border-b px-3 py-1.5 text-xs ${xfa === "unrendered" ? "border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200" : "border-sky-200 bg-sky-50 text-sky-900 dark:bg-sky-950 dark:text-sky-200"}`}>
+      className={`absolute inset-x-0 top-0 z-10 border-b px-3 py-1.5 text-xs ${xfa === "unrendered" ? "border-amber-300 border-l-4 border-l-amber-500 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200" : "border-neutral-200 border-l-4 border-l-brand-600 bg-paper text-neutral-900 dark:border-neutral-800 dark:border-l-brand-500 dark:bg-neutral-900 dark:text-neutral-100"}`}>
       {text}
       <button className="ml-2 underline" onClick={() => setHidden(docKey)} aria-label="Dismiss XFA notice">Dismiss</button>
     </div>

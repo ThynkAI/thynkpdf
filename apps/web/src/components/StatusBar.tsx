@@ -9,7 +9,7 @@ export function StatusBar() {
       <span data-testid="status-page">{pageSizes.length ? `Page ${currentPage + 1} of ${pageSizes.length}` : "No document"}</span>
       <span data-testid="status-zoom">{Math.round(effectiveScale * 100)}%{zoomMode !== "custom" ? ` (${zoomMode.replace("-", " ")})` : ""}</span>
       <span>Source: {source}</span>
-      {busy && <span className="text-brand-600">{busy}</span>}
+      {busy && <span className="text-brand-700 dark:text-brand-300">{busy}</span>}
       {notice && <span data-testid="notice">{notice}</span>}
       {error && <span role="alert" data-testid="error" className="text-red-600">{error}</span>}
     </footer>

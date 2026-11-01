@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="124 124 776 776" role="img" aria-label="THYNKPDF">
+  <defs>
+    <linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF2A2A"/><stop offset="1" stop-color="#C8101A"/></linearGradient>
+    <linearGradient id="d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF2A2A"/><stop offset="1" stop-color="#D0101A"/></linearGradient>
+  </defs>
+  <rect x="124" y="124" width="776" height="776" rx="168" fill="#0B0B0C"/>
+  <path d="M347 212H592L776 398V718a62 62 0 0 1-62 62H347a62 62 0 0 1-62-62V274a62 62 0 0 1 62-62Z" fill="#FAFAF9"/>
+  <path d="M592 212L776 398H664a72 72 0 0 1-72-72Z" fill="url(#r)"/>
+  <path d="M430 366a14 14 0 0 1 14-14h57a14 14 0 0 1 14 14V427h56a12 12 0 0 1 12 12v41a12 12 0 0 1-12 12h-56v88q0 26 26 26h32a10 10 0 0 1 10 10v47a10 10 0 0 1-10 10H522C468 683 430 640 430 577V492h-45a12 12 0 0 1-12-12v-41a12 12 0 0 1 12-12h45Z" fill="#0B0B0C"/>
+  <circle cx="652" cy="631" r="49" fill="url(#d)"/>
+</svg>

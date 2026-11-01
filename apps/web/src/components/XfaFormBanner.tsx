@@ -27,10 +27,10 @@ export function XfaFormBanner({ mode }: { mode: XfaMode }) {
   }, [server, s.ref?.document_id, s.ref?.version, mode]); // eslint-disable-line react-hooks/exhaustive-deps
   if (mode === "none") return null;
   return (
-    <div data-testid="xfa-form-banner" data-xfa={mode} className="mb-2 rounded border border-sky-200 bg-sky-50 p-2 text-xs text-sky-900 dark:bg-sky-950 dark:text-sky-200">
+    <div data-testid="xfa-form-banner" data-xfa={mode} className="mb-2 rounded border border-neutral-200 border-l-4 border-l-brand-600 bg-paper p-2 text-xs text-neutral-900 dark:border-neutral-800 dark:border-l-brand-500 dark:bg-neutral-900 dark:text-neutral-100">
       <p className="font-medium">{LABEL[mode]}</p>
       {server && xfaConvertSupport.available && canConvert !== false && (
-        <button className="mt-1 rounded border border-sky-400 px-2 py-0.5 disabled:opacity-40" disabled={!!s.busy} onClick={async () => {
+        <button className="mt-1 rounded border border-brand-600 px-2 py-0.5 font-medium text-brand-700 hover:bg-brand-500/10 dark:border-brand-400 dark:text-brand-300 disabled:opacity-40" disabled={!!s.busy} onClick={async () => {
           setMsg(null);
           const r = await convertXfaToStandardForm();
           if (r.outcome === "unavailable") { setMsg("Converting on the server isn't available yet."); force((n) => n + 1); }
