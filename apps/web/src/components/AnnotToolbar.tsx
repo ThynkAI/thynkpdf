@@ -15,7 +15,7 @@ export function AnnotToolbar() {
   const a = useAnnot(); const busy = useSession((s) => s.busy);
   const sessionServer = useSession((s) => s.api.kind === "http" && !!s.ref);
   return (
-    <div role="toolbar" aria-label="Annotation tools" className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-800 dark:bg-neutral-950">
+    <div role="toolbar" aria-label="Annotation tools" className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-800 dark:bg-ink">
       {TOOLS.map(({ t, label, icon }) => (
         <button key={t} type="button" title={label} aria-pressed={a.tool === t} onClick={() => a.set({ tool: t })}
           className={`h-7 min-w-7 rounded px-1.5 ${a.tool === t ? "bg-brand-600 text-white" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}><span aria-hidden="true">{icon}</span><span className="sr-only">{label}</span></button>

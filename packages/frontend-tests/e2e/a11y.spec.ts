@@ -45,3 +45,19 @@ test("documents dashboard (signed-out view) has no axe violations", async ({ pag
   await expect(page.getByRole("heading", { name: "Documents" })).toBeVisible();
   await axe(page);
 });
+
+test("brand: header logo, favicons and red primary accent (light + dark Home has no axe violations)", async ({ page, request }) => {
+  await page.goto("/");
+  const logo = page.locator('header img[src="/logo.svg"]');
+  await expect(logo).toBeVisible();
+  expect(await logo.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  for (const href of ["/favicon.ico", "/icon-192.png", "/icon-512.png", "/apple-touch-icon.png", "/logo.svg"]) {
+    expect((await request.get(href)).status(), href).toBe(200);
+  }
+  await expect(page.locator('link[rel="icon"][href^="/favicon.ico"]')).toHaveCount(1);
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveCount(1);
+  await expect(page.getByTestId("home")).toBeVisible();
+  await axe(page, '[data-testid="home"]');
+  await page.getByRole("button", { name: /Switch to (dark|light) theme/ }).click();
+  await axe(page, '[data-testid="home"]');
+});

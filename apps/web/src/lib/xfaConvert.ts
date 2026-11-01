@@ -1,4 +1,4 @@
-import { ApiError, XFA_ERROR_MESSAGES, type VersionResult } from "@thynkpdf/editor-client";
+import { ApiError, XFA_ERROR_MESSAGES, type VersionResult, type XfaCapabilities } from "@thynkpdf/editor-client";
 import { http, runVersionedOp } from "./documents";
 import { useSession } from "./session";
 
@@ -52,3 +52,19 @@ export function describeConvertReport(report?: Record<string, unknown> | null): 
   }
   return "Converted to a standard form (new version).";
 }
+
+/**
+ * Feature detection via GET /pdf/{id}/capabilities `xfa` (backend PR #24). Returns null when the server doesn't report
+ * `xfa` (older backend) or capabilities fail; callers then fall back to probing and the 404/405 → "unavailable" rule.
+ */
+const capCache = new Map<string, Promise<XfaCapabilities | null>>();
+export function getXfaCapabilities(documentId: string, version?: number): Promise<XfaCapabilities | null> {
+  const k = `${documentId}@${version ?? ""}`;
+  let p = capCache.get(k);
+  if (!p) {
+    p = http().getCapabilities(documentId).then((c) => ((c as { xfa?: XfaCapabilities | null }).xfa ?? null), () => null);
+    capCache.set(k, p);
+  }
+  return p;
+}
+export const clearXfaCapabilitiesCache = () => capCache.clear();

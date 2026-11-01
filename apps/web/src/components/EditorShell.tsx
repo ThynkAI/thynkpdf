@@ -120,7 +120,7 @@ export function EditorShell() {
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }}
         onDrop={(e) => { e.preventDefault(); setDragging(false); onFiles(e.dataTransfer.files); }}>
-        <header className="flex h-11 items-center gap-1 border-b border-neutral-200 bg-white px-3 dark:border-neutral-800 dark:bg-neutral-950">
+        <header className="flex h-11 items-center gap-1 border-b border-neutral-200 bg-white px-3 dark:border-neutral-800 dark:bg-ink">
           <Wordmark />
           <nav aria-label="Main" className="ml-3 flex items-center gap-1 text-sm">
             <button onClick={() => setShowHome(true)} aria-current={showHome || !hasDoc ? "page" : undefined} className="inline-flex items-center gap-1 rounded px-2 py-1 hover:bg-neutral-100 aria-[current=page]:bg-brand-500/10 aria-[current=page]:text-brand-700 dark:hover:bg-neutral-800 dark:aria-[current=page]:text-brand-300"><HomeIcon aria-hidden className="h-4 w-4" />Home</button>

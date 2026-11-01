@@ -143,11 +143,11 @@ export class HttpEditorApi implements EditorApi {
   fillForm(ref: DocumentRef, values: Record<string, string | boolean | string[]>, flatten = false) { return this.send<VersionResult>("POST", "/pdf/forms/fill", { ...this.v(ref), values, flatten }); }
   flattenForm(ref: DocumentRef) { return this.send<VersionResult>("POST", "/pdf/forms/flatten", { ...this.v(ref), confirm: true }); }
   /** XFA → AcroForm as a new version; report.mode = stripped_xfa | rendered_from_template. 422 xfa_dynamic_unsupported. */
-  convertXfaToAcroForm(ref: DocumentRef) { return this.send<VersionResult>("POST", "/pdf/forms/xfa/convert", { ...this.v(ref) }); }
-  // XFA (backend PR #24). Callers feature-detect 404/405 (endpoint not deployed) and hide the actions.
+  convertXfaToAcroForm(ref: DocumentRef) { return this.send<import("./xfa").XfaConvertResult>("POST", "/pdf/forms/xfa/convert", { ...this.v(ref) }); }
+  // XFA (backend PR #24). Callers gate on /capabilities `xfa`, falling back to 404/405 detection on older servers.
   getXfaData(id: string, version?: number) { return this.req<import("./xfa").XfaDataOut>(`/pdf/${this.e(id)}/forms/xfa${version ? `?version=${version}` : ""}`); }
   getXfaSchema(id: string, version?: number) { return this.req<import("./xfa").XfaSchemaOut>(`/pdf/${this.e(id)}/forms/xfa/schema${version ? `?version=${version}` : ""}`); }
-  fillXfa(ref: DocumentRef, values: Record<string, string | boolean>) { return this.send<VersionResult>("POST", "/pdf/forms/xfa/fill", { ...this.v(ref), values }); }
+  fillXfa(ref: DocumentRef, values: Record<string, string | boolean>) { return this.send<import("./xfa").XfaFillResult>("POST", "/pdf/forms/xfa/fill", { ...this.v(ref), values }); }
   async exportXfaData(id: string, version?: number): Promise<string> {
     const r = await this.raw(`/pdf/${this.e(id)}/forms/xfa/data.xml${version ? `?version=${version}` : ""}`);
     if (!r.ok) {
@@ -156,7 +156,8 @@ export class HttpEditorApi implements EditorApi {
     }
     return r.text();
   }
-  importXfaData(ref: DocumentRef, xml: string) { return this.send<VersionResult>("POST", "/pdf/forms/xfa/data", { ...this.v(ref), xml }); }
+  /** mode: "merge" (backend default) changes only the leaves in the XML; "replace" swaps the whole datasets packet. */
+  importXfaData(ref: DocumentRef, xml: string, mode: import("./xfa").XfaImportMode = "merge") { return this.send<import("./xfa").XfaImportResult>("POST", "/pdf/forms/xfa/data", { ...this.v(ref), xml, mode }); }
   // signatures
   listSignatureAssets() { return this.req<SignatureAsset[]>("/signatures/assets"); }
   uploadSignaturePng(png: Blob) { const fd = new FormData(); fd.append("file", png, "signature.png"); return this.req<SignatureAsset>("/signatures/assets", { method: "POST", body: fd }); }
