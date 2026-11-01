@@ -104,3 +104,17 @@ Frontend behaviour now: PDF.js opens every PDF with `enableXfa: true`. Dynamic X
 - **R7.3 detection.** Please expose `xfa: {present, kind: none|hybrid|dynamic, packets, has_scripts}` on `/metadata` (or `/pdf/forms`). The frontend currently detects client-side (PDF.js `isPureXfa` + `IsXFAPresent`) and will prefer the server value when present.
 - **R7.4 metadata page sizes.** For dynamic XFA, `/metadata.pages` describes the 1-page placeholder; the XFA layout may have a different page count/size. The frontend ignores metadata sizes when `isPureXfa`. Reporting XFA page count (or a flag) would help.
 - **R7.5 forms API on XFA.** `GET /pdf/forms` returns no fields for dynamic XFA. When datasets read/fill lands, please document the field naming (SOM path, e.g. `form1[0].body[0].City[0]`) so the Forms panel can list XFA fields from the server too.
+- **R7.6 dynamic-XFA schema (typed client: `packages/editor-client/src/xfa.ts`).** Placeholder `GET /pdf/{id}/forms/xfa/schema?version=` → `XfaSchema`:
+  ```ts
+  type XfaKind = "none" | "hybrid" | "dynamic";
+  type XfaFieldType = "text"|"multiline"|"numeric"|"date"|"checkbox"|"radio"|"choice"|"signature"|"button"|"image"|"barcode"|"other";
+  interface XfaLayout { x?, y?, w?, h?: number|null /* pt */; page?: number|null; layout?: "position"|"tb"|"lr-tb"|"rl-tb"|"row"|"table"|null }
+  interface XfaField { kind: "field"; name: string; som: string /* full SOM, fill key */; type: XfaFieldType; caption?: string|null;
+    binding?: string|null; value?: string|boolean|null; options?: {value: string; label: string}[]|null; required?: boolean;
+    read_only?: boolean; max_chars?: number|null; has_scripts?: boolean; layout?: XfaLayout|null }
+  interface XfaSubform { kind: "subform"; name: string; som: string; caption?: string|null; repeatable?: boolean; layout?: XfaLayout|null; children: (XfaField|XfaSubform)[] }
+  interface XfaSchema { kind: XfaKind; packets: string[]; has_scripts: boolean; root: XfaSubform }
+  ```
+- **R7.7 fill.** Placeholder `POST /pdf/forms/xfa/fill` `{document_id, expected_version, values: {[som]: string|boolean}}` → `VersionResult` (datasets updated; hybrid AcroForm synced).
+- **R7.8 data XML.** Placeholder export `GET /pdf/{id}/forms/xfa/data?version=` → `application/xml` (the `xfa:data` content); import `POST /pdf/forms/xfa/data` multipart `document_id, expected_version, file` → `VersionResult`.
+- All of R7.1/R7.6–R7.8 are feature-detected: 404/405 hides the action for the session. Please publish the final paths/shapes and we'll swap the placeholders (single call sites in `http.ts`).

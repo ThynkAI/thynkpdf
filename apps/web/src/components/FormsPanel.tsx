@@ -5,6 +5,7 @@ import { useSession } from "@/lib/session";
 import { currentBytes, saveModifiedCopy } from "@/lib/copies";
 import { listFields, fillFieldsWithReport, addField, XFA_REMOVED_NOTE, type FieldInfo } from "@/lib/pdfWrite";
 import { XfaFormBanner } from "./XfaFormBanner";
+import { XfaServerForm } from "./XfaServerForm";
 import { saveXfaDocument } from "@thynkpdf/pdf-viewer/client";
 import { describeError, http, runVersionedOp } from "@/lib/documents";
 
@@ -36,6 +37,7 @@ export function FormsPanel() {
     <section aria-labelledby="forms-h" data-testid="xfa-forms">
       <h2 id="forms-h" className="mb-1 font-semibold">Form fields (XFA)</h2>
       <XfaFormBanner mode={xfa} />
+      {server && <XfaServerForm />}
       <p className="text-xs text-neutral-600 dark:text-neutral-400">This is a dynamic XFA form. Type directly into the fields on the page, then save. Values are written into the form&apos;s XFA data, so Adobe Reader shows them too. Form scripts are not run.</p>
       <button className="mt-1 rounded bg-brand-600 px-3 py-1 text-xs text-white disabled:opacity-40" disabled={!doc || !!s.busy} onClick={async () => {
         if (!doc) return;
@@ -47,6 +49,7 @@ export function FormsPanel() {
     <section aria-labelledby="forms-h">
       <h2 id="forms-h" className="mb-1 font-semibold">Form fields</h2>
       <XfaFormBanner mode={xfa} />
+      {server && xfa === "unrendered" && <XfaServerForm />}
       {err && <p role="alert" className="text-xs text-red-600">{err}</p>}
       {fields === null && !err && <p className="text-xs text-neutral-500">Reading form…</p>}
       {fields && fields.length === 0 && <p className="text-xs text-neutral-500" data-testid="no-fields">This PDF has no form fields.</p>}

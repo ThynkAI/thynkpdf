@@ -146,6 +146,18 @@ export class HttpEditorApi implements EditorApi {
    * Path is a placeholder until the backend publishes it; callers must tolerate 404/405 (not deployed) and
    * 422 `xfa_dynamic_unsupported` (dynamic XFA with no widgets). */
   convertXfaToAcroForm(ref: DocumentRef) { return this.send<VersionResult>("POST", "/pdf/forms/xfa/convert", { ...this.v(ref) }); }
+  // PROVISIONAL XFA endpoints (paths are placeholders; callers feature-detect 404/405 and hide the actions).
+  getXfaSchema(id: string, version?: number) { return this.req<import("./xfa").XfaSchema>(`/pdf/${this.e(id)}/forms/xfa/schema${version ? `?version=${version}` : ""}`); }
+  fillXfa(ref: DocumentRef, values: Record<string, string | boolean>) { return this.send<VersionResult>("POST", "/pdf/forms/xfa/fill", { ...this.v(ref), values }); }
+  async exportXfaData(id: string, version?: number): Promise<string> {
+    const r = await this.raw(`/pdf/${this.e(id)}/forms/xfa/data${version ? `?version=${version}` : ""}`);
+    if (!r.ok) throw new ApiError(r.status, r.status === 404 ? "NOT_FOUND" : "HTTP_" + r.status, "XFA data export failed");
+    return r.text();
+  }
+  importXfaData(ref: DocumentRef, xml: Blob) {
+    const fd = new FormData(); fd.append("document_id", ref.document_id); fd.append("expected_version", String(ref.version)); fd.append("file", xml, "data.xml");
+    return this.req<VersionResult>("/pdf/forms/xfa/data", { method: "POST", body: fd });
+  }
   // signatures
   listSignatureAssets() { return this.req<SignatureAsset[]>("/signatures/assets"); }
   uploadSignaturePng(png: Blob) { const fd = new FormData(); fd.append("file", png, "signature.png"); return this.req<SignatureAsset>("/signatures/assets", { method: "POST", body: fd }); }
