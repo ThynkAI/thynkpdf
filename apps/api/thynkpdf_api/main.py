@@ -147,8 +147,11 @@ def create_app(database_url=None, storage_root=None, auth_mode=None) -> FastAPI:
         if u is None:
             import secrets as _sec
             u = User(email=email, password_hash=bcrypt.hashpw(_sec.token_bytes(32), bcrypt.gensalt()).decode())  # unusable password
-            o = Organization(name=org_name); s.add_all([u, o]); s.flush()
-            s.add(Membership(org_id=o.id, user_id=u.id, role="owner")); audit(s, o.id, u.id, "session.local_provision"); s.commit()
+            try:
+                o = Organization(name=org_name); s.add_all([u, o]); s.flush()
+                s.add(Membership(org_id=o.id, user_id=u.id, role="owner")); audit(s, o.id, u.id, "session.local_provision"); s.commit()
+            except IntegrityError:  # concurrent first call for the same key already provisioned it
+                s.rollback(); u = s.scalar(select(User).where(User.email == email))
         m = s.scalars(select(Membership).where(Membership.user_id == u.id)).first()
         return tokens(u.id, m.org_id)
 
