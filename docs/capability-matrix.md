@@ -26,6 +26,8 @@ Updated 2026-10-31. Evidence: `python -m pytest` (11 passed), live uvicorn+curl 
 | Jobs | Job table, GET /jobs/{id}, DB-polling worker skeleton | IN PROGRESS | no endpoint enqueues yet |
 | DB | Alembic initial migration, upgrade/downgrade/upgrade on SQLite | TESTED | MIGRATION_ROUNDTRIP_OK; Postgres untested |
 | Infra | docker-compose (Postgres/Redis/MinIO/api/worker), .env.example | IMPLEMENTED | docker unavailable; never run |
+| Forms | XFA: detect (stream + packet array; none/hybrid/dynamic; scripts counted), read datasets, template field schema, fill (hybrid = AcroForm + datasets in sync; dynamic = datasets), XML export/import, convert to AcroForm (hybrid: strip XFA; dynamic: generated pages + widgets from template, pre-filled), flatten on XFA | TESTED | test_xfa.py (16 tests, original fixtures from make_xfa_fixtures.py); XFA scripts never executed; defusedxml + lxml(resolve_entities=False,no_network) with size/node/depth caps. Limits: repeating subforms (occur) once, lr-tb/table as top-down, pageSet/master pages, draw graphics/images, button/image/barcode fields not converted; rich text flattened to plain |
+| Forms | XFA on real government forms (USCIS AR-11, I-90, I-130, I-131, I-485, I-751, I-765, I-821D, I-864, I-912, N-400; OPM SF-86; Grants.gov SF-424) | TESTED | all 8 operations pass on 13/13 (local, forms not committed); SOM↔AcroForm mapping 100% of non-master-page widgets; Reader Extensions stripped on write; IRCC/CRA (canada.ca) PDFs unreachable from the box |
 | Conversion, Forms, Signatures, Redaction, AI, Billing | — | NOT STARTED | |
 | Audit | audit_events written on auth/doc ops | IMPLEMENTED | no read API |
 

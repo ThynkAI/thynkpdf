@@ -49,7 +49,8 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     async def _eng(_, e: eng.EngineError):
         st = {"PDF_MALFORMED": 422, "INVALID_FILE_TYPE": 415, "PDF_ENCRYPTED": 422, "EDIT_NOT_SUPPORTED": 422,
               "TEXT_NOT_FOUND": 422, "EDIT_UNSUPPORTED_CHARACTERS": 422, "EDIT_UNSUPPORTED_FONT": 422,
-              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404, "VALIDATION_ERROR": 422}.get(e.code, 400)
+              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404, "VALIDATION_ERROR": 422,
+              "XFA_NOT_PRESENT": 422, "XFA_MALFORMED": 422, "XFA_UNSAFE_XML": 422, "XFA_TOO_LARGE": 413, "xfa_dynamic_unsupported": 422}.get(e.code, 400)
         return JSONResponse({"error": {"code": e.code, "message": e.message, "details": e.details}}, status_code=st)
 
     from fastapi.exceptions import RequestValidationError
@@ -387,7 +388,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/pdf/{doc_id}/capabilities", response_model=S.CapabilitiesOut, tags=["pdf"])
     def caps(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
         d = get_doc(s, p, doc_id); v = get_ver(s, d)
-        c = eng.capabilities(load(d, v))
+        data = load(d, v); c = eng.capabilities(data); c["xfa"] = eng.xfa.capabilities(data)
         if p.role == "viewer": c["document_limitations"].append({"code": "ROLE_READ_ONLY", "message": "Viewer role cannot modify"})
         return {"document_id": d.id, "version": v.number, "version_id": v.id, **c}
 
