@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class Limitation(BaseModel):
     code: str
@@ -21,6 +21,12 @@ class PageCapability(BaseModel):
     editable_fonts: list[str]
     limitations: list[Limitation]
 
+class XfaCapabilities(BaseModel):
+    present: bool; kind: str; read: bool; schema_: bool = Field(alias="schema", serialization_alias="schema"); fill: bool
+    xml_import_export: bool; convert: bool; flatten: bool; has_scripts: bool; error: str | None = None
+    model_config = {"populate_by_name": True}
+
+
 class CapabilitiesOut(BaseModel):
     document_id: str
     version: int
@@ -30,6 +36,7 @@ class CapabilitiesOut(BaseModel):
     compress: bool
     annotations: bool
     forms: bool
+    xfa: XfaCapabilities | None = None
     text_replace: bool
     document_limitations: list[Limitation]
     pages: list[PageCapability]

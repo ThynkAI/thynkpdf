@@ -17,3 +17,5 @@ pytest==9.2.0
 python-multipart==0.0.33
 reportlab==5.1.0
 uvicorn==0.54.0
+defusedxml==0.7.1
+lxml==6.1.3
