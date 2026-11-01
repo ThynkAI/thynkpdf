@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { XfaMode } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
-import { convertXfaToStandardForm, xfaConvertSupport, describeConvertReport } from "@/lib/xfaConvert";
+import { convertXfaToStandardForm, xfaConvertSupport, describeConvertReport, getXfaCapabilities } from "@/lib/xfaConvert";
 
 const LABEL: Record<Exclude<XfaMode, "none">, string> = {
   pure: "Dynamic XFA form",
@@ -15,12 +15,21 @@ export function XfaFormBanner({ mode }: { mode: XfaMode }) {
   const s = useSession();
   const [msg, setMsg] = useState<string | null>(null);
   const [, force] = useState(0);
-  if (mode === "none") return null;
+  // /capabilities xfa.convert (null = older server: keep the 404/405 fallback).
+  const [canConvert, setCanConvert] = useState<boolean | null>(null);
   const server = !!s.ref && s.api.kind === "http";
+  useEffect(() => {
+    setCanConvert(null);
+    if (!server || !s.ref || mode === "none") return;
+    let live = true;
+    getXfaCapabilities(s.ref.document_id, s.ref.version).then((c) => { if (live && c) setCanConvert(!!c.convert); });
+    return () => { live = false; };
+  }, [server, s.ref?.document_id, s.ref?.version, mode]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (mode === "none") return null;
   return (
     <div data-testid="xfa-form-banner" data-xfa={mode} className="mb-2 rounded border border-sky-200 bg-sky-50 p-2 text-xs text-sky-900 dark:bg-sky-950 dark:text-sky-200">
       <p className="font-medium">{LABEL[mode]}</p>
-      {server && xfaConvertSupport.available && (
+      {server && xfaConvertSupport.available && canConvert !== false && (
         <button className="mt-1 rounded border border-sky-400 px-2 py-0.5 disabled:opacity-40" disabled={!!s.busy} onClick={async () => {
           setMsg(null);
           const r = await convertXfaToStandardForm();

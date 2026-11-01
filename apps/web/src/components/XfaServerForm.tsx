@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import type { XfaSchemaOut } from "@thynkpdf/editor-client";
 import { useSession } from "@/lib/session";
 import { http, describeError } from "@/lib/documents";
-import { classifyXfaError, runXfaOp } from "@/lib/xfaConvert";
+import { classifyXfaError, runXfaOp, getXfaCapabilities } from "@/lib/xfaConvert";
 import { XfaSchemaForm } from "./XfaSchemaForm";
 
 /** Learned per session: hide server XFA actions once their endpoints answer 404/405. */
@@ -16,11 +16,21 @@ export function XfaServerForm() {
   const [schema, setSchema] = useState<XfaSchemaOut | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const [, force] = useState(0);
+  // From /capabilities xfa; null = server didn't report it (older backend) → probe and learn from 404/405.
+  const [xmlOk, setXmlOk] = useState<boolean | null>(null);
   useEffect(() => {
-    setSchema(null); setMsg(null);
+    setSchema(null); setMsg(null); setXmlOk(null);
     if (!ref || s.api.kind !== "http" || !xfaServerSupport.schema) return;
     let live = true;
-    http().getXfaSchema(ref.document_id, ref.version).then((sc) => { if (live && Array.isArray(sc?.fields)) setSchema(sc); }, (e) => {
+    getXfaCapabilities(ref.document_id, ref.version).then((caps) => {
+      if (!live) return;
+      if (caps) {
+        setXmlOk(!!caps.xml_import_export);
+        if (!caps.schema) { if (caps.error) setMsg(caps.error); return; }
+      }
+      load();
+    });
+    const load = () => http().getXfaSchema(ref.document_id, ref.version).then((sc) => { if (live && Array.isArray(sc?.fields)) setSchema(sc); }, (e) => {
       const c = classifyXfaError(e);
       if (c.outcome === "unavailable") xfaServerSupport.schema = false;
       else if (live) setMsg(c.message ?? `Couldn't read the XFA form fields: ${describeError(e)}`);
@@ -28,6 +38,7 @@ export function XfaServerForm() {
     return () => { live = false; };
   }, [ref?.document_id, ref?.version]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!ref || (!schema && !msg)) return null;
+  const allowXml = xmlOk !== false;
   const after = (r: Awaited<ReturnType<typeof runXfaOp>>, k: "importXml" | null, ok: string) => {
     if (r.outcome === "unavailable") { if (k) xfaServerSupport[k] = false; force((n) => n + 1); setMsg("That action isn't available on this server yet."); }
     else if (r.outcome === "known") setMsg(r.message ?? null);
@@ -40,8 +51,12 @@ export function XfaServerForm() {
       {schema && schema.fields.length === 0 && <p className="text-xs text-neutral-500">The server found no fillable fields in the XFA template.</p>}
       {schema && schema.fields.length > 0 && <XfaSchemaForm schema={schema} busy={!!s.busy}
         onSubmit={async (values) => { const r = await runXfaOp("Fill XFA form", (x) => http().fillXfa(x, values)); const miss = (r.report?.missing_required as string[] | undefined) ?? []; after(r, null, miss.length ? `Saved. Required fields still empty: ${miss.join(", ")}` : "Saved as a new version."); }}
-        onImportXml={xfaServerSupport.importXml ? async (xml) => { after(await runXfaOp("Import XFA data", (x) => http().importXfaData(x, xml)), "importXml", "Imported data XML (new version)."); } : undefined}
-        onExportXml={xfaServerSupport.exportXml ? async () => {
+        onImportXml={allowXml && xfaServerSupport.importXml ? async (xml, mode) => {
+          const r = await runXfaOp("Import XFA data", (x) => http().importXfaData(x, xml, mode));
+          const n = r.report?.imported as number | undefined; const miss = (r.report?.missing_required as string[] | undefined) ?? [];
+          after(r, "importXml", `Imported data XML (${mode === "replace" ? "replaced all data" : "merged"}${n != null ? `, ${n} value${n === 1 ? "" : "s"}` : ""}; new version).${miss.length ? ` Required fields still empty: ${miss.join(", ")}` : ""}`);
+        } : undefined}
+        onExportXml={allowXml && xfaServerSupport.exportXml ? async () => {
           try {
             const xml = await http().exportXfaData(ref.document_id, ref.version);
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([xml], { type: "application/xml" })); a.download = "xfa-data.xml"; a.click();

@@ -563,6 +563,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pdf/forms/xfa/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xfa Convert
+         * @description Hybrid: strip /XFA + NeedsRendering, keep widgets. Dynamic: render pages + widgets from the template, pre-filled.
+         */
+        post: operations["xfa_convert_pdf_forms_xfa_convert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/forms/xfa/data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Xfa Import */
+        post: operations["xfa_import_pdf_forms_xfa_data_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/forms/xfa/fill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xfa Fill
+         * @description Hybrid: writes AcroForm field AND datasets node. Dynamic: datasets only.
+         */
+        post: operations["xfa_fill_pdf_forms_xfa_fill_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pdf/merge": {
         parameters: {
             query?: never;
@@ -842,6 +899,63 @@ export interface paths {
         };
         /** Export */
         get: operations["export_pdf__doc_id__forms_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/{doc_id}/forms/xfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Xfa Data
+         * @description Flat list of the XFA datasets values. Scripts are never executed.
+         */
+        get: operations["xfa_data_pdf__doc_id__forms_xfa_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/{doc_id}/forms/xfa/data.xml": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Xfa Export */
+        get: operations["xfa_export_pdf__doc_id__forms_xfa_data_xml_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/{doc_id}/forms/xfa/schema": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Xfa Schema
+         * @description Field schema parsed from the XFA template (subforms, fields, exclusion groups, bindings, captions, layout).
+         */
+        get: operations["xfa_schema_pdf__doc_id__forms_xfa_schema_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1416,6 +1530,7 @@ export interface components {
             version: number;
             /** Version Id */
             version_id: string;
+            xfa?: components["schemas"]["XfaCapabilities"] | null;
         };
         /** CertOut */
         CertOut: {
@@ -1963,6 +2078,7 @@ export interface components {
             fields: components["schemas"]["FormField"][];
             /** Version */
             version: number;
+            xfa: components["schemas"]["XfaInfo"];
         };
         /** InsertBlankIn */
         InsertBlankIn: {
@@ -2534,6 +2650,364 @@ export interface components {
             version: number;
             /** Version Id */
             version_id: string;
+        };
+        /** XfaCapabilities */
+        XfaCapabilities: {
+            /** Convert */
+            convert: boolean;
+            /** Error */
+            error?: string | null;
+            /** Fill */
+            fill: boolean;
+            /** Flatten */
+            flatten: boolean;
+            /** Has Scripts */
+            has_scripts: boolean;
+            /** Kind */
+            kind: string;
+            /** Present */
+            present: boolean;
+            /** Read */
+            read: boolean;
+            /** Schema */
+            schema: boolean;
+            /** Xml Import Export */
+            xml_import_export: boolean;
+        };
+        /** XfaConvertReport */
+        XfaConvertReport: {
+            /** Field Map */
+            field_map?: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            } | null;
+            /** Fields */
+            fields?: number | null;
+            /** Kept Acroform Widgets */
+            kept_acroform_widgets?: number | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "stripped_xfa" | "rendered_from_template";
+            /** Pages */
+            pages?: number | null;
+            /**
+             * Scripts Ignored
+             * @default 0
+             */
+            scripts_ignored?: number;
+            /** Usage Rights Removed */
+            usage_rights_removed?: boolean | null;
+            /** Warnings */
+            warnings: string[];
+        };
+        /** XfaConvertResult */
+        XfaConvertResult: {
+            /** Document Id */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            report: components["schemas"]["XfaConvertReport"];
+            /** Sha256 */
+            sha256: string;
+            /** Size */
+            size: number;
+            /** Version */
+            version: number;
+            /** Version Id */
+            version_id: string;
+        };
+        /** XfaDataField */
+        XfaDataField: {
+            /** Acroform Field */
+            acroform_field?: string | null;
+            /** Name */
+            name: string;
+            /** Value */
+            value: string;
+        };
+        /** XfaDataOut */
+        XfaDataOut: {
+            /** Document Id */
+            document_id: string;
+            /** Fields */
+            fields: components["schemas"]["XfaDataField"][];
+            /** Version */
+            version: number;
+            xfa: components["schemas"]["XfaInfo"];
+        };
+        /** XfaFillIn */
+        XfaFillIn: {
+            /** Document Id */
+            document_id: string;
+            /** Expected Version */
+            expected_version: number;
+            /**
+             * Values
+             * @description Keys: XFA data path (form1.full_name) or AcroForm full name (form1[0].full_name[0])
+             */
+            values: {
+                [key: string]: unknown;
+            };
+        };
+        /** XfaFillReport */
+        XfaFillReport: {
+            /** Acroform Updated */
+            acroform_updated: string[];
+            /** Datasets Updated */
+            datasets_updated: string[];
+            /** Filled */
+            filled: string[];
+            /**
+             * Form State Packet Removed
+             * @default false
+             */
+            form_state_packet_removed?: boolean;
+            /** Kind */
+            kind: string;
+            /**
+             * Missing Required
+             * @default []
+             */
+            missing_required?: string[];
+            /**
+             * Not Bound
+             * @default []
+             */
+            not_bound?: string[];
+            /**
+             * Usage Rights Removed
+             * @default false
+             */
+            usage_rights_removed?: boolean;
+        };
+        /** XfaFillResult */
+        XfaFillResult: {
+            /** Document Id */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            report: components["schemas"]["XfaFillReport"];
+            /** Sha256 */
+            sha256: string;
+            /** Size */
+            size: number;
+            /** Version */
+            version: number;
+            /** Version Id */
+            version_id: string;
+        };
+        /** XfaImportIn */
+        XfaImportIn: {
+            /** Document Id */
+            document_id: string;
+            /** Expected Version */
+            expected_version: number;
+            /**
+             * Mode
+             * @description merge (default): only values present in the XML change; replace: datasets packet replaced wholesale
+             * @default merge
+             * @enum {string}
+             */
+            mode?: "merge" | "replace";
+            /**
+             * Xml
+             * @description <xfa:datasets>, <xfa:data> or a bare record element. DTDs/entities are rejected.
+             */
+            xml: string;
+        };
+        /** XfaImportReport */
+        XfaImportReport: {
+            /** Acroform Updated */
+            acroform_updated: string[];
+            /**
+             * Form State Packet Removed
+             * @default false
+             */
+            form_state_packet_removed?: boolean;
+            /** Imported */
+            imported: number;
+            /** Kind */
+            kind: string;
+            /**
+             * Missing Required
+             * @default []
+             */
+            missing_required?: string[];
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "merge" | "replace";
+            /**
+             * Usage Rights Removed
+             * @default false
+             */
+            usage_rights_removed?: boolean;
+        };
+        /** XfaImportResult */
+        XfaImportResult: {
+            /** Document Id */
+            document_id: string;
+            /** Filename */
+            filename: string;
+            report: components["schemas"]["XfaImportReport"];
+            /** Sha256 */
+            sha256: string;
+            /** Size */
+            size: number;
+            /** Version */
+            version: number;
+            /** Version Id */
+            version_id: string;
+        };
+        /** XfaInfo */
+        XfaInfo: {
+            /**
+             * Acroform Widgets
+             * @default 0
+             */
+            acroform_widgets?: number;
+            /** Form */
+            form?: ("stream" | "array") | null;
+            /** Has Scripts */
+            has_scripts: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "none" | "hybrid" | "dynamic";
+            /**
+             * Needs Rendering
+             * @default false
+             */
+            needs_rendering?: boolean;
+            /** Packets */
+            packets: string[];
+            /** Present */
+            present: boolean;
+            /**
+             * Script Count
+             * @default 0
+             */
+            script_count?: number;
+            /** Xml Safe */
+            xml_safe?: boolean | null;
+        };
+        /** XfaLayout */
+        XfaLayout: {
+            /** H */
+            h: number;
+            /** Origin */
+            origin: string;
+            /** Units */
+            units: string;
+            /** W */
+            w: number;
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+        };
+        /** XfaOccur */
+        XfaOccur: {
+            /** Initial */
+            initial: number;
+            /**
+             * Max
+             * @description -1 = unbounded
+             */
+            max: number;
+            /** Min */
+            min: number;
+        };
+        /** XfaSchemaField */
+        XfaSchemaField: {
+            /**
+             * Acroform Field
+             * @description Matching AcroForm field (hybrid only)
+             */
+            acroform_field?: string | null;
+            /** Caption */
+            caption?: string | null;
+            /**
+             * Instance
+             * @description 0-based instance of that repeatable subform
+             */
+            instance?: number | null;
+            layout: components["schemas"]["XfaLayout"];
+            /** Max Chars */
+            max_chars?: number | null;
+            /** Multi Select */
+            multi_select?: boolean | null;
+            /** Multiline */
+            multiline: boolean;
+            /**
+             * Name
+             * @description Data path in the datasets packet (fill key); null if unbound (bind match=none)
+             */
+            name: string | null;
+            /** @description Repeat rules of the nearest repeatable subform (max != 1) */
+            occur?: components["schemas"]["XfaOccur"] | null;
+            /** On Value */
+            on_value?: string | null;
+            /** Option Captions */
+            option_captions?: string[] | null;
+            /** Options */
+            options?: string[] | null;
+            /** Read Only */
+            read_only: boolean;
+            /** Required */
+            required: boolean;
+            /**
+             * Section
+             * @description SOM path of the enclosing subform
+             */
+            section?: string | null;
+            /** Section Caption */
+            section_caption?: string | null;
+            /** Section Name */
+            section_name?: string | null;
+            /**
+             * Som
+             * @description Fully indexed SOM path, e.g. form1[0].#subform[2].Name[0]; equals the AcroForm field name on hybrid forms
+             */
+            som: string;
+            /**
+             * Tooltip
+             * @description assist/toolTip help text
+             */
+            tooltip?: string | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "text" | "numeric" | "date" | "checkbox" | "choice" | "radio" | "signature" | "button" | "image" | "barcode" | "password";
+            /** Value */
+            value?: unknown;
+        };
+        /** XfaSchemaOut */
+        XfaSchemaOut: {
+            /** Document Id */
+            document_id: string;
+            /** Fields */
+            fields: components["schemas"]["XfaSchemaField"][];
+            /** Scripts Ignored */
+            scripts_ignored: number;
+            /** Version */
+            version: number;
+            /** Warnings */
+            warnings: string[];
+            xfa: components["schemas"]["XfaInfo"];
+        };
+        /** XfaVersioned */
+        XfaVersioned: {
+            /** Document Id */
+            document_id: string;
+            /** Expected Version */
+            expected_version: number;
         };
     };
     responses: never;
@@ -6104,6 +6578,294 @@ export interface operations {
             };
         };
     };
+    xfa_convert_pdf_forms_xfa_convert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["XfaVersioned"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["XfaConvertResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    xfa_import_pdf_forms_xfa_data_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["XfaImportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["XfaImportResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    xfa_fill_pdf_forms_xfa_fill_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["XfaFillIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["XfaFillResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     merge_pdf_merge_post: {
         parameters: {
             query?: never;
@@ -7560,6 +8322,295 @@ export interface operations {
                 content: {
                     "application/json": unknown;
                     "text/csv": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    xfa_data_pdf__doc_id__forms_xfa_get: {
+        parameters: {
+            query?: {
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["XfaDataOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    xfa_export_pdf__doc_id__forms_xfa_data_xml_get: {
+        parameters: {
+            query?: {
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                    "application/xml": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    xfa_schema_pdf__doc_id__forms_xfa_schema_get: {
+        parameters: {
+            query?: {
+                version?: number | null;
+            };
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["XfaSchemaOut"];
                 };
             };
             /** @description Bad Request */
