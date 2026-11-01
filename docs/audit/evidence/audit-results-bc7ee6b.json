@@ -1,0 +1,1108 @@
+{
+  "config": {
+    "configFile": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/audit.config.ts",
+    "rootDir": "/workspace/thynkpdf-audit/packages/frontend-tests/audit",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../../../docs/audit/evidence/audit-results-bc7ee6b.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/workspace/thynkpdf-audit/packages/frontend-tests/audit",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.audit\\.spec\\.ts/"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "frontend.audit.spec.ts",
+      "file": "frontend.audit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "FUX-01 known-failing: fresh user (no account) can use page tools after opening a PDF",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1005,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:02.015Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-38de7d54522d218e111f",
+          "file": "frontend.audit.spec.ts",
+          "line": 46,
+          "column": 1
+        },
+        {
+          "title": "FUX-04 known-failing: AI entry point label matches excerpt-search behaviour",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-04: tile says 'Ask AI' while the default provider is keyword excerpt search",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 46,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1581,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:51:48",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 48,
+                      "line": 51
+                    },
+                    "snippet": "  49 |   await expect(page.getByTestId(\"ai-mode\")).toContainText(\"Excerpt mode\");\n  50 |   const labels = await page.evaluate(() => [...document.querySelectorAll(\"button,a\")].map((b) => b.textContent?.trim() ?? \"\"));\n> 51 |   expect(labels.some((t) => /Ask AI/.test(t))).toBe(false);\n     |                                                ^\n  52 | });\n  53 |\n  54 | // FUX-05: replacement longer than the original is reported as success though it runs off the page."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 48,
+                        "line": 51
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n\n  49 |   await expect(page.getByTestId(\"ai-mode\")).toContainText(\"Excerpt mode\");\n  50 |   const labels = await page.evaluate(() => [...document.querySelectorAll(\"button,a\")].map((b) => b.textContent?.trim() ?? \"\"));\n> 51 |   expect(labels.some((t) => /Ask AI/.test(t))).toBe(false);\n     |                                                ^\n  52 | });\n  53 |\n  54 | // FUX-05: replacement longer than the original is reported as success though it runs off the page.\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:51:48"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:03.140Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-04: tile says 'Ask AI' while the default provider is keyword excerpt search",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 46,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-04-know-6c9dc-es-excerpt-search-behaviour-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 48,
+                    "line": 51
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-88edca5edb6f26de5464",
+          "file": "frontend.audit.spec.ts",
+          "line": 64,
+          "column": 1
+        },
+        {
+          "title": "FUX-05 known-failing: longer replacement text warns that it may not fit",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-05: success shown, text overflows the page edge (see evidence/output-text-edit-longer-v3.png)",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 56,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 6672,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('body')\nExpected pattern: \u001b[32m/may not fit|longer than|overflow/i\u001b[39m\nReceived string:  \u001b[31m\"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1Font Helvetica: The quick brown foxFont Times-Roman: The quick brown foxFont Courier-with-a-much-much-longer-replacement-string-that-overFont Helvetica-Bold: The quick brown foxSplitRun Words hereCloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('body')\u001b[22m\n\u001b[2m    2 × locator resolved to <body class=\"bg-white text-neutral-900 antialiased dark:bg-ink dark:text-neutral-100\">…</body>\u001b[22m\n\u001b[2m      - unexpected value \"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1CloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[22m\n\u001b[2m    7 × locator resolved to <body class=\"bg-white text-neutral-900 antialiased dark:bg-ink dark:text-neutral-100\">…</body>\u001b[22m\n\u001b[2m      - unexpected value \"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1Font Helvetica: The quick brown foxFont Times-Roman: The quick brown foxFont Courier-with-a-much-much-longer-replacement-string-that-overFont Helvetica-Bold: The quick brown foxSplitRun Words hereCloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('body')\nExpected pattern: \u001b[32m/may not fit|longer than|overflow/i\u001b[39m\nReceived string:  \u001b[31m\"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1Font Helvetica: The quick brown foxFont Times-Roman: The quick brown foxFont Courier-with-a-much-much-longer-replacement-string-that-overFont Helvetica-Bold: The quick brown foxSplitRun Words hereCloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('body')\u001b[22m\n\u001b[2m    2 × locator resolved to <body class=\"bg-white text-neutral-900 antialiased dark:bg-ink dark:text-neutral-100\">…</body>\u001b[22m\n\u001b[2m      - unexpected value \"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1CloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[22m\n\u001b[2m    7 × locator resolved to <body class=\"bg-white text-neutral-900 antialiased dark:bg-ink dark:text-neutral-100\">…</body>\u001b[22m\n\u001b[2m      - unexpected value \"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1Font Helvetica: The quick brown foxFont Times-Roman: The quick brown foxFont Courier-with-a-much-much-longer-replacement-string-that-overFont Helvetica-Bold: The quick brown foxSplitRun Words hereCloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[22m\n\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:62:38",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 38,
+                      "line": 62
+                    },
+                    "snippet": "  60 |   await page.getByRole(\"button\", { name: \"Replace\", exact: true }).click();\n  61 |   await expect(page.getByTestId(\"text-edit-result\")).toBeVisible();\n> 62 |   await expect(page.locator(\"body\")).toContainText(/may not fit|longer than|overflow/i);\n     |                                      ^\n  63 | });\n  64 |\n  65 | // FUX-06: raw error codes leak into user messages."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 38,
+                        "line": 62
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('body')\nExpected pattern: \u001b[32m/may not fit|longer than|overflow/i\u001b[39m\nReceived string:  \u001b[31m\"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1Font Helvetica: The quick brown foxFont Times-Roman: The quick brown foxFont Courier-with-a-much-much-longer-replacement-string-that-overFont Helvetica-Bold: The quick brown foxSplitRun Words hereCloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[39m\nTimeout: 5000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('body')\u001b[22m\n\u001b[2m    2 × locator resolved to <body class=\"bg-white text-neutral-900 antialiased dark:bg-ink dark:text-neutral-100\">…</body>\u001b[22m\n\u001b[2m      - unexpected value \"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1CloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[22m\n\u001b[2m    7 × locator resolved to <body class=\"bg-white text-neutral-900 antialiased dark:bg-ink dark:text-neutral-100\">…</body>\u001b[22m\n\u001b[2m      - unexpected value \"THYNKPDFHomeToolsDocumentsmultifont.pdfOpen/ 1Fit widthFit page142%50%75%100%125%150%200%300%400%AnnotateOrganizePagesBookmarksComments1Font Helvetica: The quick brown foxFont Times-Roman: The quick brown foxFont Courier-with-a-much-much-longer-replacement-string-that-overFont Helvetica-Bold: The quick brown foxSplitRun Words hereCloseAll toolsEdit textMerge & splitCompressSignFormsCommentAsk AIDocumentsSearchEnter a termPrevNextComments (0)AllOpen onlyNo annotations.Edit text — page 1Use selection All FirstReplaceReplaced 1 occurrence on page 1.Edits rewrite the page's text in place (no overlay). Only text drawn in one run with a standard font can be changed.SignVisual e-signature only — not a cryptographic digital signature.Create signaturePlace on page 1Apply signatureServer document: the signature is stamped by the server and saved as a new version (visual only).Request signaturesAudit trailForm fieldsThis PDF has no form fields.TextCheckboxAdd to page 1Server document: changes are saved as a new version. PDF JavaScript is never executed.Ask this documentExcerpt mode (built-in): answers are quoted passages found by keyword search, not AI-written text.Connect your own AIAskKey excerpts (summary)DocumentNamemultifont.pdfPages1Versionv2 (9feaed58)EditingRotate pages: availableReorder pages (drag thumbnails): availableDelete pages: availableDuplicate pages: availableInsert pages: availableBackendConnected to the THYNKPDF serverSign outPage 1 of 1142% (fit width)Source: backend\"\u001b[22m\n\n\n  60 |   await page.getByRole(\"button\", { name: \"Replace\", exact: true }).click();\n  61 |   await expect(page.getByTestId(\"text-edit-result\")).toBeVisible();\n> 62 |   await expect(page.locator(\"body\")).toContainText(/may not fit|longer than|overflow/i);\n     |                                      ^\n  63 | });\n  64 |\n  65 | // FUX-06: raw error codes leak into user messages.\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:62:38"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:04.739Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-05: success shown, text overflows the page edge (see evidence/output-text-edit-longer-v3.png)",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 56,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-05-know-806ce-t-warns-that-it-may-not-fit-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 38,
+                    "line": 62
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-3f2a92729aa4e5efc4a8",
+          "file": "frontend.audit.spec.ts",
+          "line": 82,
+          "column": 1
+        },
+        {
+          "title": "FUX-06 known-failing: text-edit errors are plain language (no raw codes)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-06: messages like 'TEXT_NOT_FOUND: …' and 'HTTP_405: POST … failed: 405' are shown verbatim",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 67,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1539,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/\\b[A-Z]{3,}_[A-Z_]+:|HTTP_\\d{3}|failed: \\d{3}/\u001b[39m\nReceived string:      \u001b[31m\"Edit text failed: \u001b[7mTEXT_NOT_FOUND:\u001b[27m Text not found within a single editable text run (Text split across runs/kerning is not matched)\"\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/\\b[A-Z]{3,}_[A-Z_]+:|HTTP_\\d{3}|failed: \\d{3}/\u001b[39m\nReceived string:      \u001b[31m\"Edit text failed: \u001b[7mTEXT_NOT_FOUND:\u001b[27m Text not found within a single editable text run (Text split across runs/kerning is not matched)\"\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:74:19",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 19,
+                      "line": 74
+                    },
+                    "snippet": "  72 |   await expect(alert).toBeVisible();\n  73 |   const txt = await alert.innerText(); metrics.fux06_message = txt;\n> 74 |   expect(txt).not.toMatch(/\\b[A-Z]{3,}_[A-Z_]+:|HTTP_\\d{3}|failed: \\d{3}/);\n     |                   ^\n  75 | });\n  76 |\n  77 | // FUX-07: status bar is a fixed 28px row; long errors are clipped / overflow at minimum size."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 19,
+                        "line": 74
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mnot\u001b[2m.\u001b[22mtoMatch\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected pattern: not \u001b[32m/\\b[A-Z]{3,}_[A-Z_]+:|HTTP_\\d{3}|failed: \\d{3}/\u001b[39m\nReceived string:      \u001b[31m\"Edit text failed: \u001b[7mTEXT_NOT_FOUND:\u001b[27m Text not found within a single editable text run (Text split across runs/kerning is not matched)\"\u001b[39m\n\n  72 |   await expect(alert).toBeVisible();\n  73 |   const txt = await alert.innerText(); metrics.fux06_message = txt;\n> 74 |   expect(txt).not.toMatch(/\\b[A-Z]{3,}_[A-Z_]+:|HTTP_\\d{3}|failed: \\d{3}/);\n     |                   ^\n  75 | });\n  76 |\n  77 | // FUX-07: status bar is a fixed 28px row; long errors are clipped / overflow at minimum size.\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:74:19"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:11.421Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-06: messages like 'TEXT_NOT_FOUND: …' and 'HTTP_405: POST … failed: 405' are shown verbatim",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 67,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-06-know-b5f2f-lain-language-no-raw-codes--chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 19,
+                    "line": 74
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-c315ddaeabb52cb601bb",
+          "file": "frontend.audit.spec.ts",
+          "line": 99,
+          "column": 1
+        },
+        {
+          "title": "FUX-07 known-failing: long status error stays readable at 1024x700 zoom 100%",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-07: fixed-height single-row footer clips/overflows long messages",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 80,
+                    "column": 10
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 972,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:90:61",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 61,
+                      "line": 90
+                    },
+                    "snippet": "  88 |     const e = await err.evaluate((el) => { const r = el.getBoundingClientRect(); return { right: r.right, vw: window.innerWidth, text: el.textContent }; });\n  89 |     metrics[`fux07_${vp.w}x${vp.h}@${vp.z}`] = { ...m, ...e };\n> 90 |     expect(m.sw <= m.cw && m.sh <= m.ch && e.right <= e.vw).toBe(true);\n     |                                                             ^\n  91 |     await ctx.close();\n  92 |   });\n  93 | }"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 61,
+                        "line": 90
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  88 |     const e = await err.evaluate((el) => { const r = el.getBoundingClientRect(); return { right: r.right, vw: window.innerWidth, text: el.textContent }; });\n  89 |     metrics[`fux07_${vp.w}x${vp.h}@${vp.z}`] = { ...m, ...e };\n> 90 |     expect(m.sw <= m.cw && m.sh <= m.ch && e.right <= e.vw).toBe(true);\n     |                                                             ^\n  91 |     await ctx.close();\n  92 |   });\n  93 | }\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:90:61"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:12.989Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-07: fixed-height single-row footer clips/overflows long messages",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 80,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-07-know-aa154-dable-at-1024x700-zoom-100--chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 61,
+                    "line": 90
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-5f5e21965b6cb11ebd9b",
+          "file": "frontend.audit.spec.ts",
+          "line": 130,
+          "column": 3
+        },
+        {
+          "title": "FUX-07 known-failing: long status error stays readable at 1366x768 zoom 200%",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-07: fixed-height single-row footer clips/overflows long messages",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 80,
+                    "column": 10
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 20209,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('backend-status')\nExpected pattern: \u001b[32m/Online|Connected|locally/\u001b[39m\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('backend-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('backend-status')\nExpected pattern: \u001b[32m/Online|Connected|locally/\u001b[39m\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('backend-status')\u001b[22m\n\n    at online (/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:17:52)\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:82:39",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 52,
+                      "line": 17
+                    },
+                    "snippet": "  15 |   await page.goto(\"/\");\n  16 |   // 7604fc5: \"Online — sign in…\" / \"Connected\"; bc7ee6b (v0.1.7): \"Files open and edit locally…\" / \"Connected to the THYNKPDF server\"\n> 17 |   await expect(page.getByTestId(\"backend-status\")).toHaveText(/Online|Connected|locally/, { timeout: 20_000 });\n     |                                                    ^\n  18 | }\n  19 | async function signIn(page: Page) {\n  20 |   await online(page);"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 52,
+                        "line": 17
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('backend-status')\nExpected pattern: \u001b[32m/Online|Connected|locally/\u001b[39m\nTimeout: 20000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" with timeout 20000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('backend-status')\u001b[22m\n\n\n  15 |   await page.goto(\"/\");\n  16 |   // 7604fc5: \"Online — sign in…\" / \"Connected\"; bc7ee6b (v0.1.7): \"Files open and edit locally…\" / \"Connected to the THYNKPDF server\"\n> 17 |   await expect(page.getByTestId(\"backend-status\")).toHaveText(/Online|Connected|locally/, { timeout: 20_000 });\n     |                                                    ^\n  18 | }\n  19 | async function signIn(page: Page) {\n  20 |   await online(page);\n    at online (/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:17:52)\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:82:39"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:14.009Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-07: fixed-height single-row footer clips/overflows long messages",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 80,
+                        "column": 10
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-07-know-df2eb-dable-at-1366x768-zoom-200--chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 52,
+                    "line": 17
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-8c868424a15bdc51011a",
+          "file": "frontend.audit.spec.ts",
+          "line": 130,
+          "column": 3
+        },
+        {
+          "title": "FUX-08 known-failing: compress result shows a meaningful before/after for small files",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-08: '1 KB → 1 KB (now v2)' although 1341→957 bytes",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 97,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 1591,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:104:30",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 30,
+                      "line": 104
+                    },
+                    "snippet": "  102 |   const t = await r.innerText(); metrics.fux08 = t;\n  103 |   const m = t.match(/(\\d+) KB → (\\d+) KB/);\n> 104 |   expect(m && m[1] === m[2]).toBe(false);\n      |                              ^\n  105 | });\n  106 |\n  107 | // FUX-09: no unsaved-changes guard (no beforeunload anywhere in apps/web)."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 30,
+                        "line": 104
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mfalse\u001b[39m\nReceived: \u001b[31mtrue\u001b[39m\n\n  102 |   const t = await r.innerText(); metrics.fux08 = t;\n  103 |   const m = t.match(/(\\d+) KB → (\\d+) KB/);\n> 104 |   expect(m && m[1] === m[2]).toBe(false);\n      |                              ^\n  105 | });\n  106 |\n  107 | // FUX-09: no unsaved-changes guard (no beforeunload anywhere in apps/web).\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:104:30"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:34.252Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-08: '1 KB → 1 KB (now v2)' although 1341→957 bytes",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 97,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-08-know-abdf7-efore-after-for-small-files-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 30,
+                    "line": 104
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-5af32384f67155bbfb76",
+          "file": "frontend.audit.spec.ts",
+          "line": 178,
+          "column": 1
+        },
+        {
+          "title": "FUX-09 known-failing: reloading with unsaved local annotations asks first",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-09: no beforeunload handler; unsaved local markup is discarded silently",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 109,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 979,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:121:22",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 22,
+                      "line": 121
+                    },
+                    "snippet": "  119 |   const hasHandler = await page.evaluate(() => { const ev = new Event(\"beforeunload\", { cancelable: true }); window.dispatchEvent(ev); return ev.defaultPrevented; });\n  120 |   metrics.fux09 = { hasHandler, dialogSeen };\n> 121 |   expect(hasHandler).toBe(true);\n      |                      ^\n  122 | });\n  123 |\n  124 | // Performance baseline (local open of a real 320-page fixture, no backend involved)."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 22,
+                        "line": 121
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  119 |   const hasHandler = await page.evaluate(() => { const ev = new Event(\"beforeunload\", { cancelable: true }); window.dispatchEvent(ev); return ev.defaultPrevented; });\n  120 |   metrics.fux09 = { hasHandler, dialogSeen };\n> 121 |   expect(hasHandler).toBe(true);\n      |                      ^\n  122 | });\n  123 |\n  124 | // Performance baseline (local open of a real 320-page fixture, no backend involved).\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:121:22"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:35.852Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-09: no beforeunload handler; unsaved local markup is discarded silently",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 109,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-09-know-6d012-ocal-annotations-asks-first-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 22,
+                    "line": 121
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-0ded746a6c1b57ae0586",
+          "file": "frontend.audit.spec.ts",
+          "line": 201,
+          "column": 1
+        },
+        {
+          "title": "PERF: 320-page document open, search, scroll, thumbnails, reopen memory",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2108,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:36.840Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-e31e1e5f6b4479788cb2",
+          "file": "frontend.audit.spec.ts",
+          "line": 243,
+          "column": 1
+        },
+        {
+          "title": "VISUAL/AXE 1024x700",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3662,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:38.956Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-412a739d205c2bcb94af",
+          "file": "frontend.audit.spec.ts",
+          "line": 313,
+          "column": 3
+        },
+        {
+          "title": "VISUAL/AXE 1366x768",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3662,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:42.625Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-8a03fdbfaf2d01f59062",
+          "file": "frontend.audit.spec.ts",
+          "line": 313,
+          "column": 3
+        },
+        {
+          "title": "VISUAL/AXE 1920x1080",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3694,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:46.293Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-336150beb6489c6fe607",
+          "file": "frontend.audit.spec.ts",
+          "line": 313,
+          "column": 3
+        },
+        {
+          "title": "VISUAL/AXE 2560x1440",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3997,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:49.993Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-e48591283ed6305acd45",
+          "file": "frontend.audit.spec.ts",
+          "line": 313,
+          "column": 3
+        },
+        {
+          "title": "VISUAL/AXE 683x384 @200%",
+          "ok": true,
+          "tags": [
+            "200%"
+          ],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3304,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:53.996Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-45e681e918bc6b7f070c",
+          "file": "frontend.audit.spec.ts",
+          "line": 313,
+          "column": 3
+        },
+        {
+          "title": "A11Y keyboard: home tab order, focus ring, signature dialog Escape + focus restore",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1216,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:57.306Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-b28d05ada6e7ecd22e20",
+          "file": "frontend.audit.spec.ts",
+          "line": 359,
+          "column": 1
+        },
+        {
+          "title": "FUX-12 known-failing: signature dialog traps Tab and restores focus on Escape",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-12: Tab leaves the aria-modal dialog; focus lands on 'Documents' after Escape",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 194,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 870,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:200:138",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 138,
+                      "line": 200
+                    },
+                    "snippet": "  198 |   const open = page.getByRole(\"button\", { name: /Create signature/ }).first(); await open.scrollIntoViewIfNeeded(); await open.focus(); await page.keyboard.press(\"Enter\");\n  199 |   const dlg = page.getByRole(\"dialog\"); await expect(dlg).toBeVisible();\n> 200 |   for (let i = 0; i < 15; i++) { await page.keyboard.press(\"Tab\"); expect(await dlg.evaluate((d) => d.contains(document.activeElement))).toBe(true); }\n      |                                                                                                                                          ^\n  201 |   await page.keyboard.press(\"Escape\"); await expect(dlg).toBeHidden();\n  202 |   await expect(open).toBeFocused();\n  203 | });"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 138,
+                        "line": 200
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  198 |   const open = page.getByRole(\"button\", { name: /Create signature/ }).first(); await open.scrollIntoViewIfNeeded(); await open.focus(); await page.keyboard.press(\"Enter\");\n  199 |   const dlg = page.getByRole(\"dialog\"); await expect(dlg).toBeVisible();\n> 200 |   for (let i = 0; i < 15; i++) { await page.keyboard.press(\"Tab\"); expect(await dlg.evaluate((d) => d.contains(document.activeElement))).toBe(true); }\n      |                                                                                                                                          ^\n  201 |   await page.keyboard.press(\"Escape\"); await expect(dlg).toBeHidden();\n  202 |   await expect(open).toBeFocused();\n  203 | });\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:200:138"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:58.530Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-12: Tab leaves the aria-modal dialog; focus lands on 'Documents' after Escape",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 194,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-12-know-246a8-nd-restores-focus-on-Escape-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 138,
+                    "line": 200
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-c429be1907d4203381e0",
+          "file": "frontend.audit.spec.ts",
+          "line": 415,
+          "column": 1
+        },
+        {
+          "title": "FUX-13 known-failing: toolbar controls stay reachable at 200% scaling",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [
+                {
+                  "type": "fail",
+                  "description": "FUX-13: toolbar overflows; right-hand controls are clipped (evidence/visual-editor-longname-683x384@200.png)",
+                  "location": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "line": 207,
+                    "column": 8
+                  }
+                }
+              ],
+              "expectedStatus": "failed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 770,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Annotate\",\u001b[39m\n\u001b[31m+   \"Organize pages\",\u001b[39m\n\u001b[31m+   \"Keyboard shortcuts\",\u001b[39m\n\u001b[31m+   \"Settings — AI Providers\",\u001b[39m\n\u001b[31m+   \"Search\",\u001b[39m\n\u001b[31m+   \"Switch to dark theme\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Annotate\",\u001b[39m\n\u001b[31m+   \"Organize pages\",\u001b[39m\n\u001b[31m+   \"Keyboard shortcuts\",\u001b[39m\n\u001b[31m+   \"Settings — AI Providers\",\u001b[39m\n\u001b[31m+   \"Search\",\u001b[39m\n\u001b[31m+   \"Switch to dark theme\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:215:19",
+                    "location": {
+                      "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                      "column": 19,
+                      "line": 215
+                    },
+                    "snippet": "  213 |   const clipped = await tb.evaluate((t) => [...t.querySelectorAll(\"button,select,input\")].filter((b) => { const r = (b as HTMLElement).getBoundingClientRect(); return r.width > 0 && r.right > window.innerWidth; }).map((b) => (b.getAttribute(\"aria-label\") || b.textContent || \"\").trim()));\n  214 |   metrics.fux13_clipped = clipped;\n> 215 |   expect(clipped).toEqual([]);\n      |                   ^\n  216 |   await ctx.close();\n  217 | });\n  218 |"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "column": 19,
+                        "line": 215
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 8\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Annotate\",\u001b[39m\n\u001b[31m+   \"Organize pages\",\u001b[39m\n\u001b[31m+   \"Keyboard shortcuts\",\u001b[39m\n\u001b[31m+   \"Settings — AI Providers\",\u001b[39m\n\u001b[31m+   \"Search\",\u001b[39m\n\u001b[31m+   \"Switch to dark theme\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n  213 |   const clipped = await tb.evaluate((t) => [...t.querySelectorAll(\"button,select,input\")].filter((b) => { const r = (b as HTMLElement).getBoundingClientRect(); return r.width > 0 && r.right > window.innerWidth; }).map((b) => (b.getAttribute(\"aria-label\") || b.textContent || \"\").trim()));\n  214 |   metrics.fux13_clipped = clipped;\n> 215 |   expect(clipped).toEqual([]);\n      |                   ^\n  216 |   await ctx.close();\n  217 | });\n  218 |\n    at /workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts:215:19"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-01T04:55:59.408Z",
+                  "annotations": [
+                    {
+                      "type": "fail",
+                      "description": "FUX-13: toolbar overflows; right-hand controls are clipped (evidence/visual-editor-longname-683x384@200.png)",
+                      "location": {
+                        "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                        "line": 207,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/workspace/thynkpdf-audit/packages/frontend-tests/test-results/frontend.audit-FUX-13-know-10277-ay-reachable-at-200-scaling-chromium/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/workspace/thynkpdf-audit/packages/frontend-tests/audit/frontend.audit.spec.ts",
+                    "column": 19,
+                    "line": 215
+                  }
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8df6f8b2b5c794b4c86-8c43e920acfed0bd3585",
+          "file": "frontend.audit.spec.ts",
+          "line": 440,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T04:55:00.840Z",
+    "duration": 59493.845,
+    "expected": 17,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

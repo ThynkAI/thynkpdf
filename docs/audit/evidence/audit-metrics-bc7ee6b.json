@@ -1,0 +1,233 @@
+{
+  "commit": "bc7ee6bc",
+  "fux06_message": "Edit text failed: TEXT_NOT_FOUND: Text not found within a single editable text run (Text split across runs/kerning is not matched)",
+  "fux07_1024x700@1": {
+    "sw": 1024,
+    "cw": 1024,
+    "sh": 30,
+    "ch": 27,
+    "right": 1012.015625,
+    "vw": 1024,
+    "text": "Could not open Q3-financial-report-for-the-board-of-directors-final-revised-version-2026-copy-with-a-very-long-name.pdf: Invalid PDF structure."
+  },
+  "fux08": "Compressed: 1 KB → 1 KB (now v2).",
+  "fux09": {
+    "hasHandler": false,
+    "dialogSeen": false
+  },
+  "scrollProbe": {
+    "sh": 365456,
+    "ch": 652,
+    "st": 364804
+  },
+  "perf": {
+    "fixture": "large-320.pdf 224 KB, 320 Letter pages, 31 text lines/page",
+    "firstPageMs": 700,
+    "searchMs": 393,
+    "searchText": "1 of 1 matches",
+    "scrollToEndMs": 44,
+    "heapAfterReopensMB": [
+      15,
+      15,
+      15,
+      15,
+      15
+    ]
+  },
+  "visual_1024x700": {
+    "overflowX": false,
+    "header": {
+      "sw": 1024,
+      "cw": 1024
+    },
+    "axeHome": [
+      "aria-allowed-role(minor) x1",
+      "region(moderate) x1"
+    ],
+    "axeEditor": [
+      "aria-allowed-role(minor) x1",
+      "page-has-heading-one(moderate) x1",
+      "region(moderate) x1"
+    ]
+  },
+  "visual_1366x768": {
+    "overflowX": false,
+    "header": {
+      "sw": 1366,
+      "cw": 1366
+    },
+    "axeHome": [
+      "aria-allowed-role(minor) x1",
+      "region(moderate) x1"
+    ],
+    "axeEditor": [
+      "aria-allowed-role(minor) x1",
+      "page-has-heading-one(moderate) x1",
+      "region(moderate) x1"
+    ]
+  },
+  "visual_1920x1080": {
+    "overflowX": false,
+    "header": {
+      "sw": 1920,
+      "cw": 1920
+    },
+    "axeHome": [
+      "aria-allowed-role(minor) x1",
+      "region(moderate) x1"
+    ],
+    "axeEditor": [
+      "aria-allowed-role(minor) x1",
+      "page-has-heading-one(moderate) x1",
+      "region(moderate) x1"
+    ]
+  },
+  "visual_2560x1440": {
+    "overflowX": false,
+    "header": {
+      "sw": 2560,
+      "cw": 2560
+    },
+    "axeHome": [
+      "aria-allowed-role(minor) x1",
+      "region(moderate) x1"
+    ],
+    "axeEditor": [
+      "aria-allowed-role(minor) x1",
+      "region(moderate) x1"
+    ]
+  },
+  "visual_683x384@200": {
+    "overflowX": false,
+    "header": {
+      "sw": 683,
+      "cw": 683
+    },
+    "axeHome": [
+      "aria-allowed-role(minor) x1",
+      "region(moderate) x1"
+    ],
+    "axeEditor": [
+      "aria-allowed-role(minor) x1",
+      "page-has-heading-one(moderate) x1",
+      "region(moderate) x1"
+    ]
+  },
+  "keyboard": {
+    "homeStops": [
+      {
+        "name": "Home",
+        "ring": true
+      },
+      {
+        "name": "Tools",
+        "ring": true
+      },
+      {
+        "name": "Documents",
+        "ring": true
+      },
+      {
+        "name": "Toggle thumbnails",
+        "ring": true
+      },
+      {
+        "name": "Open PDF",
+        "ring": true
+      },
+      {
+        "name": "Keyboard shortcuts",
+        "ring": true
+      },
+      {
+        "name": "Settings — AI Providers",
+        "ring": true
+      },
+      {
+        "name": "Search",
+        "ring": true
+      },
+      {
+        "name": "Switch to dark theme",
+        "ring": true
+      },
+      {
+        "name": "Pages",
+        "ring": true
+      },
+      {
+        "name": "Bookmarks",
+        "ring": true
+      },
+      {
+        "name": "Comments",
+        "ring": true
+      },
+      {
+        "name": "Document pages",
+        "ring": true
+      },
+      {
+        "name": "Open PDFor drop a file anywhere · Ctrl+O",
+        "ring": true
+      },
+      {
+        "name": "Edit textFind and replace text in place",
+        "ring": true
+      },
+      {
+        "name": "Merge & splitReorder, combine, extract p",
+        "ring": true
+      },
+      {
+        "name": "CompressMake files smaller",
+        "ring": true
+      },
+      {
+        "name": "SignSign, or send for signing",
+        "ring": true
+      },
+      {
+        "name": "FormsFill, create and flatten fields",
+        "ring": true
+      },
+      {
+        "name": "CommentHighlight, draw, add notes",
+        "ring": true
+      },
+      {
+        "name": "Ask AIQuestions about this document",
+        "ring": true
+      },
+      {
+        "name": "DocumentsYour files, folders, versions",
+        "ring": true
+      },
+      {
+        "name": "Tool: Edit text",
+        "ring": true
+      },
+      {
+        "name": "Tool: Merge & split",
+        "ring": true
+      },
+      {
+        "name": "Tool: Compress",
+        "ring": true
+      }
+    ],
+    "noRingCount": 0,
+    "dialogTrap": false,
+    "escapeCloses": true,
+    "focusRestoredTo": "Open",
+    "reducedMotionRules": true
+  },
+  "fux13_clipped": [
+    "Annotate",
+    "Organize pages",
+    "Keyboard shortcuts",
+    "Settings — AI Providers",
+    "Search",
+    "Switch to dark theme"
+  ]
+}
