@@ -12,7 +12,7 @@ export function ToolsPane({ active, onTool }: { active: ToolParam | null; onTool
           <li key={id}>
             <button aria-label={`Tool: ${label}`} aria-current={active === id ? "true" : undefined} onClick={() => onTool(id)}
               className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-neutral-200 dark:hover:bg-neutral-800 ${active === id ? "bg-brand-500/10 font-medium text-brand-700 dark:text-brand-300" : ""}`}>
-              <Icon aria-hidden className="h-4 w-4 shrink-0" />{label}
+              <span className={`grid h-6 w-6 shrink-0 place-items-center rounded ${active === id ? "bg-brand-600" : "bg-ink dark:bg-neutral-700"} text-white`}><Icon aria-hidden className="h-4 w-4" strokeWidth={2} /></span>{label}
             </button>
           </li>
         ))}
