@@ -153,7 +153,7 @@ export async function localBytesOp(label: string, fn: (b: Uint8Array) => Promise
   const s = useSession.getState();
   const { localBytesRef } = await import("./copies");
   const before = localBytesRef.current;
-  if (!before) return false;
+  if (!before || s.source !== "local") { s.set({ error: `${label}: this view is read-only.` }); return false; }
   const name = useViewerStore.getState().fileName ?? "document.pdf";
   s.set({ busy: `${label}…`, error: null, notice: null });
   try {

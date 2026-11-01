@@ -4,7 +4,7 @@ import { useViewerStore, moveOrder } from "@thynkpdf/pdf-viewer";
 import { PageView } from "@thynkpdf/pdf-viewer/client";
 import type { DocumentInfo, UploadResponse } from "@thynkpdf/editor-client";
 import { useSession } from "@/lib/session";
-import { editGate } from "@/lib/gates";
+import { editGate, readOnlyView } from "@/lib/gates";
 import { runVersionedOp, http, rotatePages, reorderTo, newDocOp, openLatest, deletePages, duplicatePages, insertBlankAfter, insertFromDoc } from "@/lib/documents";
 import { parseRanges } from "@/lib/ranges";
 
@@ -22,11 +22,11 @@ export function Organizer({ onClose, focus: initialFocus = "pages" }: { onClose(
   const [mergeSel, setMergeSel] = useState<string[]>([]);
   const tiles = useRef<(HTMLDivElement | null)[]>([]);
   const dialog = useRef<HTMLDivElement>(null);
-  const rot = editGate("rotate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const ro = editGate("reorder", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const del = editGate("delete", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const dup = editGate("duplicate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const ins = editGate("insert_blank", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
+  const rot = editGate("rotate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const ro = editGate("reorder", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const del = editGate("delete", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const dup = editGate("duplicate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const ins = editGate("insert_blank", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
   const [confirmDel, setConfirmDel] = useState(false);
   const [insSrc, setInsSrc] = useState("");
   const [preset, setPreset] = useState<"low" | "balanced" | "high">("balanced");
