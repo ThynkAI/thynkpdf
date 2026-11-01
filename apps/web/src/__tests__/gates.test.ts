@@ -5,7 +5,7 @@ const caps = (o: Partial<Capabilities> = {}): Capabilities => ({ document_id: "d
   page_ops: { rotate: true, reorder: true, extract: true, split: true, merge: true, delete: true, duplicate: true, insert_blank: true }, compress: true, text_replace: true, edit_ops: { text_replace: true, text_delete: false, text_move: false, text_insert: false }, annotations: true, forms: true,
   document_limitations: [], pages: [], safe_alternatives: [], ...o });
 describe("editGate", () => {
-  it("local documents (no server) are editable in the browser without sign-in", () => expect(editGate("rotate", null, null)).toEqual({ enabled: true, reason: null }));
+  it("requires a server document", () => expect(editGate("rotate", null, null).reason).toMatch(/server/));
   it("waits for capabilities of the current version", () => {
     expect(editGate("rotate", ref, null).reason).toMatch(/Checking/);
     expect(editGate("rotate", ref, caps({ version: 1 })).enabled).toBe(false);

@@ -54,9 +54,7 @@ export async function openFile(file: File) {
   s.set({ busy: "Opening…", error: null, notice: null });
   clearHistory();
   try {
-    // Desktop: the shell provisions a local session (refresh cookie) for the bundled engine, so no sign-in is ever shown.
-    if (s.backend === "online" && !s.authed && isDesktop()) await bootstrapAuth();
-    if (s.backend === "online" && useSession.getState().authed) {
+    if (s.backend === "online" && s.authed) {
       s.set({ busy: "Uploading…" });
       const up = await s.api.upload(file, file.name);
       await openServerRef({ document_id: up.document_id, version_id: up.version_id, version: up.version }, file.name, false);
