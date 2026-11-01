@@ -2,7 +2,7 @@
 import { useState } from "react";
 import type { XfaMode } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
-import { convertXfaToStandardForm, xfaConvertSupport, XFA_DYNAMIC_UNSUPPORTED_MSG } from "@/lib/xfaConvert";
+import { convertXfaToStandardForm, xfaConvertSupport, describeConvertReport } from "@/lib/xfaConvert";
 
 const LABEL: Record<Exclude<XfaMode, "none">, string> = {
   pure: "Dynamic XFA form",
@@ -24,9 +24,9 @@ export function XfaFormBanner({ mode }: { mode: XfaMode }) {
         <button className="mt-1 rounded border border-sky-400 px-2 py-0.5 disabled:opacity-40" disabled={!!s.busy} onClick={async () => {
           setMsg(null);
           const r = await convertXfaToStandardForm();
-          if (r === "unsupported") { useSession.getState().set({ error: null }); setMsg(XFA_DYNAMIC_UNSUPPORTED_MSG); }
-          else if (r === "unavailable") { useSession.getState().set({ error: null }); setMsg("Converting on the server isn't available yet."); force((n) => n + 1); }
-          else if (r === "converted") setMsg("Converted to a standard form (new version). XFA was removed; earlier versions keep it.");
+          if (r.outcome === "unavailable") { setMsg("Converting on the server isn't available yet."); force((n) => n + 1); }
+          else if (r.outcome === "known") setMsg(r.message ?? null);
+          else if (r.outcome === "ok") setMsg(describeConvertReport(r.report));
         }}>Convert to standard form</button>
       )}
       {msg && <p role="status" data-testid="xfa-convert-msg" className="mt-1">{msg}</p>}
