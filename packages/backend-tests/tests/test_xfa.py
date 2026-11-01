@@ -68,18 +68,18 @@ def test_dynamic_fill_datasets_only_and_creates_nodes(client, orgA):
 def test_template_schema(client, orgA):
     r = client.get(f"/pdf/{up(client, orgA, 'xfa-dynamic.pdf')}/forms/xfa/schema", headers=orgA); assert r.status_code == 200, r.text
     j = r.json(); by = {f["som"]: f for f in j["fields"]}
-    assert {k: by[k]["type"] for k in by} == {"form1.full_name": "text", "form1.age": "numeric", "form1.dob": "date", "form1.notes": "text",
-        "form1.agree": "checkbox", "form1.plan": "radio", "form1.country": "choice", "form1.address.street": "text",
-        "form1.address.town": "text", "form1.submit": "button"}
-    assert by["form1.full_name"]["required"] and by["form1.full_name"]["max_chars"] == 40 and by["form1.full_name"]["caption"] == "Full name"
-    assert by["form1.notes"]["multiline"] and by["form1.agree"]["on_value"] == "Y"
-    assert by["form1.plan"]["options"] == ["basic", "pro"] and by["form1.plan"]["option_captions"] == ["Basic plan", "Pro plan"] and by["form1.plan"]["value"] == "pro"
-    assert by["form1.country"]["options"] == ["CA", "US"] and by["form1.country"]["option_captions"] == ["Canada", "United States"]
-    assert by["form1.address.town"]["name"] == "form1.address.city" and by["form1.address.town"]["value"] == "Guelph"  # dataRef binding
-    assert by["form1.address.town"]["layout"]["y"] > by["form1.address.street"]["layout"]["y"]
+    assert {k: by[k]["type"] for k in by} == {"form1[0].full_name[0]": "text", "form1[0].age[0]": "numeric", "form1[0].dob[0]": "date", "form1[0].notes[0]": "text",
+        "form1[0].agree[0]": "checkbox", "form1[0].plan[0]": "radio", "form1[0].country[0]": "choice", "form1[0].address[0].street[0]": "text",
+        "form1[0].address[0].town[0]": "text", "form1[0].submit[0]": "button"}
+    assert by["form1[0].full_name[0]"]["required"] and by["form1[0].full_name[0]"]["max_chars"] == 40 and by["form1[0].full_name[0]"]["caption"] == "Full name"
+    assert by["form1[0].notes[0]"]["multiline"] and by["form1[0].agree[0]"]["on_value"] == "Y"
+    assert by["form1[0].plan[0]"]["options"] == ["basic", "pro"] and by["form1[0].plan[0]"]["option_captions"] == ["Basic plan", "Pro plan"] and by["form1[0].plan[0]"]["value"] == "pro"
+    assert by["form1[0].country[0]"]["options"] == ["CA", "US"] and by["form1[0].country[0]"]["option_captions"] == ["Canada", "United States"]
+    assert by["form1[0].address[0].town[0]"]["name"] == "form1.address.city" and by["form1[0].address[0].town[0]"]["value"] == "Guelph"  # dataRef binding
+    assert by["form1[0].address[0].town[0]"]["layout"]["y"] > by["form1[0].address[0].street[0]"]["layout"]["y"]
     assert j["scripts_ignored"] == 1 and "scripts_ignored" in j["warnings"]
     hy = client.get(f"/pdf/{up(client, orgA, 'xfa-hybrid.pdf')}/forms/xfa/schema", headers=orgA).json()
-    f = {x["som"]: x for x in hy["fields"]}["form1.full_name"]["layout"]; assert (f["x"], f["y"], f["w"]) == (72, 72, 216)
+    f = {x["som"]: x for x in hy["fields"]}["form1[0].full_name[0]"]["layout"]; assert (f["x"], f["y"], f["w"]) == (72, 72, 216)
 
 def test_xml_export_import(client, orgA):
     doc = up(client, orgA, "xfa-array.pdf")

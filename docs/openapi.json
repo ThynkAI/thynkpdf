@@ -849,6 +849,16 @@
      "version_id": {
       "title": "Version Id",
       "type": "string"
+     },
+     "xfa": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/XfaCapabilities"
+       },
+       {
+        "type": "null"
+       }
+      ]
      }
     },
     "required": [
@@ -4059,6 +4069,201 @@
     "title": "VersionResult",
     "type": "object"
    },
+   "XfaCapabilities": {
+    "properties": {
+     "convert": {
+      "title": "Convert",
+      "type": "boolean"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "fill": {
+      "title": "Fill",
+      "type": "boolean"
+     },
+     "flatten": {
+      "title": "Flatten",
+      "type": "boolean"
+     },
+     "has_scripts": {
+      "title": "Has Scripts",
+      "type": "boolean"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "present": {
+      "title": "Present",
+      "type": "boolean"
+     },
+     "read": {
+      "title": "Read",
+      "type": "boolean"
+     },
+     "schema": {
+      "title": "Schema",
+      "type": "boolean"
+     },
+     "xml_import_export": {
+      "title": "Xml Import Export",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "present",
+     "kind",
+     "read",
+     "schema",
+     "fill",
+     "xml_import_export",
+     "convert",
+     "flatten",
+     "has_scripts"
+    ],
+    "title": "XfaCapabilities",
+    "type": "object"
+   },
+   "XfaConvertReport": {
+    "properties": {
+     "field_map": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "additionalProperties": true,
+         "type": "object"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Field Map"
+     },
+     "fields": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fields"
+     },
+     "kept_acroform_widgets": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kept Acroform Widgets"
+     },
+     "mode": {
+      "enum": [
+       "stripped_xfa",
+       "rendered_from_template"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "pages": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pages"
+     },
+     "scripts_ignored": {
+      "default": 0,
+      "title": "Scripts Ignored",
+      "type": "integer"
+     },
+     "usage_rights_removed": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Usage Rights Removed"
+     },
+     "warnings": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Warnings",
+      "type": "array"
+     }
+    },
+    "required": [
+     "mode",
+     "warnings"
+    ],
+    "title": "XfaConvertReport",
+    "type": "object"
+   },
+   "XfaConvertResult": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
+     "report": {
+      "$ref": "#/components/schemas/XfaConvertReport"
+     },
+     "sha256": {
+      "title": "Sha256",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version_id",
+     "version",
+     "sha256",
+     "size",
+     "filename",
+     "report"
+    ],
+    "title": "XfaConvertResult",
+    "type": "object"
+   },
    "XfaDataField": {
     "properties": {
      "acroform_field": {
@@ -4145,6 +4350,111 @@
     "title": "XfaFillIn",
     "type": "object"
    },
+   "XfaFillReport": {
+    "properties": {
+     "acroform_updated": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Acroform Updated",
+      "type": "array"
+     },
+     "datasets_updated": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Datasets Updated",
+      "type": "array"
+     },
+     "filled": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Filled",
+      "type": "array"
+     },
+     "form_state_packet_removed": {
+      "default": false,
+      "title": "Form State Packet Removed",
+      "type": "boolean"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "missing_required": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "title": "Missing Required",
+      "type": "array"
+     },
+     "not_bound": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "title": "Not Bound",
+      "type": "array"
+     },
+     "usage_rights_removed": {
+      "default": false,
+      "title": "Usage Rights Removed",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "filled",
+     "kind",
+     "acroform_updated",
+     "datasets_updated"
+    ],
+    "title": "XfaFillReport",
+    "type": "object"
+   },
+   "XfaFillResult": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
+     "report": {
+      "$ref": "#/components/schemas/XfaFillReport"
+     },
+     "sha256": {
+      "title": "Sha256",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version_id",
+     "version",
+     "sha256",
+     "size",
+     "filename",
+     "report"
+    ],
+    "title": "XfaFillResult",
+    "type": "object"
+   },
    "XfaImportIn": {
     "properties": {
      "document_id": {
@@ -4155,6 +4465,16 @@
       "minimum": 1.0,
       "title": "Expected Version",
       "type": "integer"
+     },
+     "mode": {
+      "default": "merge",
+      "description": "merge (default): only values present in the XML change; replace: datasets packet replaced wholesale",
+      "enum": [
+       "merge",
+       "replace"
+      ],
+      "title": "Mode",
+      "type": "string"
      },
      "xml": {
       "description": "<xfa:datasets>, <xfa:data> or a bare record element. DTDs/entities are rejected.",
@@ -4169,6 +4489,101 @@
      "xml"
     ],
     "title": "XfaImportIn",
+    "type": "object"
+   },
+   "XfaImportReport": {
+    "properties": {
+     "acroform_updated": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Acroform Updated",
+      "type": "array"
+     },
+     "form_state_packet_removed": {
+      "default": false,
+      "title": "Form State Packet Removed",
+      "type": "boolean"
+     },
+     "imported": {
+      "title": "Imported",
+      "type": "integer"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "missing_required": {
+      "default": [],
+      "items": {
+       "type": "string"
+      },
+      "title": "Missing Required",
+      "type": "array"
+     },
+     "mode": {
+      "enum": [
+       "merge",
+       "replace"
+      ],
+      "title": "Mode",
+      "type": "string"
+     },
+     "usage_rights_removed": {
+      "default": false,
+      "title": "Usage Rights Removed",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "imported",
+     "mode",
+     "kind",
+     "acroform_updated"
+    ],
+    "title": "XfaImportReport",
+    "type": "object"
+   },
+   "XfaImportResult": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "filename": {
+      "title": "Filename",
+      "type": "string"
+     },
+     "report": {
+      "$ref": "#/components/schemas/XfaImportReport"
+     },
+     "sha256": {
+      "title": "Sha256",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "version_id": {
+      "title": "Version Id",
+      "type": "string"
+     }
+    },
+    "required": [
+     "document_id",
+     "version_id",
+     "version",
+     "sha256",
+     "size",
+     "filename",
+     "report"
+    ],
+    "title": "XfaImportResult",
     "type": "object"
    },
    "XfaInfo": {
@@ -4286,8 +4701,44 @@
     "title": "XfaLayout",
     "type": "object"
    },
+   "XfaOccur": {
+    "properties": {
+     "initial": {
+      "title": "Initial",
+      "type": "integer"
+     },
+     "max": {
+      "description": "-1 = unbounded",
+      "title": "Max",
+      "type": "integer"
+     },
+     "min": {
+      "title": "Min",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "min",
+     "max",
+     "initial"
+    ],
+    "title": "XfaOccur",
+    "type": "object"
+   },
    "XfaSchemaField": {
     "properties": {
+     "acroform_field": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Matching AcroForm field (hybrid only)",
+      "title": "Acroform Field"
+     },
      "caption": {
       "anyOf": [
        {
@@ -4298,6 +4749,18 @@
        }
       ],
       "title": "Caption"
+     },
+     "instance": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "0-based instance of that repeatable subform",
+      "title": "Instance"
      },
      "layout": {
       "$ref": "#/components/schemas/XfaLayout"
@@ -4339,6 +4802,17 @@
       ],
       "description": "Data path in the datasets packet (fill key); null if unbound (bind match=none)",
       "title": "Name"
+     },
+     "occur": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/XfaOccur"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "Repeat rules of the nearest repeatable subform (max != 1)"
      },
      "on_value": {
       "anyOf": [
@@ -4387,9 +4861,56 @@
       "title": "Required",
       "type": "boolean"
      },
+     "section": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "SOM path of the enclosing subform",
+      "title": "Section"
+     },
+     "section_caption": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section Caption"
+     },
+     "section_name": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Section Name"
+     },
      "som": {
+      "description": "Fully indexed SOM path, e.g. form1[0].#subform[2].Name[0]; equals the AcroForm field name on hybrid forms",
       "title": "Som",
       "type": "string"
+     },
+     "tooltip": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "assist/toolTip help text",
+      "title": "Tooltip"
      },
      "type": {
       "enum": [
@@ -9125,7 +9646,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/VersionResult"
+         "$ref": "#/components/schemas/XfaConvertResult"
         }
        }
       },
@@ -9241,7 +9762,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/VersionResult"
+         "$ref": "#/components/schemas/XfaImportResult"
         }
        }
       },
@@ -9358,7 +9879,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/VersionResult"
+         "$ref": "#/components/schemas/XfaFillResult"
         }
        }
       },

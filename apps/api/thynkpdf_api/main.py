@@ -388,7 +388,7 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     @app.get("/pdf/{doc_id}/capabilities", response_model=S.CapabilitiesOut, tags=["pdf"])
     def caps(doc_id: str, p: Principal = Depends(principal), s=Depends(db)):
         d = get_doc(s, p, doc_id); v = get_ver(s, d)
-        c = eng.capabilities(load(d, v))
+        data = load(d, v); c = eng.capabilities(data); c["xfa"] = eng.xfa.capabilities(data)
         if p.role == "viewer": c["document_limitations"].append({"code": "ROLE_READ_ONLY", "message": "Viewer role cannot modify"})
         return {"document_id": d.id, "version": v.number, "version_id": v.id, **c}
 

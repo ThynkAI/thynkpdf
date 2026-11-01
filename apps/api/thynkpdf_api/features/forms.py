@@ -33,12 +33,39 @@ class XfaLayout(BaseModel):
     x: float; y: float; w: float; h: float; units: str; origin: str
 
 
+class XfaOccur(BaseModel):
+    min: int; max: int = Field(description="-1 = unbounded"); initial: int
+
+
 class XfaSchemaField(BaseModel):
     name: str | None = Field(description="Data path in the datasets packet (fill key); null if unbound (bind match=none)")
-    som: str; type: Literal["text", "numeric", "date", "checkbox", "choice", "radio", "signature", "button", "image", "barcode", "password"]
-    caption: str | None = None; options: list[str] | None = None; option_captions: list[str] | None = None
+    som: str = Field(description="Fully indexed SOM path, e.g. form1[0].#subform[2].Name[0]; equals the AcroForm field name on hybrid forms")
+    acroform_field: str | None = Field(None, description="Matching AcroForm field (hybrid only)")
+    section: str | None = Field(None, description="SOM path of the enclosing subform"); section_name: str | None = None
+    section_caption: str | None = None
+    occur: XfaOccur | None = Field(None, description="Repeat rules of the nearest repeatable subform (max != 1)")
+    instance: int | None = Field(None, description="0-based instance of that repeatable subform")
+    type: Literal["text", "numeric", "date", "checkbox", "choice", "radio", "signature", "button", "image", "barcode", "password"]
+    caption: str | None = None; tooltip: str | None = Field(None, description="assist/toolTip help text")
+    options: list[str] | None = None; option_captions: list[str] | None = None
     multi_select: bool | None = None; on_value: str | None = None; value: Any = None
     required: bool; read_only: bool; multiline: bool; max_chars: int | None = None; layout: XfaLayout
+
+
+class XfaFillReport(BaseModel):
+    filled: list[str]; kind: str; acroform_updated: list[str]; datasets_updated: list[str]; not_bound: list[str] = []
+    missing_required: list[str] = []; usage_rights_removed: bool = False; form_state_packet_removed: bool = False
+
+
+class XfaImportReport(BaseModel):
+    imported: int; mode: Literal["merge", "replace"]; kind: str; acroform_updated: list[str]
+    missing_required: list[str] = []; usage_rights_removed: bool = False; form_state_packet_removed: bool = False
+
+
+class XfaConvertReport(BaseModel):
+    mode: Literal["stripped_xfa", "rendered_from_template"]; warnings: list[str]; scripts_ignored: int = 0
+    kept_acroform_widgets: int | None = None; usage_rights_removed: bool | None = None
+    pages: int | None = None; fields: int | None = None; field_map: dict[str, dict] | None = None
 
 
 class XfaSchemaOut(BaseModel):
@@ -49,7 +76,20 @@ def _ff(f):
     return {**f, "type": "text" if f["type"] == "multiline" else f["type"], "multiline": f["type"] == "multiline"}
 
 
+def _cas(c, s, p, b):
+    """Load for writing and check expected_version FIRST, so a stale write is always 409 VERSION_CONFLICT
+    (never a content error computed against a newer version)."""
+    d, data = c.writable(s, p, b.document_id)
+    if b.expected_version != d.current_version:
+        raise c.ApiError(409, "VERSION_CONFLICT", "Document changed since expected_version", {"current_version": d.current_version})
+    return d, data
+
+
 def register(app, c):
+    class XfaFillResult(c.VersionResult): report: XfaFillReport
+    class XfaImportResult(c.VersionResult): report: XfaImportReport
+    class XfaConvertResult(c.VersionResult): report: XfaConvertReport
+
     class FieldSpec(BaseModel):
         name: str = Field(pattern=r"^[A-Za-z0-9_\-]{1,100}$")
         type: Literal["text", "multiline", "checkbox", "radio", "dropdown", "listbox", "signature"]
@@ -88,7 +128,7 @@ def register(app, c):
 
     @app.post("/pdf/forms/fill", response_model=c.VersionResult, tags=["forms"])
     def fill(b: FillIn, p=Depends(c.principal), s=Depends(c.db)):
-        d, data = c.writable(s, p, b.document_id)
+        d, data = _cas(c, s, p, b)
         if (b.values is None) == (b.csv is None): raise c.ApiError(422, "VALIDATION_ERROR", "Provide exactly one of values or csv")
         vals = b.values if b.values is not None else eng.parse_csv_values(b.csv, eng.list_fields(data))
         out, rep = eng.fill_fields(data, vals)
@@ -100,7 +140,7 @@ def register(app, c):
     @app.post("/pdf/forms/flatten", response_model=c.VersionResult, tags=["forms"])
     def flat(b: FlattenIn, p=Depends(c.principal), s=Depends(c.db)):
         if not b.confirm: raise c.ApiError(422, "CONFIRMATION_REQUIRED", "Set confirm=true to flatten (previous version stays recoverable)")
-        d, data = c.writable(s, p, b.document_id)
+        d, data = _cas(c, s, p, b)
         warns = ["All annotations and widgets were burned into page content; form is no longer interactive."]
         kind = eng.xfa.detect(data)["kind"]
         if kind == "hybrid": data = eng.xfa.strip_xfa(data); warns.append("XFA packets were removed before flattening (hybrid form).")
@@ -116,6 +156,7 @@ def register(app, c):
         document_id: str; expected_version: int = Field(ge=1)
     class XfaImportIn(BaseModel):
         document_id: str; expected_version: int = Field(ge=1)
+        mode: Literal["merge", "replace"] = Field("merge", description="merge (default): only values present in the XML change; replace: datasets packet replaced wholesale")
         xml: str = Field(max_length=5_000_000, description="<xfa:datasets>, <xfa:data> or a bare record element. DTDs/entities are rejected.")
 
     @app.get("/pdf/{doc_id}/forms/xfa", response_model=XfaDataOut, tags=["forms"])
@@ -136,23 +177,23 @@ def register(app, c):
         return Response(eng.xfa.export_xml(c.load(d, v)), media_type="application/xml",
                         headers={"Content-Disposition": 'attachment; filename="xfa-data.xml"'})
 
-    @app.post("/pdf/forms/xfa/data", response_model=c.VersionResult, tags=["forms"])
+    @app.post("/pdf/forms/xfa/data", response_model=XfaImportResult, tags=["forms"])
     def xfa_import(b: XfaImportIn, p=Depends(c.principal), s=Depends(c.db)):
-        d, data = c.writable(s, p, b.document_id)
-        out, rep = eng.xfa.import_xml(data, b.xml.encode("utf-8"))
-        return c.vres(d, c.new_version(s, p, d, b.expected_version, out, "xfa_import", {"imported": rep["imported"]}), rep)
+        d, data = _cas(c, s, p, b)
+        out, rep = eng.xfa.import_xml(data, b.xml.encode("utf-8"), b.mode)
+        return c.vres(d, c.new_version(s, p, d, b.expected_version, out, "xfa_import", {"imported": rep["imported"], "mode": b.mode}), rep)
 
-    @app.post("/pdf/forms/xfa/fill", response_model=c.VersionResult, tags=["forms"])
+    @app.post("/pdf/forms/xfa/fill", response_model=XfaFillResult, tags=["forms"])
     def xfa_fill(b: XfaFillIn, p=Depends(c.principal), s=Depends(c.db)):
         """Hybrid: writes AcroForm field AND datasets node. Dynamic: datasets only."""
-        d, data = c.writable(s, p, b.document_id)
+        d, data = _cas(c, s, p, b)
         out, rep = eng.xfa.fill(data, b.values)
         return c.vres(d, c.new_version(s, p, d, b.expected_version, out, "xfa_fill", {"fields": list(b.values)}), rep)
 
-    @app.post("/pdf/forms/xfa/convert", response_model=c.VersionResult, tags=["forms"])
+    @app.post("/pdf/forms/xfa/convert", response_model=XfaConvertResult, tags=["forms"])
     def xfa_convert(b: XfaVersioned, p=Depends(c.principal), s=Depends(c.db)):
         """Hybrid: strip /XFA + NeedsRendering, keep widgets. Dynamic: render pages + widgets from the template, pre-filled."""
-        d, data = c.writable(s, p, b.document_id)
+        d, data = _cas(c, s, p, b)
         out, rep = eng.xfa.convert_to_acroform(data)
         return c.vres(d, c.new_version(s, p, d, b.expected_version, out, "xfa_convert", {"mode": rep["mode"]}), rep)
 
