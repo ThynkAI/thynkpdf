@@ -15,9 +15,9 @@ describe("textEditGate", () => {
     pages: [{ number: 1, text_replace: true, text_delete: false, text_move: false, text_insert: false, editable_fonts: [], limitations: [], ...p }], safe_alternatives: [], ...o });
   it("enabled for editable page even if rotate is off", () => expect(textEditGate(1, ref, caps({})).enabled).toBe(true));
   it("explains per-page limitations", () => {
-    expect(textEditGate(1, ref, caps({ text_replace: false, limitations: [{ code: "NO_TEXT_LAYER", message: "No text layer." }] })).reason).toBe("No text layer.");
+    expect(textEditGate(1, ref, caps({ text_replace: false, limitations: [{ code: "NO_TEXT_LAYER", message: "No text layer." }] })).reason).toBe("This page has no editable text (it may be a scan or an image).");
   });
-  it("document-level off", () => expect(textEditGate(1, ref, caps({}, { text_replace: false, document_limitations: [{ code: "PDFA", message: "PDF/A." }] })).reason).toBe("PDF/A."));
+  it("document-level off", () => expect(textEditGate(1, ref, caps({}, { text_replace: false, document_limitations: [{ code: "PDFA", message: "PDF/A." }] })).reason).toBe("This is an archival (PDF/A) file. Saving changes may remove its PDF/A compliance."));
   it("requires server doc", () => expect(textEditGate(1, null, null).enabled).toBe(false));
 });
 
