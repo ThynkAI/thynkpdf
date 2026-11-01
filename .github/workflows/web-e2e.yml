@@ -1,13 +1,14 @@
 # Frontend CI: tsc + vitest + full Playwright suite (chromium, firefox, mobile AND webkit) against a throwaway backend.
-# No secrets: the backend runs locally with SQLite and a CI-only JWT secret; the dev account is registered on the fly.
+# No secrets: the backend runs locally with SQLite and a CI-only JWT secret, in anonymous mode (no accounts).
 name: web-e2e
 on:
   pull_request:
   workflow_dispatch:
+  workflow_call:   # the desktop release depends on this suite (BD-03)
 permissions:
   contents: read
 concurrency:
-  group: web-e2e-${{ github.ref }}
+  group: web-e2e-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   web:
@@ -30,13 +31,12 @@ jobs:
           THYNKPDF_DATABASE_URL: sqlite:///./ci.db
           THYNKPDF_JWT_SECRET: ci-only-not-a-secret-0123456789abcdef0123
           THYNKPDF_CORS_ORIGINS: http://localhost:3000
+          THYNKPDF_AUTH_MODE: anonymous
         run: |
           python -m venv .venv && .venv/bin/pip install -q -r requirements.txt
           export PYTHONPATH=apps/api:$(ls -d packages/*/ | grep -vE 'frontend|ui/|viewer|editor' | tr '\n' ':')
           nohup .venv/bin/uvicorn thynkpdf_api.main:app --port 8000 > api.log 2>&1 &
           for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 1; done
-          curl -sf -X POST localhost:8000/auth/register -H 'content-type: application/json' \
-            -d '{"email":"dev@thynkpdf.dev","password":"ThynkDev-2026!","org_name":"THYNKPDF Dev"}' > /dev/null
       - name: Third-party PDF verifiers (pikepdf/qpdf, pypdf)
         run: rm -rf packages/frontend-tests/.venv && python -m venv packages/frontend-tests/.venv && packages/frontend-tests/.venv/bin/pip install -q pikepdf pypdf
       - name: Typecheck

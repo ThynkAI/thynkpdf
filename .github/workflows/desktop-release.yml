@@ -12,7 +12,13 @@ permissions:
   contents: write
 
 jobs:
+  backend-tests:
+    uses: ./.github/workflows/backend-tests.yml
+  web-e2e:
+    uses: ./.github/workflows/web-e2e.yml
+
   build:
+    needs: [backend-tests, web-e2e]
     strategy:
       fail-fast: false
       matrix:
@@ -55,7 +61,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt pyinstaller
           python apps/desktop/build/build_sidecar.py
-      - name: Smoke-test sidecar
+      - name: Packaged smoke test (route set == source, features, key/Host/Origin, restart, permissions)
         shell: bash
         run: python apps/desktop/build/smoke_sidecar.py
       - name: Package installer
@@ -96,7 +102,15 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with: { path: out }
+      - name: Checksums (BD-21)
+        run: |
+          mkdir -p dist && find out -type f -exec cp {} dist/ \;
+          cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
           draft: true
-          files: out/**/*
+          files: dist/*
+          body: |
+            THYNKPDF ${{ github.ref_name }} — free PDF editor. No account, no sign-in: the app opens a private local workspace on your computer.
+
+            Known limitations: Windows build is unsigned (SmartScreen warning) and the macOS build is ad-hoc signed, not notarized (right-click → Open). Verify downloads with SHA256SUMS. Share links and signature requests need a hosted server and are off in the desktop app; visual signing on this device works.
