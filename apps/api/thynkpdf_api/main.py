@@ -49,7 +49,8 @@ def create_app(database_url=None, storage_root=None) -> FastAPI:
     async def _eng(_, e: eng.EngineError):
         st = {"PDF_MALFORMED": 422, "INVALID_FILE_TYPE": 415, "PDF_ENCRYPTED": 422, "EDIT_NOT_SUPPORTED": 422,
               "TEXT_NOT_FOUND": 422, "EDIT_UNSUPPORTED_CHARACTERS": 422, "EDIT_UNSUPPORTED_FONT": 422,
-              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404, "VALIDATION_ERROR": 422}.get(e.code, 400)
+              "FORM_FIELD_NOT_FOUND": 422, "FORM_FIELD_EXISTS": 409, "SIGNATURE_INVALID": 422, "ANNOTATION_NOT_FOUND": 404, "VALIDATION_ERROR": 422,
+              "XFA_NOT_PRESENT": 422, "XFA_MALFORMED": 422, "XFA_UNSAFE_XML": 422, "XFA_TOO_LARGE": 413, "xfa_dynamic_unsupported": 422}.get(e.code, 400)
         return JSONResponse({"error": {"code": e.code, "message": e.message, "details": e.details}}, status_code=st)
 
     from fastapi.exceptions import RequestValidationError
