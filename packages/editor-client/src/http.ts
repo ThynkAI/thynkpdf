@@ -142,6 +142,10 @@ export class HttpEditorApi implements EditorApi {
   addFormFields(ref: DocumentRef, add: FieldSpec[], del?: string[]) { return this.send<VersionResult>("POST", "/pdf/forms/fields", { ...this.v(ref), add, ...(del ? { delete: del } : {}) }); }
   fillForm(ref: DocumentRef, values: Record<string, string | boolean | string[]>, flatten = false) { return this.send<VersionResult>("POST", "/pdf/forms/fill", { ...this.v(ref), values, flatten }); }
   flattenForm(ref: DocumentRef) { return this.send<VersionResult>("POST", "/pdf/forms/flatten", { ...this.v(ref), confirm: true }); }
+  /** PROVISIONAL (backend THYNKPDF2, branch feat/xfa): convert an XFA form to a standard AcroForm as a new version.
+   * Path is a placeholder until the backend publishes it; callers must tolerate 404/405 (not deployed) and
+   * 422 `xfa_dynamic_unsupported` (dynamic XFA with no widgets). */
+  convertXfaToAcroForm(ref: DocumentRef) { return this.send<VersionResult>("POST", "/pdf/forms/xfa/convert", { ...this.v(ref) }); }
   // signatures
   listSignatureAssets() { return this.req<SignatureAsset[]>("/signatures/assets"); }
   uploadSignaturePng(png: Blob) { const fd = new FormData(); fd.append("file", png, "signature.png"); return this.req<SignatureAsset>("/signatures/assets", { method: "POST", body: fd }); }

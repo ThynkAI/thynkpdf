@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Wordmark, TooltipProvider } from "@thynkpdf/ui";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { PdfViewer } from "@thynkpdf/pdf-viewer/client";
+import { XfaBanner } from "./XfaBanner";
 import { Home as HomeIcon, Wrench } from "lucide-react";
 import { Home } from "./shell/Home";
 import { LeftPanel } from "./shell/LeftPanel";
@@ -135,6 +136,7 @@ export function EditorShell() {
         <div className="relative flex min-h-0 flex-1">
           {sidebar && <nav aria-label="Left sidebar" className="absolute inset-y-0 left-0 z-20 w-44 shrink-0 border-r shadow-lg md:static md:shadow-none border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900"><LeftPanel onReorder={(f, t) => void reorderPage(f, t)} reorderDisabledReason={reorderGate.reason} /></nav>}
           <main className="relative min-w-0 flex-1">
+            {hasDoc && !showHome && <XfaBanner />}
             <PdfViewer renderOverlay={(i, sc) => <><AnnotOverlay pageIndex={i} scale={sc} /><SignatureBox pageIndex={i} scale={sc} /></>} />
             {(!hasDoc || showHome) && <Home onTool={pickTool} onOpen={() => { setShowHome(false); fileRef.current?.click(); }} />}
             {dragging && <div data-testid="drop-overlay" className="pointer-events-none absolute inset-2 rounded-lg border-4 border-dashed border-brand-500 bg-brand-500/10" />}
