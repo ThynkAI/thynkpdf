@@ -96,3 +96,25 @@ New requests:
 - R5.6 (typed SignerLink): casts removed; signer links are built from `token`.
 - R0.3 (optional defaulted fields): the client is now generated with `--default-non-nullable false`, so the `FieldSpec`/`EditOp` loosening is gone.
 - Static export / apps/desktop: public pages are `/sign/?token=` and `/shared/?token=`. The sidecar serves `/sign/{token}` and `/shared/{token}` as API routes, so those can't be pages. The launcher ids `merge` and `annotate` are accepted as aliases. **Backend request R6.1:** have `CreatedReqOut.signer_links[].path` and `ShareOut.url` return the query form, or return only the token, so clients don't need to rebuild the URLs.
+
+## XFA forms (branch feat/xfa-support, 2026-10-31) — requests for THYNKPDF2 (backend feat/xfa)
+Frontend behaviour now: PDF.js opens every PDF with `enableXfa: true`. Dynamic XFA (`isPureXfa`) is rendered client-side by the XFA layer and filled via PDF.js `annotationStorage`; "Save" uses `saveDocument()` (values go into the XFA datasets) and, for server documents, uploads the bytes as a new version (`POST` upload-version, existing contract). Hybrid XFA+AcroForm shows the AcroForm; filling via pdf-lib explicitly deletes `/XFA` on that save and tells the user. Stamp/annotation/add-field writes now preserve `/XFA` (pdf-lib's default `save()` was silently deleting it). No existing contract changed.
+- **R7.1 convert endpoint.** Client stub: `HttpEditorApi.convertXfaToAcroForm(ref)` → `POST /pdf/forms/xfa/convert` with `{document_id, version_id|version}` returning `VersionResult`. The path is a placeholder — please confirm the real one and we'll update the single call site. The UI hides the action after a 404/405.
+- **R7.2 422 `xfa_dynamic_unsupported`.** Handled: shown as "dynamic XFA form with no standard fields to convert; fill it here and save a copy". Please return `code` exactly `xfa_dynamic_unsupported` (case-insensitive match).
+- **R7.3 detection.** Please expose `xfa: {present, kind: none|hybrid|dynamic, packets, has_scripts}` on `/metadata` (or `/pdf/forms`). The frontend currently detects client-side (PDF.js `isPureXfa` + `IsXFAPresent`) and will prefer the server value when present.
+- **R7.4 metadata page sizes.** For dynamic XFA, `/metadata.pages` describes the 1-page placeholder; the XFA layout may have a different page count/size. The frontend ignores metadata sizes when `isPureXfa`. Reporting XFA page count (or a flag) would help.
+- **R7.5 forms API on XFA.** `GET /pdf/forms` returns no fields for dynamic XFA. When datasets read/fill lands, please document the field naming (SOM path, e.g. `form1[0].body[0].City[0]`) so the Forms panel can list XFA fields from the server too.
+- **R7.6 dynamic-XFA schema (typed client: `packages/editor-client/src/xfa.ts`).** Placeholder `GET /pdf/{id}/forms/xfa/schema?version=` → `XfaSchema`:
+  ```ts
+  type XfaKind = "none" | "hybrid" | "dynamic";
+  type XfaFieldType = "text"|"multiline"|"numeric"|"date"|"checkbox"|"radio"|"choice"|"signature"|"button"|"image"|"barcode"|"other";
+  interface XfaLayout { x?, y?, w?, h?: number|null /* pt */; page?: number|null; layout?: "position"|"tb"|"lr-tb"|"rl-tb"|"row"|"table"|null }
+  interface XfaField { kind: "field"; name: string; som: string /* full SOM, fill key */; type: XfaFieldType; caption?: string|null;
+    binding?: string|null; value?: string|boolean|null; options?: {value: string; label: string}[]|null; required?: boolean;
+    read_only?: boolean; max_chars?: number|null; has_scripts?: boolean; layout?: XfaLayout|null }
+  interface XfaSubform { kind: "subform"; name: string; som: string; caption?: string|null; repeatable?: boolean; layout?: XfaLayout|null; children: (XfaField|XfaSubform)[] }
+  interface XfaSchema { kind: XfaKind; packets: string[]; has_scripts: boolean; root: XfaSubform }
+  ```
+- **R7.7 fill.** Placeholder `POST /pdf/forms/xfa/fill` `{document_id, expected_version, values: {[som]: string|boolean}}` → `VersionResult` (datasets updated; hybrid AcroForm synced).
+- **R7.8 data XML.** Placeholder export `GET /pdf/{id}/forms/xfa/data?version=` → `application/xml` (the `xfa:data` content); import `POST /pdf/forms/xfa/data` multipart `document_id, expected_version, file` → `VersionResult`.
+- All of R7.1/R7.6–R7.8 are feature-detected: 404/405 hides the action for the session. Please publish the final paths/shapes and we'll swap the placeholders (single call sites in `http.ts`).

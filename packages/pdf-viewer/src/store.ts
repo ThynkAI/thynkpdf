@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { clampScale, zoomIn, zoomOut, type ZoomMode, type Size } from "./zoom";
 import { findMatches, type SearchMatch } from "./search";
+import type { XfaMode } from "./xfa";
 
 export interface ViewerState {
   doc: PDFDocumentProxy | null;
@@ -17,6 +18,9 @@ export interface ViewerState {
   query: string;
   matches: SearchMatch[];
   activeMatch: number;
+  /** XFA handling for the open document (see loader.detectXfa). */
+  xfa: XfaMode;
+  setXfa(m: XfaMode): void;
   setDocument(doc: PDFDocumentProxy | null, fileName: string | null, sizes: Size[], keepPage?: boolean): void;
   setCurrentPage(p: number): void;
   goToPage(p: number): void;
@@ -32,10 +36,11 @@ export interface ViewerState {
 
 export const useViewerStore = create<ViewerState>((set, get) => ({
   doc: null, docKey: 0, fileName: null, pageSizes: [], pagesText: [], currentPage: 0, scrollRequest: null,
-  zoomMode: "fit-width", customScale: 1, effectiveScale: 1, query: "", matches: [], activeMatch: -1,
+  zoomMode: "fit-width", customScale: 1, effectiveScale: 1, query: "", matches: [], activeMatch: -1, xfa: "none",
+  setXfa(m) { set({ xfa: m }); },
   setDocument(doc, fileName, sizes, keepPage = false) {
     const cur = keepPage ? Math.min(get().currentPage, Math.max(0, sizes.length - 1)) : 0;
-    set((s) => ({ doc, fileName, pageSizes: sizes, pagesText: sizes.map(() => null), currentPage: cur, docKey: s.docKey + 1,
+    set((s) => ({ doc, fileName, pageSizes: sizes, pagesText: sizes.map(() => null), currentPage: cur, docKey: s.docKey + 1, xfa: "none" as XfaMode,
       matches: [], activeMatch: -1, scrollRequest: keepPage ? { page: cur, nonce: Date.now() } : null }));
   },
   setCurrentPage(p) { if (p !== get().currentPage) set({ currentPage: p }); },

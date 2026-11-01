@@ -3,6 +3,7 @@
  * /Contents and an appearance stream (/AP /N) so any reader (PDF.js, qpdf-based tools, Acrobat) shows it.
  * Replies are /Text annots with /IRT + /RT /R; resolve/reopen are Review state annots (/StateModel /Review, /State Completed|None).
  */
+import { savePdf } from "./pdfWrite";
 import { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFRef, PDFNumber, StandardFonts, PDFHexString, PDFFont,
   pushGraphicsState, popGraphicsState, setFillingRgbColor, setStrokingRgbColor, setLineWidth, rectangle, fill, stroke,
   moveTo, lineTo, appendBezierCurve, closePath, beginText, endText, setFontAndSize, showText, moveText, setGraphicsState, fillAndStroke, type PDFOperator } from "pdf-lib";
@@ -224,7 +225,7 @@ export async function addAnnotations(bytes: Uint8Array, list: NewAnnot[]): Promi
     const ref = ctx.register(ctx.obj(dict as never));
     annotsOf(doc, a.page).push(ref);
   }
-  return { bytes: await doc.save(), ids };
+  return { bytes: await savePdf(doc), ids };
 }
 
 function arrowHead(tip: [number, number], from: [number, number]): PDFOperator[] {
@@ -305,7 +306,7 @@ async function addChild(bytes: Uint8Array, parentId: string, author: string, ext
   const ref = doc.context.register(doc.context.obj({ Type: "Annot", Subtype: "Text", NM: PDFString.of(id), T: txt(author), M: PDFString.of(now), CreationDate: PDFString.of(now),
     Contents: txt(contents), IRT: parent.ref!, Rect: [r.x, r.y, r.x + r.width, r.y + r.height], F: 4 | 2 /* hidden: shown in thread, not on page */, P: doc.getPage(parent.page).ref, ...extra } as never));
   annotsOf(doc, parent.page).push(ref);
-  return { bytes: await doc.save(), id };
+  return { bytes: await savePdf(doc), id };
 }
 export const addReply = (bytes: Uint8Array, parentId: string, author: string, contents: string, date?: Date) =>
   addChild(bytes, parentId, author, { RT: PDFName.of("R") }, contents, date);
@@ -333,5 +334,5 @@ export async function deleteAnnotation(bytes: Uint8Array, id: string): Promise<U
       }
     }
   });
-  return doc.save();
+  return savePdf(doc);
 }

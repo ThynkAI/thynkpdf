@@ -9,3 +9,4 @@ export function createEditorApi(env: { apiUrl?: string; mock?: boolean }): Edito
   if (env.mock) return new MockEditorApi();
   return new HttpEditorApi({ baseUrl: env.apiUrl ?? "http://localhost:8000" });
 }
+export * from "./xfa";

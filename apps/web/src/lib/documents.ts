@@ -1,5 +1,5 @@
 "use client";
-import { openPdf, extractAllText, sizesFromMetadata, type PdfSource } from "@thynkpdf/pdf-viewer/client";
+import { openPdf, extractAllText, sizesFromMetadata, detectXfa, type PdfSource } from "@thynkpdf/pdf-viewer/client";
 import { useViewerStore, moveOrder, isIdentity } from "@thynkpdf/pdf-viewer";
 import { useSession } from "./session";
 import { loadPersisted, savePersisted } from "./persist";
@@ -11,6 +11,7 @@ async function load(src: PdfSource, name: string, keepPage = false, sizes?: { wi
   const prev = useViewerStore.getState().doc;
   const r = await openPdf(src, sizes);
   useViewerStore.getState().setDocument(r.doc, name, r.sizes, keepPage);
+  void detectXfa(r.doc).then((m) => { if (useViewerStore.getState().doc === r.doc) useViewerStore.getState().setXfa(m); });
   void prev?.destroy();
   textJob = null;
   // Text is extracted lazily (on first search) so reloads after an edit only fetch the byte ranges the visible pages need.

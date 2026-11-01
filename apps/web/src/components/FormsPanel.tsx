@@ -3,11 +3,15 @@ import { useEffect, useState } from "react";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { currentBytes, saveModifiedCopy } from "@/lib/copies";
-import { listFields, fillFields, addField, type FieldInfo } from "@/lib/pdfWrite";
+import { listFields, fillFieldsWithReport, addField, XFA_REMOVED_NOTE, type FieldInfo } from "@/lib/pdfWrite";
+import { XfaFormBanner } from "./XfaFormBanner";
+import { XfaServerForm } from "./XfaServerForm";
+import { saveXfaDocument } from "@thynkpdf/pdf-viewer/client";
 import { describeError, http, runVersionedOp } from "@/lib/documents";
 
 export function FormsPanel() {
-  const { docKey, currentPage, pageSizes } = useViewerStore();
+  const { docKey, currentPage, pageSizes, xfa, doc } = useViewerStore();
+  const [note, setNote] = useState<string | null>(null);
   const s = useSession();
   const [fields, setFields] = useState<FieldInfo[] | null>(null);
   const [vals, setVals] = useState<Record<string, string | boolean>>({});
@@ -18,7 +22,7 @@ export function FormsPanel() {
   // Server documents use the versioned forms API (fields/fill/flatten → new version); local files use pdf-lib in the browser.
   const server = !!s.ref && s.api.kind === "http";
   useEffect(() => {
-    setFields(null); setVals({}); setErr(null); setConfirmFlat(false);
+    setFields(null); setVals({}); setErr(null); setConfirmFlat(false); setNote(null);
     if (!pageSizes.length) return;
     let live = true;
     const ref = s.ref;
@@ -29,10 +33,23 @@ export function FormsPanel() {
     return () => { live = false; };
   }, [docKey, s.ref?.version]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!pageSizes.length) return null;
+  if (xfa === "pure") return (
+    <section aria-labelledby="forms-h" data-testid="xfa-forms">
+      <h2 id="forms-h" className="mb-1 font-semibold">Form fields (XFA)</h2>
+      <XfaFormBanner mode={xfa} />
+      {server && <XfaServerForm />}
+      <p className="text-xs text-neutral-600 dark:text-neutral-400">This is a dynamic XFA form. Type directly into the fields on the page, then save. Values are written into the form&apos;s XFA data, so Adobe Reader shows them too. Form scripts are not run.</p>
+      <button className="mt-1 rounded bg-brand-600 px-3 py-1 text-xs text-white disabled:opacity-40" disabled={!doc || !!s.busy} onClick={async () => {
+        if (!doc) return;
+        try { await saveModifiedCopy(await saveXfaDocument(doc), "filled"); } catch (x) { s.set({ error: `Save failed: ${describeError(x)}` }); }
+      }}>{server ? "Save values (new version)" : "Save filled copy"}</button>
+    </section>);
   const input = "w-full rounded border px-2 py-1 dark:border-neutral-700 dark:bg-neutral-800";
   return (
     <section aria-labelledby="forms-h">
       <h2 id="forms-h" className="mb-1 font-semibold">Form fields</h2>
+      <XfaFormBanner mode={xfa} />
+      {server && xfa === "unrendered" && <XfaServerForm />}
       {err && <p role="alert" className="text-xs text-red-600">{err}</p>}
       {fields === null && !err && <p className="text-xs text-neutral-500">Reading form…</p>}
       {fields && fields.length === 0 && <p className="text-xs text-neutral-500" data-testid="no-fields">This PDF has no form fields.</p>}
@@ -45,7 +62,7 @@ export function FormsPanel() {
             if (ok) { setMissing(((rep as { missing_required?: string[] } | null)?.missing_required) ?? []); setVals({}); }
             return;
           }
-          try { await saveModifiedCopy(await fillFields(await currentBytes(), vals), "filled"); } catch (x) { s.set({ error: `Fill failed: ${describeError(x)}` }); }
+          try { const r = await fillFieldsWithReport(await currentBytes(), vals); await saveModifiedCopy(r.bytes, "filled"); setNote(r.xfaRemoved ? XFA_REMOVED_NOTE : null); } catch (x) { s.set({ error: `Fill failed: ${describeError(x)}` }); }
         }}>
           {fields.map((f) => {
             const v = vals[f.name] ?? f.value;
@@ -62,6 +79,7 @@ export function FormsPanel() {
               </label>);
           })}
           <button className="rounded bg-brand-600 px-3 py-1 text-white disabled:opacity-40" disabled={!Object.keys(vals).length || !!s.busy}>{server ? "Save values (new version)" : "Save filled copy"}</button>
+          {note && <p role="status" data-testid="xfa-removed-note" className="text-amber-700">{note}</p>}
           {missing.length > 0 && <p role="status" className="text-amber-700">Required fields still empty: {missing.join(", ")}</p>}
         </form>)}
       {server && fields && fields.length > 0 && (!confirmFlat

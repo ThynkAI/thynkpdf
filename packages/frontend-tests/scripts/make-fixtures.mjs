@@ -34,3 +34,9 @@ console.log("wrote", join(out, "sample-12p.pdf"));
   writeFileSync(join(out, "form-fields.pdf"), await f.save({ useObjectStreams: false }));
   console.log("wrote", join(out, "form-fields.pdf"));
 }
+{
+  const { makeXfaPdf } = await import("./make-xfa-fixture.mjs");
+  writeFileSync(join(out, "xfa-dynamic.pdf"), await makeXfaPdf());
+  writeFileSync(join(out, "xfa-hybrid.pdf"), await makeXfaPdf({ hybrid: true }));
+  console.log("wrote xfa-dynamic.pdf, xfa-hybrid.pdf");
+}
