@@ -4,6 +4,8 @@ import { useViewerStore, moveOrder, isIdentity } from "@thynkpdf/pdf-viewer";
 import { useSession } from "./session";
 import { loadPersisted, savePersisted } from "./persist";
 import { useAnnot } from "./annotState";
+import { record, clearHistory } from "./history";
+import { rotateLocal, reorderLocal, deleteLocal, duplicateLocal, insertBlankLocal } from "./localPages";
 import { ApiError, VersionConflictError, DocumentSignedError, RateLimitedError, HttpEditorApi, type DocumentRef, type VersionResult } from "@thynkpdf/editor-client";
 
 let textJob: Promise<void> | null = null;
@@ -50,8 +52,11 @@ export async function openFile(file: File) {
   useAnnot.getState().set({ working: null });
   const s = useSession.getState();
   s.set({ busy: "Opening…", error: null, notice: null });
+  clearHistory();
   try {
-    if (s.backend === "online" && s.authed) {
+    // Desktop: the shell provisions a local session (refresh cookie) for the bundled engine, so no sign-in is ever shown.
+    if (s.backend === "online" && !s.authed && isDesktop()) await bootstrapAuth();
+    if (s.backend === "online" && useSession.getState().authed) {
       s.set({ busy: "Uploading…" });
       const up = await s.api.upload(file, file.name);
       await openServerRef({ document_id: up.document_id, version_id: up.version_id, version: up.version }, file.name, false);
@@ -105,7 +110,14 @@ async function runPageOp(label: string, op: (ref: DocumentRef) => Promise<Versio
   try {
     const r = await op(ref);
     lastReport = r.report ?? null;
-    await openServerRef({ document_id: r.document_id, version_id: r.version_id, version: r.version }, useViewerStore.getState().fileName ?? "document.pdf", true);
+    const after: DocumentRef = { document_id: r.document_id, version_id: r.version_id, version: r.version };
+    await openServerRef(after, useViewerStore.getState().fileName ?? "document.pdf", true);
+    if (after.document_id === ref.document_id && after.version !== ref.version) {
+      // Undo/redo of a server edit = restore the earlier/later version as a new version (history is never rewritten).
+      record({ label,
+        undo: () => restoreVersionOp(ref.version_id).then((ok) => { void refreshAnnots(); return ok; }),
+        redo: () => restoreVersionOp(after.version_id).then((ok) => { void refreshAnnots(); return ok; }) });
+    }
   } catch (e) {
     if (e instanceof DocumentSignedError) {
       s.set({ error: `${label} blocked: this version carries a digital signature, and changing it in place would invalidate the signature. Work on a copy (Organize → Extract to new PDF) or restore an unsigned version from Documents → Versions. (DOCUMENT_SIGNED)` });
@@ -133,13 +145,46 @@ export function describeError(e: unknown) {
   return (e as Error).message;
 }
 
-export const rotateCurrentPage = (deg: 90 | 180 | 270 | -90 = 90) =>
-  runPageOp("Rotate", (ref) => useSession.getState().api.rotatePages(ref, [useViewerStore.getState().currentPage + 1], deg));
+export const isDesktop = () => typeof window !== "undefined" && !!(window as unknown as { thynkpdf?: { desktop?: boolean } }).thynkpdf?.desktop;
+const refreshAnnots = () => import("./annotActions").then((m) => m.refreshThreads()).catch(() => undefined);
+
+/** Apply a client-side (pdf-lib) edit to a local document and record it for undo. Used when there is no server document. */
+export async function localBytesOp(label: string, fn: (b: Uint8Array) => Promise<Uint8Array>, keepPage = true) {
+  const s = useSession.getState();
+  const { localBytesRef } = await import("./copies");
+  const before = localBytesRef.current;
+  if (!before) return false;
+  const name = useViewerStore.getState().fileName ?? "document.pdf";
+  s.set({ busy: `${label}…`, error: null, notice: null });
+  try {
+    const after = await fn(before);
+    await loadLocalBytes(after, name, keepPage);
+    const { useAnnot } = await import("./annotState");
+    const a = useAnnot.getState();
+    if (!a.working) a.set({ working: { originRef: null, baseName: name, original: before, dirty: true } });
+    else a.set({ working: { ...a.working, dirty: true } });
+    record({ label,
+      undo: async () => { await loadLocalBytes(before, name, true); await refreshAnnots(); },
+      redo: async () => { await loadLocalBytes(after, name, true); await refreshAnnots(); } });
+    void refreshAnnots();
+    return true;
+  } catch (e) { s.set({ error: `${label} failed: ${describeError(e)}` }); return false; }
+  finally { s.set({ busy: null }); }
+}
+
+/** Page op: server version when a server document is open, otherwise done in the browser with pdf-lib (works offline, no sign-in). */
+function pageOp(label: string, server: (ref: DocumentRef) => Promise<VersionResult>, local: (b: Uint8Array) => Promise<Uint8Array>) {
+  const s = useSession.getState();
+  if (s.ref && s.api.kind === "http") return runPageOp(label, server);
+  return localBytesOp(label, local);
+}
+
+export const rotateCurrentPage = (deg: 90 | 180 | 270 | -90 = 90) => rotatePages([useViewerStore.getState().currentPage + 1], deg);
 
 export async function reorderPage(from: number, to: number) {
   const order = moveOrder(useViewerStore.getState().pageSizes.length, from, to);
   if (isIdentity(order)) return;
-  await runPageOp("Reorder", (ref) => useSession.getState().api.reorderPages(ref, order));
+  await reorderTo(order);
   if (!useSession.getState().error) useViewerStore.getState().goToPage(to);
 }
 
@@ -158,10 +203,10 @@ export async function replaceText(page: number, find: string, replacement: strin
 }
 
 export const rotatePages = (pages: number[], angle: 90 | 180 | 270 | -90) =>
-  runPageOp("Rotate", (ref) => useSession.getState().api.rotatePages(ref, pages, angle));
-export const deletePages = (pages: number[]) => runPageOp("Delete pages", (ref) => http().deletePages(ref, pages));
-export const duplicatePages = (pages: number[]) => runPageOp("Duplicate pages", (ref) => http().duplicatePages(ref, pages));
-export const insertBlankAfter = (afterPage: number) => runPageOp("Insert blank page", (ref) => http().insertBlank(ref, afterPage));
+  pageOp("Rotate", (ref) => useSession.getState().api.rotatePages(ref, pages, angle), (b) => rotateLocal(b, pages, angle));
+export const deletePages = (pages: number[]) => pageOp("Delete pages", (ref) => http().deletePages(ref, pages), (b) => deleteLocal(b, pages));
+export const duplicatePages = (pages: number[]) => pageOp("Duplicate pages", (ref) => http().duplicatePages(ref, pages), (b) => duplicateLocal(b, pages));
+export const insertBlankAfter = (afterPage: number) => pageOp("Insert blank page", (ref) => http().insertBlank(ref, afterPage), (b) => insertBlankLocal(b, afterPage));
 export const insertFromDoc = (sourceId: string, afterPage: number) => runPageOp("Insert pages", (ref) => http().insertFrom(ref, sourceId, afterPage));
 /** Save client-modified bytes as a new version of the open server document. */
 export const saveAsNewVersion = (bytes: Uint8Array) => runPageOp("Save new version", (ref) => http().uploadVersion(ref, bytes, useViewerStore.getState().fileName ?? "document.pdf"));
@@ -171,7 +216,7 @@ export function http(): HttpEditorApi {
   if (!(a instanceof HttpEditorApi)) throw new ApiError(0, "SERVER_REQUIRED", "Requires the THYNKPDF server (not available in mock/local mode).");
   return a;
 }
-export const reorderTo = (order: number[]) => runPageOp("Reorder", (ref) => useSession.getState().api.reorderPages(ref, order));
+export const reorderTo = (order: number[]) => pageOp("Reorder", (ref) => useSession.getState().api.reorderPages(ref, order), (b) => reorderLocal(b, order));
 
 /** Backend ops that create NEW documents. Return the created documents; caller decides whether to open. */
 export async function newDocOp<T>(label: string, fn: () => Promise<T>): Promise<T | null> {

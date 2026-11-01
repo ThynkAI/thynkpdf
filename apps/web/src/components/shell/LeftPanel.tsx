@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { LayoutGrid, Bookmark, MessageSquare } from "lucide-react";
+import { LayoutGrid, Bookmark, MessageSquare, Trash2 } from "lucide-react";
+import { eraseAnnotations } from "@/lib/annotActions";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { Thumbnails } from "@thynkpdf/pdf-viewer/client";
 import { useAnnot } from "@/lib/annotState";
@@ -70,18 +71,21 @@ function Bookmarks() {
 
 function CommentList() {
   const threads = useAnnot((a) => a.threads);
+  const selected = useAnnot((a) => a.selected);
   const goToPage = useViewerStore((s) => s.goToPage);
   if (!threads.length) return <p className="p-3 text-xs text-neutral-500">No comments yet. Use the Comment tool to add some.</p>;
   return (
     <ul className="space-y-1 p-1" data-testid="left-comments">
-      {threads.map((t, i) => (
-        <li key={i}>
-          <button onClick={() => goToPage(t.root.page)} className="w-full rounded px-2 py-1 text-left text-xs hover:bg-neutral-200 dark:hover:bg-neutral-800">
+      {threads.map((t, i) => { const on = selected.includes(t.root.id); return (
+        <li key={i} className={`group flex items-start rounded ${on ? "bg-[#E8141C]/10 ring-1 ring-[#E8141C]" : ""}`} data-testid="left-comment">
+          <button onClick={(e) => { goToPage(t.root.page); const cur = useAnnot.getState().selected; useAnnot.getState().set({ selected: e.shiftKey ? (on ? cur.filter((x) => x !== t.root.id) : [...cur, t.root.id]) : [t.root.id] }); }}
+            className="min-w-0 flex-1 rounded px-2 py-1 text-left text-xs hover:bg-neutral-200 dark:hover:bg-neutral-800">
             <span className="block truncate font-medium">{t.root.contents || t.root.subtype}</span>
             <span className="text-neutral-500">p{t.root.page + 1}{t.root.author ? ` · ${t.root.author}` : ""}</span>
           </button>
-        </li>
-      ))}
+          <button aria-label={`Delete ${t.root.contents || t.root.subtype} on page ${t.root.page + 1}`} title="Delete (Del)" onClick={() => void eraseAnnotations([t.root.id])}
+            className="m-1 rounded p-1 text-neutral-500 hover:bg-red-100 hover:text-[#E8141C] dark:hover:bg-neutral-800"><Trash2 aria-hidden className="h-3.5 w-3.5" /></button>
+        </li>); })}
     </ul>
   );
 }

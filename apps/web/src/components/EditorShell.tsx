@@ -19,7 +19,12 @@ import { parseTool, toolAction } from "@/lib/tools";
 import { RightPanel } from "./RightPanel";
 import { StatusBar } from "./StatusBar";
 import { useSession } from "@/lib/session";
-import { openFile, rotateCurrentPage, reorderPage, restoreSession } from "@/lib/documents";
+import { openFile, rotateCurrentPage, reorderPage, restoreSession, duplicatePages } from "@/lib/documents";
+import { undo, redo } from "@/lib/history";
+import { copyAction, cutAction, pasteAction, deleteSelection, selectAllPageText, hasTextSelection } from "@/lib/editActions";
+import { saveAnnotations } from "@/lib/annotActions";
+import { ShortcutsDialog } from "./ShortcutsDialog";
+import { SettingsDialog } from "./SettingsDialog";
 import { editGate } from "@/lib/gates";
 import { resolveShortcut } from "@/lib/shortcuts";
 
@@ -35,6 +40,7 @@ export function EditorShell() {
   const [pendingSection, setPendingSection] = useState<string | null>(null);
   const [activeTool, setActiveTool] = useState<ToolParam | null>(null);
   const [showHome, setShowHome] = useState(false);
+  const [dialog, setDialog] = useState<null | "help" | "settings">(null);
   const applyTool = useCallback((t: ToolParam) => {
     const a = toolAction(t);
     if (a.navigate) { window.location.assign(a.navigate); return; }
@@ -100,13 +106,47 @@ export function EditorShell() {
         case "prevPage": v.goToPage(v.currentPage - 1); break;
         case "firstPage": v.goToPage(0); break;
         case "lastPage": v.goToPage(v.pageSizes.length - 1); break;
-        case "rotate": { const ss = useSession.getState(); if (editGate("rotate", ss.ref, ss.caps, { busy: !!ss.busy, capsError: ss.capsError }).enabled) void rotateCurrentPage(90); break; }
+        case "rotate": case "rotateCcw": { const ss = useSession.getState(); if (v.pageSizes.length && editGate("rotate", ss.ref, ss.caps, { busy: !!ss.busy, capsError: ss.capsError }).enabled) void rotateCurrentPage(a === "rotate" ? 90 : -90); break; }
         case "toggleTheme": toggleTheme(); break;
+        case "undo": if (!useSession.getState().busy) void undo(); break;
+        case "redo": if (!useSession.getState().busy) void redo(); break;
+        case "delete": void deleteSelection(); break;
+        case "duplicate": if (v.pageSizes.length) void duplicatePages([v.currentPage + 1]); break;
+        case "save": if (useAnnot.getState().working) void saveAnnotations(); break;
+        case "print": window.print(); break;
+        case "help": setDialog("help"); break;
+        case "settings": setDialog("settings"); break;
+        case "escape": setDialog(null); useAnnot.getState().set({ selected: [] }); break;
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [toggleTheme]);
+    // Shortcuts that must fall through to the browser in some states are filtered BEFORE preventDefault.
+    const onKeyGuard = (e: KeyboardEvent) => {
+      const a = resolveShortcut(e); if (!a) return;
+      if (a === "copy" || a === "cut" || a === "paste") return; // handled by the native clipboard events below (also fired by the Edit menu)
+      if (a === "selectAll") { if (selectAllPageText()) e.preventDefault(); return; }
+      if (a === "delete" && !useAnnot.getState().selected.length) return;
+      if (a === "escape") { if (useAnnot.getState().selected.length || dialog) onKey(e); return; }
+      onKey(e);
+    };
+    const editable = (t: EventTarget | null) => !!t && t instanceof HTMLElement && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+    // Clipboard: selected PDF text uses native copy; otherwise annotations / pages use the in-app clipboard.
+    const onCopy = (e: ClipboardEvent) => { if (editable(e.target) || hasTextSelection() || !useViewerStore.getState().pageSizes.length) return; e.preventDefault(); void copyAction(); };
+    const onCut = (e: ClipboardEvent) => { if (editable(e.target) || hasTextSelection() || !useViewerStore.getState().pageSizes.length) return; e.preventDefault(); void cutAction(); };
+    const onPaste = (e: ClipboardEvent) => { if (editable(e.target) || !useViewerStore.getState().pageSizes.length) return; e.preventDefault(); void pasteAction(); };
+    const onCustom = (e: Event) => { const t = e.type.split(":")[1]; if (t === "undo") void undo(); else if (t === "redo") void redo(); else if (t === "help") setDialog("help"); else if (t === "settings") setDialog("settings"); };
+    // Clicking empty page area clears the annotation selection.
+    const onDown = (e: PointerEvent) => { const t = e.target as Element | null; if (t?.closest?.(".tp-page") && !t.closest(".tp-annot-hit")) useAnnot.getState().selected.length && useAnnot.getState().set({ selected: [] }); };
+    window.addEventListener("keydown", onKeyGuard);
+    document.addEventListener("copy", onCopy); document.addEventListener("cut", onCut); document.addEventListener("paste", onPaste);
+    document.addEventListener("pointerdown", onDown);
+    const evs = ["thynkpdf:undo", "thynkpdf:redo", "thynkpdf:help", "thynkpdf:settings"]; evs.forEach((n) => window.addEventListener(n, onCustom));
+    return () => {
+      window.removeEventListener("keydown", onKeyGuard);
+      document.removeEventListener("copy", onCopy); document.removeEventListener("cut", onCut); document.removeEventListener("paste", onPaste);
+      document.removeEventListener("pointerdown", onDown);
+      evs.forEach((n) => window.removeEventListener(n, onCustom));
+    };
+  }, [toggleTheme, dialog]);
 
   const onFiles = (files: FileList | null) => {
     const f = files?.[0]; if (!f) return;
@@ -129,7 +169,7 @@ export function EditorShell() {
           </nav>
           <span className="truncate text-sm text-neutral-500" data-testid="doc-title">{fileName ?? ""}</span>
         </header>
-        <Toolbar onAnnotate={() => useAnnot.getState().set({ open: !annotOpen, tool: annotOpen ? "none" : useAnnot.getState().tool })} annotating={annotOpen} onOrganize={() => setOrganize("pages")} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} />
+        <Toolbar onAnnotate={() => useAnnot.getState().set({ open: !annotOpen, tool: annotOpen ? "none" : useAnnot.getState().tool })} annotating={annotOpen} onOrganize={() => setOrganize("pages")} onOpen={() => fileRef.current?.click()} onToggleSidebar={() => setSidebar((s) => !s)} onTogglePanel={() => { setPanel((p) => (narrow ? !p : true)); setTimeout(() => searchRef.current?.focus(), 0); }} onToggleTheme={toggleTheme} dark={dark} onHelp={() => setDialog("help")} onSettings={() => setDialog("settings")} />
         {annotOpen && hasDoc && <AnnotToolbar />}
         {!annotOpen && hasDoc && !showHome && activeTool && activeTool !== "comment" && activeTool !== "documents" && <ContextBar tool={activeTool} onDone={() => setActiveTool(null)} />}
         <input ref={fileRef} type="file" accept="application/pdf,.pdf" hidden data-testid="file-input" onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }} />
@@ -141,10 +181,12 @@ export function EditorShell() {
             {(!hasDoc || showHome) && <Home onTool={pickTool} onOpen={() => { setShowHome(false); fileRef.current?.click(); }} />}
             {dragging && <div data-testid="drop-overlay" className="pointer-events-none absolute inset-2 rounded-lg border-4 border-dashed border-brand-500 bg-brand-500/10" />}
           </main>
-          {panel && <RightPanel ref={searchRef} onClose={() => setPanel(false)} activeTool={activeTool} onTool={pickTool} />}
+          {panel && <RightPanel ref={searchRef} onClose={() => setPanel(false)} activeTool={activeTool} onTool={pickTool} onSettings={() => setDialog("settings")} />}
         </div>
         <StatusBar />
         {organize && <Organizer focus={organize} onClose={() => setOrganize(false)} />}
+        {dialog === "help" && <ShortcutsDialog onClose={() => setDialog(null)} />}
+        {dialog === "settings" && <SettingsDialog onClose={() => setDialog(null)} />}
       </div>
     </TooltipProvider>
   );

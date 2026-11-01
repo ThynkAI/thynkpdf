@@ -7,6 +7,8 @@ import { loadLocalBytes, openLatest, runVersionedOp, http, describeError } from 
 import { readAnnotations, buildThreads, addAnnotations, addReply, setReviewState, deleteAnnotation, type NewAnnot, type Thread } from "./annotWrite";
 import { serverCanWrite, toServer, fromServer, serverThreads } from "./annotServer";
 import { getGeom } from "./pageGeom";
+import { record } from "./history";
+import { getClip, setClip, nextPasteOffset, pasteAnnotations } from "./clipboard";
 
 export function authorName() {
   const a = useAnnot.getState().author.trim();
@@ -42,6 +44,12 @@ export async function applyEdit(label: string, fn: (b: Uint8Array) => Promise<Ui
     await loadLocalBytes(out, working.baseName, true);
     useAnnot.getState().set({ working: { ...working, dirty: true } });
     await refreshThreads();
+    const restore = (b: Uint8Array) => async () => {
+      await loadLocalBytes(b, working.baseName, true);
+      useAnnot.getState().set({ working: { ...working, dirty: true }, selected: [] });
+      await refreshThreads();
+    };
+    record({ label, undo: restore(before), redo: restore(out) });
     return true;
   } catch (e) { s.set({ error: `${label} failed: ${describeError(e)}` }); return false; }
   finally { s.set({ busy: null }); }
@@ -114,6 +122,48 @@ export async function eraseAnnotation(id: string) {
   if (serverMode()) return serverChange("Delete annotation", { delete: [id] });
   return applyEdit("Erase", (b) => deleteAnnotation(b, id));
 }
+/** Delete several annotations (and their replies) as ONE undoable step. */
+export async function eraseAnnotations(ids: string[]) {
+  if (!ids.length) return false;
+  const all = useAnnot.getState().all;
+  const withReplies = [...new Set([...ids, ...all.filter((a) => a.inReplyTo && ids.includes(a.inReplyTo)).map((a) => a.id)])];
+  useAnnot.getState().set({ selected: [] });
+  const label = ids.length > 1 ? `Delete ${ids.length} annotations` : "Delete annotation";
+  if (serverMode()) return serverChange(label, { delete: withReplies });
+  return applyEdit(label, async (b) => { for (const id of withReplies) b = await deleteAnnotation(b, id); return b; });
+}
+
+/** Copy the selected annotations to the in-app clipboard. Returns how many were copied. */
+export async function copySelectedAnnotations() {
+  const { selected, all } = useAnnot.getState();
+  const picked = all.filter((a) => selected.includes(a.id));
+  if (!picked.length) return 0;
+  setClip({ kind: "annots", source: (await currentBytes()).slice(), ids: picked.map((a) => a.id), fromPage: picked[0].page });
+  return picked.length;
+}
+export async function cutSelectedAnnotations() {
+  const ids = useAnnot.getState().selected;
+  const n = await copySelectedAnnotations();
+  if (n) await eraseAnnotations(ids);
+  return n;
+}
+/** Paste clipboard annotations onto the current page (slightly offset). Server documents get a new version. */
+export async function pasteAnnotationsHere() {
+  const c = getClip(); if (!c || c.kind !== "annots") return false;
+  const page = useViewerStore.getState().currentPage;
+  const off = nextPasteOffset(page === c.fromPage);
+  let ids: string[] = [];
+  const fn = async (b: Uint8Array) => { const r = await pasteAnnotations(b, c.source, c.ids, page, off); ids = r.ids; return r.bytes; };
+  let ok: boolean;
+  if (serverMode()) {
+    const bytes = await fn(await currentBytes());
+    ok = !!(await runVersionedOp("Paste annotations", (r) => http().uploadVersion(r, bytes, useViewerStore.getState().fileName ?? "document.pdf")));
+    await refreshThreads();
+  } else ok = await applyEdit("Paste annotations", fn);
+  if (ok) useAnnot.getState().set({ selected: ids });
+  return ok;
+}
+
 export async function replyTo(t: Thread, text: string) {
   if (serverMode()) {
     const r = t.root.rect;

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useAnnot } from "@/lib/annotState";
-import { refreshThreads, replyTo, setResolved, eraseAnnotation } from "@/lib/annotActions";
+import { refreshThreads, replyTo, setResolved, eraseAnnotations } from "@/lib/annotActions";
 import { useSession } from "@/lib/session";
 
 const fmt = (d: Date | null) => (d ? d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "");
@@ -10,7 +10,7 @@ const LABEL: Record<string, string> = { Text: "Note", FreeText: "Text comment", 
 
 export function CommentsPanel() {
   const docKey = useViewerStore((s) => s.docKey); const goToPage = useViewerStore((s) => s.goToPage); const has = useViewerStore((s) => s.pageSizes.length > 0);
-  const { threads } = useAnnot();
+  const { threads, selected } = useAnnot();
   const [reply, setReply] = useState<Record<string, string>>({});
   const [filter, setFilter] = useState<"open" | "all">("all");
   const version = useSession((s) => s.ref?.version);
@@ -26,9 +26,9 @@ export function CommentsPanel() {
       {shown.length === 0 && <p className="text-xs text-neutral-500">No annotations.</p>}
       <ul className="space-y-2" data-testid="threads">
         {shown.map((t) => (
-          <li key={t.root.id} className={`rounded border p-2 text-xs dark:border-neutral-700 ${t.resolved ? "opacity-70" : ""}`} data-testid="thread">
+          <li key={t.root.id} className={`rounded border p-2 text-xs dark:border-neutral-700 ${t.resolved ? "opacity-70" : ""} ${selected.includes(t.root.id) ? "border-[#E8141C] ring-1 ring-[#E8141C]" : ""}`} data-testid="thread">
             <div className="flex items-center gap-1">
-              <button className="font-semibold underline" onClick={() => goToPage(t.root.page)}>{LABEL[t.root.subtype] ?? t.root.subtype} · p{t.root.page + 1}</button>
+              <button className="font-semibold underline" onClick={() => { goToPage(t.root.page); useAnnot.getState().set({ selected: [t.root.id] }); }}>{LABEL[t.root.subtype] ?? t.root.subtype} · p{t.root.page + 1}</button>
               {t.resolved && <span className="rounded bg-green-100 px-1 text-green-800 dark:bg-green-900 dark:text-green-200" data-testid="resolved-badge">Resolved</span>}
             </div>
             <p className="text-neutral-500"><span data-testid="author">{t.root.author || "Unknown"}</span> · <time dateTime={t.root.created?.toISOString()}>{fmt(t.root.created ?? t.root.modified)}</time></p>
@@ -47,7 +47,7 @@ export function CommentsPanel() {
             </form>
             <div className="mt-1 flex gap-2">
               <button className="underline" onClick={() => void setResolved(t, !t.resolved)}>{t.resolved ? "Reopen" : "Resolve"}</button>
-              <button className="underline text-red-600" onClick={() => void eraseAnnotation(t.root.id)}>Delete</button>
+              <button className="underline text-red-600" onClick={() => void eraseAnnotations([t.root.id])}>Delete</button>
             </div>
           </li>))}
       </ul>
