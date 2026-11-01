@@ -2,10 +2,9 @@
 import { forwardRef, useState } from "react";
 import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
-import { editGate } from "@/lib/gates";
-import { signOut, ensureText, isDesktop } from "@/lib/documents";
+import { editGate, readOnlyView } from "@/lib/gates";
+import { ensureText, isDesktop } from "@/lib/documents";
 import { TextEditPanel } from "./TextEditPanel";
-import { SignInForm } from "./SignInForm";
 import { SignPanel } from "./SignPanel";
 import { CommentsPanel } from "./CommentsPanel";
 import { FormsPanel } from "./FormsPanel";
@@ -59,7 +58,7 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; a
       <section>
         <h2 className="mb-2 font-semibold">Editing</h2>
         <ul className="space-y-1 text-xs" data-testid="edit-gates">
-          {(["rotate", "reorder", "delete", "duplicate", "insert_blank"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError }); return (
+          {(["rotate", "reorder", "delete", "duplicate", "insert_blank"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError, readOnly: readOnlyView(s) }); return (
             <li key={a}><span className={g.enabled ? "text-green-700 dark:text-green-400" : "text-neutral-500"}>{({ rotate: "Rotate pages", reorder: "Reorder pages (drag thumbnails)", delete: "Delete pages", duplicate: "Duplicate pages", insert_blank: "Insert pages" } as const)[a]}: {g.enabled ? "available" : g.reason}</span></li>); })}
           {s.caps?.document_limitations.map((l) => <li key={l.code} className="text-amber-700">{l.code}: {l.message}</li>)}
         </ul>
@@ -67,12 +66,8 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; a
       <section>
         <h2 className="mb-2 font-semibold">{desktop ? "Engine" : "Backend"}</h2>
         <p className="text-xs" data-testid="backend-status">{s.api.kind === "mock" ? "Mock API (in-browser, not persisted)"
-          : desktop ? (s.backend === "online" ? "Local engine on this computer — works offline, no sign-in needed" : s.backend === "offline" ? "Local engine unavailable — editing in the browser" : "Starting local engine…")
-          : s.backend === "online" ? (s.authed ? "Connected to the THYNKPDF server" : "Files open and edit locally in your browser") : s.backend === "offline" ? "Offline — files open and edit locally" : "Checking…"}</p>
-        {!desktop && s.api.kind === "http" && s.authed && <button className="mt-1 text-xs underline" onClick={() => void signOut()}>Sign out</button>}
-        {!desktop && s.api.kind === "http" && s.backend === "online" && !s.authed && (
-          <details className="mt-1 text-xs"><summary className="cursor-pointer text-neutral-500">Cloud sync (optional)</summary><SignInForm /></details>
-        )}
+          : desktop ? (s.backend === "online" ? "Local engine on this computer — works offline" : s.backend === "offline" ? "Local engine unavailable — editing in the browser" : "Starting local engine…")
+          : s.backend === "online" ? (s.authed ? "Connected" : "Online — files open and edit in your browser") : s.backend === "offline" ? "Offline — files open and edit locally" : "Checking…"}</p>
       </section>
     </aside>
   );

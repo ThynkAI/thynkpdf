@@ -21,7 +21,18 @@ def free_port() -> int:
 
 
 def prepare_env(data: Path, port: int):
+    os.umask(0o077)  # BD-11: library files readable by this OS user only
     data.mkdir(parents=True, exist_ok=True)
+    if os.name == "posix":  # tighten libraries created by older versions (0755/0644)
+        for root, dirs, files in os.walk(data):
+            for d in dirs:
+                try: os.chmod(os.path.join(root, d), 0o700)
+                except OSError: pass
+            for f in files:
+                try: os.chmod(os.path.join(root, f), 0o600)
+                except OSError: pass
+        try: os.chmod(data, 0o700)
+        except OSError: pass
     sec = data / "jwt-secret"
     if not sec.exists():
         sec.write_text(secrets.token_urlsafe(48)); os.chmod(sec, 0o600)
@@ -29,18 +40,27 @@ def prepare_env(data: Path, port: int):
     os.environ.setdefault("THYNKPDF_JWT_SECRET", sec.read_text().strip())
     os.environ["THYNKPDF_DATABASE_URL"] = "sqlite:///" + (data / "thynkpdf.db").as_posix()
     os.environ["THYNKPDF_STORAGE_ROOT"] = str(data / "objects")
-    os.environ["THYNKPDF_CORS_ORIGINS"] = f"http://127.0.0.1:{port},http://localhost:{port}"
+    os.environ["THYNKPDF_CORS_ORIGINS"] = f"http://127.0.0.1:{port},http://localhost:{port},{os.environ.get('THYNKPDF_APP_ORIGIN', 'app://thynkpdf')}"
+    os.environ["THYNKPDF_AUTH_MODE"] = "desktop"; os.environ["THYNKPDF_MANAGED_SCHEMA"] = "true"
     os.chdir(data)  # any relative default (e.g. dev signing cert) lands in app data, never in Program Files
 
 
-def build_app(web_dir: Path | None, launcher_dir: Path | None, version: str):
+def run_migrations(data: Path):
+    from thynkpdf_api.desktop_migrate import migrate
+    return migrate(data / "thynkpdf.db", BASE / "migrations")
+
+
+def build_app(web_dir: Path | None, launcher_dir: Path | None, version: str, port: int, secret: str):
     from fastapi.responses import JSONResponse
     from fastapi.staticfiles import StaticFiles
     from thynkpdf_api.main import create_app
-    app = create_app()
+    from thynkpdf_api import desktop_guard
+    app = create_app(auth_mode="desktop")
 
     @app.get("/desktop/info", include_in_schema=False)
     def info(): return JSONResponse({"version": version, "desktop": True})
+
+    host_origin_guard = desktop_guard.install(app, port, secret, extra_origins=[os.environ.get("THYNKPDF_APP_ORIGIN", "app://thynkpdf")])
 
     if launcher_dir and launcher_dir.is_dir():
         app.mount("/desktop", StaticFiles(directory=launcher_dir, html=True), name="launcher")
@@ -57,6 +77,10 @@ def build_app(web_dir: Path | None, launcher_dir: Path | None, version: str):
                 return FileResponse(web_dir / path.lstrip("/") / "index.html")
             return await call_next(request)
         app.mount("/", StaticFiles(directory=web_dir, html=True), name="web")
+
+    @app.middleware("http")  # added last = outermost: applies to static pages too
+    async def host_origin(request, call_next):
+        return host_origin_guard(request) or await call_next(request)
     return app
 
 
@@ -76,8 +100,17 @@ def main(argv=None):
     port = a.port or free_port()
     web = (Path(a.web_dir) if a.web_dir else BASE / "web").resolve()
     launcher = (Path(a.launcher_dir) if a.launcher_dir else BASE / "launcher").resolve()
-    prepare_env(Path(a.data_dir).expanduser(), port)
-    app = build_app(web, launcher, a.version)
+    secret = os.environ.pop("THYNKPDF_DESKTOP_SECRET", "")
+    if len(secret) < 32:
+        print("THYNKPDF_FATAL missing THYNKPDF_DESKTOP_SECRET (the desktop app sets it)", file=sys.stderr, flush=True); sys.exit(3)
+    data = Path(a.data_dir).expanduser()
+    prepare_env(data, port)
+    from thynkpdf_api.desktop_migrate import MigrationError
+    try:
+        r = run_migrations(data); print(f"THYNKPDF_SCHEMA {r}", file=sys.stderr, flush=True)
+    except MigrationError as e:
+        print(f"THYNKPDF_MIGRATION_FAILED {e}", flush=True); sys.exit(4)
+    app = build_app(web, launcher, a.version, port, secret)
     import uvicorn
     cfg = uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning")
     srv = uvicorn.Server(cfg)

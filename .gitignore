@@ -16,3 +16,4 @@ packages/frontend-tests/.venv/
 !packages/backend-tests/certs/*.pem
 installers/dist/
 apps/web/out/
+.venv312/

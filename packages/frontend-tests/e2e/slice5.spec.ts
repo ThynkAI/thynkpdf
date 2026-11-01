@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import path from "node:path";
 import { readFileSync } from "node:fs";
 import { PDFDocument, PDFName, PDFDict } from "pdf-lib";
-import { apiUp, signInAndUpload, LOCAL_FIXTURE, stableBox } from "./helpers";
+import { apiUp, openWorkspaceAndUpload, LOCAL_FIXTURE, stableBox, offline } from "./helpers";
 const FORM = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "fixtures", "form-fields.pdf");
 
 async function drawAndPlace(page: Page) {
@@ -35,6 +35,7 @@ const imageCount = async (bytes: Uint8Array, i = 0) => {
 };
 
 test("local: draw, place, resize, apply visual signature; download contains stamped image", async ({ page }) => {
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await expect(page.getByTestId("sig-disclaimer")).toContainText("not a cryptographic");
@@ -50,6 +51,7 @@ test("local: draw, place, resize, apply visual signature; download contains stam
 });
 
 test("local: fill form fields and add a new field", async ({ page }) => {
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(FORM);
   const ff = page.getByTestId("form-fields");
@@ -70,7 +72,7 @@ test("local: fill form fields and add a new field", async ({ page }) => {
 test.describe("live backend", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
   test("server doc: signature placed by the server as a new version", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await drawAndPlace(page);
     await page.getByRole("button", { name: "Apply signature" }).click();
     await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);

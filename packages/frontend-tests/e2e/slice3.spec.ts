@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { apiUp, signInAndUpload, LOCAL_FIXTURE } from "./helpers";
+import { apiUp, openWorkspaceAndUpload, LOCAL_FIXTURE, offline } from "./helpers";
 
 test.describe("slice 3 (live backend)", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
   test("text edit replaces text in the PDF and reports errors with hints", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await expect(page.getByLabel("Find text")).toBeEnabled();
     await page.getByLabel("Find text").fill("ACME-001");
     await page.getByLabel("Replacement text").fill("EDIT-777");
@@ -20,7 +20,7 @@ test.describe("slice 3 (live backend)", () => {
   });
 
   test("organizer: keyboard reorder, rotate selected, extract and open new doc", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Organize pages" }).click();
     const dlg = page.getByRole("dialog");
     await expect(dlg.getByRole("button", { name: "Delete", exact: true })).toBeDisabled(); // nothing selected
@@ -42,7 +42,7 @@ test.describe("slice 3 (live backend)", () => {
   });
 
   test("organizer: split by ranges and merge with another document", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Organize pages" }).click();
     const dlg = page.getByRole("dialog");
     await dlg.getByLabel("Split into new PDFs").fill("1-5");
@@ -60,9 +60,10 @@ test.describe("slice 3 (live backend)", () => {
   });
 
   test("local docs: organizer and text edit explain why they are disabled", async ({ page }) => {
+    await offline(page);
     await page.goto("/");
     await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
-    await expect(page.getByTestId("text-edit-reason")).toContainText("server");
+    await expect(page.getByTestId("text-edit-reason")).toContainText("THYNKPDF engine");
     await page.getByRole("button", { name: "Organize pages" }).click();
     await expect(page.getByRole("button", { name: "Extract to new PDF" })).toBeDisabled();
     await page.keyboard.press("Escape");

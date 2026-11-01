@@ -4,7 +4,7 @@ import { useViewerStore, moveOrder } from "@thynkpdf/pdf-viewer";
 import { PageView } from "@thynkpdf/pdf-viewer/client";
 import type { DocumentInfo, UploadResponse } from "@thynkpdf/editor-client";
 import { useSession } from "@/lib/session";
-import { editGate } from "@/lib/gates";
+import { editGate, readOnlyView } from "@/lib/gates";
 import { runVersionedOp, http, rotatePages, reorderTo, newDocOp, openLatest, deletePages, duplicatePages, insertBlankAfter, insertFromDoc } from "@/lib/documents";
 import { parseRanges } from "@/lib/ranges";
 
@@ -22,18 +22,18 @@ export function Organizer({ onClose, focus: initialFocus = "pages" }: { onClose(
   const [mergeSel, setMergeSel] = useState<string[]>([]);
   const tiles = useRef<(HTMLDivElement | null)[]>([]);
   const dialog = useRef<HTMLDivElement>(null);
-  const rot = editGate("rotate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const ro = editGate("reorder", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const del = editGate("delete", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const dup = editGate("duplicate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
-  const ins = editGate("insert_blank", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError });
+  const rot = editGate("rotate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const ro = editGate("reorder", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const del = editGate("delete", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const dup = editGate("duplicate", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
+  const ins = editGate("insert_blank", s.ref, s.caps, { busy: !!s.busy, capsError: s.capsError, readOnly: readOnlyView(s) });
   const [confirmDel, setConfirmDel] = useState(false);
   const [insSrc, setInsSrc] = useState("");
   const [preset, setPreset] = useState<"low" | "balanced" | "high">("balanced");
   const [compressMsg, setCompressMsg] = useState<string | null>(null);
   const compressRef = useRef<HTMLDivElement>(null);
   useEffect(() => { if (initialFocus === "compress") compressRef.current?.scrollIntoView({ block: "nearest" }); }, [initialFocus]);
-  const compressGate = !s.ref ? "Compression runs on the server: sign in and open a server document." : s.busy ? "Another operation is in progress." : null;
+  const compressGate = !s.ref ? "Compression runs in the THYNKPDF engine: open the file from Home while the engine is running." : s.busy ? "Another operation is in progress." : null;
   const newOps = s.ref && s.caps?.page_ops.extract ? null : (s.ref ? "Checking capabilities…" : "Requires a server document.");
   const selected = [...sel].sort((a, b) => a - b).map((i) => i + 1);
 
@@ -43,7 +43,7 @@ export function Organizer({ onClose, focus: initialFocus = "pages" }: { onClose(
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-  useEffect(() => { if (s.ref) s.api.listDocuments({ limit: 100 }).then((p) => setDocs(p.items), () => setDocs([])); }, [s.ref, s.api]);
+  useEffect(() => { if (s.ref) s.api.listDocuments({ limit: 100 }).then((p) => setDocs(p.items), () => setDocs([])); }, [s.ref, s.api, created.length]); // refresh after split/extract so new docs can be merged
 
   const move = async (from: number, to: number) => {
     if (!ro.enabled || to < 0 || to >= pageSizes.length) return;
@@ -77,7 +77,7 @@ export function Organizer({ onClose, focus: initialFocus = "pages" }: { onClose(
               <button className={btn} onClick={() => setConfirmDel(false)}>Cancel</button>
             </span>
           )}
-          <button className={btn} disabled={!dup.enabled || !selected.length} title={dup.reason ?? "Duplicate each selected page after itself (annotations are not copied)"} onClick={async () => { if (await duplicatePages(selected)) setSel(new Set()); }}>Duplicate</button>
+          <button className={btn} disabled={!dup.enabled || !selected.length} title={dup.reason ?? "Duplicate each selected page after itself (comments and links are copied; form fields are not)"} onClick={async () => { if (await duplicatePages(selected)) setSel(new Set()); }}>Duplicate</button>
           <button className={btn} disabled={!ins.enabled} title={ins.reason ?? "Insert a blank page after the focused page"} onClick={async () => { if (await insertBlankAfter(focus + 1)) setFocus(focus + 1); }}>Insert blank page</button>
           <select aria-label="Insert pages from document" className="rounded border px-1 py-1 text-xs dark:border-neutral-700 dark:bg-neutral-800" value={insSrc} onChange={(e) => setInsSrc(e.target.value)} disabled={!ins.enabled}>
             <option value="">Insert from PDF…</option>

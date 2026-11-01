@@ -1,8 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { offline } from "./helpers";
 import path from "node:path";
 const fx = (n: string) => path.join(path.dirname(new URL(import.meta.url).pathname), "..", "fixtures", n);
 
 test("dynamic XFA form renders (not the 'Please wait… Adobe Reader' placeholder), is fillable, and saves", async ({ page }) => {
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(fx("xfa-dynamic.pdf"));
   const layer = page.getByTestId("xfa-layer").first();
@@ -24,6 +26,7 @@ test("dynamic XFA form renders (not the 'Please wait… Adobe Reader' placeholde
 });
 
 test("hybrid XFA + AcroForm shows the AcroForm fallback and an honest banner", async ({ page }) => {
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(fx("xfa-hybrid.pdf"));
   await expect(page.getByTestId("xfa-banner")).toHaveAttribute("data-xfa", "hybrid");

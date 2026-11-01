@@ -2,6 +2,23 @@ import { HttpEditorApi, ApiError, VersionConflictError, DocumentSignedError, Rat
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { "content-type": "application/json" } });
 const tok = (a: string) => ({ access_token: a, refresh_token: "r", token_type: "bearer", expires_in: 60 });
 describe("HttpEditorApi", () => {
+  it("no-account session: desktop key on every call (incl. PDF source), silent renewal via /session/local on 401", async () => {
+    const calls: { url: string; h: Record<string, string> }[] = []; let n = 0; let first = true;
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({ url: url.replace("http://api", ""), h: (init?.headers as Record<string, string>) ?? {} });
+      if (url.endsWith("/session/local")) return json(tok("s" + ++n));
+      if (url.endsWith("/documents/d")) { if (first) { first = false; return json({}, 401); } return json({ document_id: "d" }); }
+      return json({}, 404);
+    });
+    const api = new HttpEditorApi({ baseUrl: "http://api", fetchImpl: f as unknown as typeof fetch });
+    api.extraHeaders = { "X-Thynkpdf-Key": "k" }; api.sessionProvider = () => api.localSession();
+    await api.refresh();
+    await api.getDocument("d");
+    expect(calls.map((c) => c.url)).toEqual(["/session/local", "/documents/d", "/session/local", "/documents/d"]);
+    expect(calls.every((c) => c.h["X-Thynkpdf-Key"] === "k")).toBe(true);
+    expect(calls[3].h.Authorization).toBe("Bearer s2");
+    expect((await api.fileSource({ document_id: "d", version_id: "v" })).httpHeaders).toEqual({ "X-Thynkpdf-Key": "k", Authorization: "Bearer s2" });
+  });
   it("logs in, sends bearer, refreshes on 401 and retries once", async () => {
     const calls: { url: string; auth?: string }[] = [];
     let first = true;

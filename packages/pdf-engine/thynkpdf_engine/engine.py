@@ -102,7 +102,7 @@ def capabilities(data: bytes) -> dict:
     for p in m["pages"]:
         lims, ok_fonts = [], []
         if not any(f.get("used", True) for f in p["fonts"]):
-            lims.append({"code": "NO_TEXT_LAYER", "message": "No fonts on page (scanned/vector-only?). Use OCR first."})
+            lims.append({"code": "NO_TEXT_LAYER", "message": "No fonts on page (scanned/vector-only?). Text editing is not available on this page."})
         for f in p["fonts"]:
             if not f.get("used", True): continue
             ok, why = _font_editable(f)
@@ -118,7 +118,7 @@ def capabilities(data: bytes) -> dict:
             "annotations": not m["has_signatures"], "forms": not m["has_signatures"],
             "compress": True, "text_replace": anyp("text_replace"),
             "document_limitations": doc_lims, "pages": pages,
-            "safe_alternatives": ["ocr (when text layer absent)", "annotations/comments", "replace page via merge"]}
+            "safe_alternatives": ["annotations/comments", "replace page via merge"]}
 
 
 def _check_pages(n: int, pages: list[int]):

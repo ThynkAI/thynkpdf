@@ -13,7 +13,7 @@ const BASE = process.env.THYNKPDF_API_URL ?? "http://localhost:8000";
 const fx = (n: string) => readFileSync(new URL(`../../frontend-tests/fixtures/${n}`, import.meta.url));
 async function fresh(file: string) {
   const api = new HttpEditorApi({ baseUrl: BASE });
-  await api.login(process.env.THYNKPDF_DEV_EMAIL ?? "dev@thynkpdf.dev", process.env.THYNKPDF_DEV_PASSWORD ?? "ThynkDev-2026!");
+  api.setTokens(await api.localSession("live-test-browser-key-0123456789abcdef"));  // no accounts: anonymous workspace
   const u = await api.upload(new Blob([fx(file)], { type: "application/pdf" }), file);
   return { api, ref: { document_id: u.document_id, version_id: u.version_id, version: u.version } as DocumentRef };
 }

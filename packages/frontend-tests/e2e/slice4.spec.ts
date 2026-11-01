@@ -1,14 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { apiUp, EMAIL, PASSWORD, BACKEND_FIXTURE } from "./helpers";
+import { apiUp, BACKEND_FIXTURE } from "./helpers";
 
 test.describe("documents dashboard (live backend)", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
-  test("sign in, upload, search, open, edit, view old version read-only, restore", async ({ page }) => {
+  test("open workspace, upload, search, open, edit, view old version read-only, restore", async ({ page }) => {
     await page.goto("/documents");
-    await page.getByLabel("Username").fill(EMAIL);
-    await page.getByLabel("Password").fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByTestId("doc-table")).toBeVisible();
     const name = `dash-${Date.now()}.pdf`;
     const { readFileSync } = await import("node:fs");
@@ -37,9 +34,6 @@ test.describe("documents dashboard (live backend)", () => {
 
   test("star, tag, folder, share link (view-only), trash, restore, delete forever", async ({ page, context }) => {
     await page.goto("/documents");
-    await page.getByLabel("Username").fill(EMAIL);
-    await page.getByLabel("Password").fill(PASSWORD);
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
     const name = `mgmt-${Date.now()}.pdf`; const folder = `F${Date.now() % 100000}`;
     const { readFileSync } = await import("node:fs");
     await page.getByTestId("dash-file-input").setInputFiles({ name, mimeType: "application/pdf", buffer: readFileSync(BACKEND_FIXTURE) });

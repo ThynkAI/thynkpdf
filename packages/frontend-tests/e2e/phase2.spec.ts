@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import path from "node:path";
 import AxeBuilder from "@axe-core/playwright";
-import { apiUp, signInAndUpload } from "./helpers";
+import { apiUp, openWorkspaceAndUpload } from "./helpers";
 const axe = async (p: import("@playwright/test").Page) => (await new AxeBuilder({ page: p }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()).violations.map((v) => `${v.id}: ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`);
 
 const FORM = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "fixtures", "form-fields.pdf");
@@ -10,7 +10,7 @@ test.describe("phase 2 (live backend)", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
   test("organizer: duplicate, insert blank, delete (with confirmation) as new versions", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Organize pages" }).click();
     const dlg = page.getByRole("dialog");
     await dlg.getByTestId("org-page-1").click();
@@ -30,7 +30,7 @@ test.describe("phase 2 (live backend)", () => {
   });
 
   test("server forms: fill and flatten as new versions", async ({ page }) => {
-    await signInAndUpload(page, FORM, 1);
+    await openWorkspaceAndUpload(page, FORM, 1);
     const ff = page.getByTestId("form-fields");
     await ff.getByLabel("full_name").fill("Grace Hopper");
     await ff.getByRole("button", { name: "Save values (new version)" }).click();
@@ -43,7 +43,7 @@ test.describe("phase 2 (live backend)", () => {
   });
 
   test("request signature → one-time link → signer completes → signed version; edits then show DOCUMENT_SIGNED; audit", async ({ page, context }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Request signatures" }).click();
     const rp = page.getByTestId("request-panel");
     await rp.getByLabel("Request title").fill("E2E contract");
@@ -90,18 +90,18 @@ test.describe("phase 2 (live backend)", () => {
   });
 
   test("AI panel is labelled as excerpt/stub mode and links to pages", async ({ page }) => {
-    await signInAndUpload(page);
-    await expect(page.getByTestId("ai-mode")).toContainText("Excerpt mode (stub)");
+    await openWorkspaceAndUpload(page);
+    await expect(page.getByTestId("ai-mode")).toContainText("Excerpt mode");
     await page.getByRole("button", { name: "Key excerpts (summary)" }).click();
     const ans = page.getByTestId("ai-answer");
     await expect(ans).toBeVisible();
-    await expect(page.getByTestId("ai-mode")).toContainText("Excerpt mode (stub)");
+    await expect(page.getByTestId("ai-mode")).toContainText("Excerpt mode");
     const ref = ans.getByRole("button", { name: /^p\.\d+$/ }).first();
     if (await ref.count()) { await ref.click(); }
   });
 
   test("AI 429 RATE_LIMITED shows a retry countdown", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.route("**/ai/ask", (r) => r.fulfill({ status: 429, contentType: "application/json", body: JSON.stringify({ error: { code: "RATE_LIMITED", message: "slow down", details: { retry_after: 3, limit_per_minute: 20 } } }) }));
     await page.getByLabel("Question about the document").fill("total?");
     await page.getByRole("button", { name: "Ask", exact: true }).click();

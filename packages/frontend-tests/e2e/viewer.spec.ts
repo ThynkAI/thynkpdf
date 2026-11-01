@@ -5,8 +5,10 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const FIXTURE = path.join(__dirname, "..", "fixtures", "sample-12p.pdf");
 const BACKEND_FIXTURE = path.join(__dirname, "..", "..", "backend-tests", "fixtures", "simple-3page.pdf");
 const API = process.env.THYNKPDF_API_URL ?? "http://localhost:8000";
+import { workspaceToken, offline } from "./helpers";
 
 async function openLocal(page: Page) {
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(FIXTURE);
   await expect(page.getByTestId("status-page")).toHaveText("Page 1 of 12");
@@ -68,13 +70,17 @@ test("search across pages with highlights and next/prev", async ({ page }) => {
   expect(bg).toBe("rgba(234, 88, 12, 0.6)"); // inactive hits are rgba(250, 204, 21, 0.45)
 });
 
-test("local documents show why editing is disabled", async ({ page }) => {
+test("local documents can be edited in the browser with no account", async ({ page }) => {
   await openLocal(page);
-  await expect(page.getByTestId("rotate-wrap")).toHaveAttribute("title", /requires a document opened through the THYNKPDF server/);
-  await expect(page.getByTestId("thumb-1")).toHaveAttribute("draggable", "false");
+  await expect(page.getByLabel("Rotate page clockwise")).toBeEnabled();
+  await expect(page.getByTestId("thumb-1")).toHaveAttribute("draggable", "true");
+  await page.getByLabel("Rotate page clockwise").click();
+  await expect(page.getByTestId("undo-btn")).toBeEnabled();
+  await expect(page.locator("body")).not.toContainText(/sign in/i);
 });
 
 test("drag and drop opens a PDF", async ({ page }) => {
+  await offline(page);
   await page.goto("/");
   const b64 = readFileSync(FIXTURE).toString("base64");
   const dt = await page.evaluateHandle((data) => {
@@ -87,14 +93,8 @@ test("drag and drop opens a PDF", async ({ page }) => {
   await expect(page.getByTestId("doc-title")).toHaveText("dropped.pdf");
 });
 
-const EMAIL = process.env.THYNKPDF_DEV_EMAIL ?? "dev@thynkpdf.dev";
-const PASSWORD = process.env.THYNKPDF_DEV_PASSWORD ?? "ThynkDev-2026!";
-async function signInAndUpload(page: Page) {
+async function openWorkspaceAndUpload(page: Page) {
   await page.goto("/");
-  await expect(page.getByTestId("backend-status")).toHaveText(/Online/);
-  await page.getByLabel("Username").fill(EMAIL);
-  await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(page.getByTestId("backend-status")).toHaveText("Connected");
   await page.getByTestId("file-input").setInputFiles(BACKEND_FIXTURE);
   await expect(page.getByTestId("status-page")).toHaveText("Page 1 of 3");
@@ -110,7 +110,7 @@ test.describe("live backend", () => {
   });
 
 test("upload -> open -> rotate -> reload persisted", async ({ page }) => {
-  await signInAndUpload(page);
+  await openWorkspaceAndUpload(page);
   const p1 = page.locator('.tp-viewer [data-page="1"]');
   const before = await p1.boundingBox();
   expect(before!.height).toBeGreaterThan(before!.width);
@@ -121,7 +121,7 @@ test("upload -> open -> rotate -> reload persisted", async ({ page }) => {
 });
 
 test("drag thumbnail to reorder persists via backend", async ({ page }) => {
-  await signInAndUpload(page);
+  await openWorkspaceAndUpload(page);
   await expect(page.getByTestId("thumb-1")).toHaveAttribute("draggable", "true");
   await page.getByTestId("thumb-1").dragTo(page.getByTestId("thumb-3"));
   await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
@@ -130,9 +130,9 @@ test("drag thumbnail to reorder persists via backend", async ({ page }) => {
 });
 
 test("409 conflict shows message and reloads latest version", async ({ page, request }) => {
-  await signInAndUpload(page);
+  await openWorkspaceAndUpload(page);
   // Change the document behind the UI's back.
-  const tok = await (await request.post(API + "/auth/login", { data: { email: EMAIL, password: PASSWORD } })).json();
+  const tok = { access_token: await workspaceToken(page, request) };
   const docId = await page.evaluate(() => JSON.parse(sessionStorage.getItem("tp-session-v2")!).lastDocumentId as string);
   const r = await request.post(API + "/pdf/pages/rotate", { headers: { Authorization: `Bearer ${tok.access_token}` }, data: { document_id: docId, expected_version: 1, pages: [3], angle: 180 } });
   expect(r.ok()).toBe(true);
@@ -145,7 +145,7 @@ test("409 conflict shows message and reloads latest version", async ({ page, req
 });
 
 test("session and last document survive a page reload", async ({ page }) => {
-  await signInAndUpload(page);
+  await openWorkspaceAndUpload(page);
   await page.reload();
   await expect(page.getByTestId("backend-status")).toHaveText("Connected");
   await expect(page.getByTestId("doc-title")).toHaveText("simple-3page.pdf");

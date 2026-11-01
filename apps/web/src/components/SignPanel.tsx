@@ -8,7 +8,7 @@ import { SignatureDialog } from "./SignatureDialog";
 import { currentBytes, saveModifiedCopy, lastDownload } from "@/lib/copies";
 import { pageInfo, stampImage } from "@/lib/pdfWrite";
 import { uprightImagePlacement } from "@/lib/geometry";
-import { describeError, http, runVersionedOp } from "@/lib/documents";
+import { describeError, http, runVersionedOp, isDesktop } from "@/lib/documents";
 import { displayBoxToPdfRect } from "@/lib/geometry";
 import { toPngBlob } from "@/lib/png";
 import { RequestSignatures } from "./RequestSignatures";
@@ -91,10 +91,10 @@ export function SignPanel() {
       <p className="mt-1 text-[11px] text-neutral-500">{server ? "Server document: the signature is stamped by the server and saved as a new version (visual only)." : "Local file: a signed copy opens here and can be downloaded."}</p>
       {dl && <a className="text-xs underline" href={dl.url} download={dl.name} data-testid="download-signed">Download {dl.name}</a>}
       <div className="mt-2 flex flex-wrap gap-1 text-xs">
-        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!server} title={server ? undefined : "Requires a document opened through the THYNKPDF server"} aria-expanded={more === "request"} onClick={() => setMore(more === "request" ? null : "request")}>Request signatures</button>
-        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!server} title={server ? undefined : "Requires a document opened through the THYNKPDF server"} aria-expanded={more === "audit"} onClick={() => setMore(more === "audit" ? null : "audit")}>Audit trail</button>
+        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!server || isDesktop()} title={isDesktop() ? "Needs a hosted THYNKPDF server — sign on this device instead" : server ? undefined : "Requires a document opened through the THYNKPDF engine"} aria-expanded={more === "request"} onClick={() => setMore(more === "request" ? null : "request")}>{isDesktop() ? "Request signatures (needs hosted server)" : "Request signatures"}</button>
+        <button className="rounded border px-2 py-1 disabled:opacity-40 dark:border-neutral-700" disabled={!server || isDesktop()} title={isDesktop() ? "Needs a hosted THYNKPDF server — sign on this device instead" : server ? undefined : "Requires a document opened through the THYNKPDF engine"} aria-expanded={more === "audit"} onClick={() => setMore(more === "audit" ? null : "audit")}>Audit trail</button>
       </div>
-      {server && more === "request" && <RequestSignatures />}
+      {server && !isDesktop() && more === "request" && <RequestSignatures />}
       {server && more === "audit" && <AuditPanel />}
       {dialog && <SignatureDialog onClose={() => setDialog(false)} />}
     </section>

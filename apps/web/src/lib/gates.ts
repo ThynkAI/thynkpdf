@@ -4,9 +4,10 @@ export type EditAction = "rotate" | "reorder" | "delete" | "duplicate" | "insert
 export interface Gate { enabled: boolean; reason: string | null }
 
 /** Decide whether an edit action is available, with a human reason when it is not. Pure; unit-tested. */
-export function editGate(action: EditAction, ref: DocumentRef | null, caps: Capabilities | null, opts: { busy?: boolean; capsError?: string | null } = {}): Gate {
+export function editGate(action: EditAction, ref: DocumentRef | null, caps: Capabilities | null, opts: { busy?: boolean; capsError?: string | null; readOnly?: boolean } = {}): Gate {
   const no = (reason: string): Gate => ({ enabled: false, reason });
   if (opts.busy) return no("Another operation is in progress.");
+  if (opts.readOnly) return no("You are viewing an older version (read-only). Restore it as a new version to edit.");
   // No server document: page operations run in the browser with pdf-lib (offline, no sign-in needed).
   if (!ref) return { enabled: true, reason: null };
   if (opts.capsError) return no(`Could not check edit capabilities: ${opts.capsError}`);
@@ -27,3 +28,6 @@ export function textEditGate(page: number, ref: DocumentRef | null, caps: Capabi
   if (!p?.text_replace) return { enabled: false, reason: p?.limitations.map((l) => l.message).join(" ") || `Page ${page} has no editable text.` };
   return { enabled: true, reason: null };
 }
+
+/** An older server version opened for viewing: no server ref and no local bytes to edit. */
+export const readOnlyView = (st: { ref: DocumentRef | null; source: string }) => !st.ref && (st.source === "backend" || st.source === "mock");

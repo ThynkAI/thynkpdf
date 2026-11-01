@@ -14,7 +14,7 @@ const fixture = readFileSync(new URL("../../backend-tests/fixtures/simple-3page.
 describe.skipIf(!up)("live API: upload -> rotate -> reload", () => {
   it("persists rotation as a new version, serves Range, rejects stale versions with 409", async () => {
     const api = new HttpEditorApi({ baseUrl: BASE });
-    await api.login(process.env.THYNKPDF_DEV_EMAIL ?? "dev@thynkpdf.dev", process.env.THYNKPDF_DEV_PASSWORD ?? "ThynkDev-2026!");
+    api.setTokens(await api.localSession("live-test-browser-key-0123456789abcdef"));  // no accounts: anonymous workspace
     const u = await api.upload(new Blob([fixture], { type: "application/pdf" }), "simple-3page.pdf");
     expect(u.page_count).toBe(3);
     const ref = { document_id: u.document_id, version_id: u.version_id, version: u.version };
@@ -44,7 +44,7 @@ describe.skipIf(!up)("live API: upload -> rotate -> reload", () => {
 
   it("text edit, extract, split, merge, metadata, versions", async () => {
     const api = new HttpEditorApi({ baseUrl: BASE });
-    await api.login(process.env.THYNKPDF_DEV_EMAIL ?? "dev@thynkpdf.dev", process.env.THYNKPDF_DEV_PASSWORD ?? "ThynkDev-2026!");
+    api.setTokens(await api.localSession("live-test-browser-key-0123456789abcdef"));  // no accounts: anonymous workspace
     const u = await api.upload(new Blob([fixture], { type: "application/pdf" }), "simple-3page.pdf");
     const ref = { document_id: u.document_id, version_id: u.version_id, version: u.version };
     const e = await api.editText(ref, [{ op: "text_replace", page: 1, find: "ACME-001", replacement: "EDIT-001", occurrence: "all" }]);

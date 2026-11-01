@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { getDocument } from "pdfjs-dist/legacy/build/pdf.mjs";
 import AxeBuilder from "@axe-core/playwright";
-import { apiUp, signIn, signInAndUpload, LOCAL_FIXTURE, stableBox } from "./helpers";
+import { apiUp, openWorkspace, openWorkspaceAndUpload, LOCAL_FIXTURE, stableBox, workspaceToken, offline } from "./helpers";
 const here = path.dirname(new URL(import.meta.url).pathname);
 const PY = path.join(here, "..", ".venv", "bin", "python");
 const VERIFY = path.join(here, "..", "scripts", "verify_pdf.py");
@@ -20,6 +20,7 @@ async function drag(page: Page, x1: number, y1: number, x2: number, y2: number) 
 
 test("annotations: every tool, identity, threads, resolve/reopen, eraser, save, verify with PDF.js + qpdf + pypdf, reopen", async ({ page }, info) => {
   test.setTimeout(120_000);
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await expect(page.locator('.tp-viewer [data-page="1"] .textLayer span').first()).toBeVisible();
@@ -107,6 +108,7 @@ test("annotations: every tool, identity, threads, resolve/reopen, eraser, save, 
 });
 
 test("signature images persist in IndexedDB across reloads", async ({ page }) => {
+  await offline(page);
   await page.goto("/");
   await page.getByTestId("file-input").setInputFiles(LOCAL_FIXTURE);
   await page.getByRole("button", { name: "Create signature" }).click();
@@ -127,7 +129,7 @@ test.describe("live backend", () => {
   test.beforeEach(async ({ request }) => { test.skip(!(await apiUp(request)), "backend not running"); });
 
   test("server annotations: each change is a versioned server write; reply, resolve/reopen, erase", async ({ page, request }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Annotate" }).click();
     await expect(page.getByTestId("annot-server-mode")).toBeVisible();
     await page.getByLabel("Comment text").fill("Server note");
@@ -142,7 +144,7 @@ test.describe("live backend", () => {
     await expect(page.getByTestId("version-id")).toHaveText(/^v3 /);
     await expect(count(page)).toHaveText("(2)");
     const note = page.getByTestId("thread").filter({ hasText: "Server note" });
-    await expect(note.getByTestId("author")).toHaveText("dev@thynkpdf.dev");
+    await expect(note.getByTestId("author")).toHaveText("Guest");
     await note.getByRole("textbox", { name: /^Reply to Note/ }).fill("Server reply");
     await note.getByRole("button", { name: "Reply", exact: true }).click();
     await expect(page.getByTestId("version-id")).toHaveText(/^v4 /);
@@ -154,7 +156,7 @@ test.describe("live backend", () => {
     await expect(page.getByTestId("version-id")).toHaveText(/^v6 /);
     await expect(note.getByTestId("resolved-badge")).toHaveCount(0);
     // the server really has them (independent read)
-    const tok = await (await request.post(`${process.env.THYNKPDF_API_URL ?? "http://localhost:8000"}/auth/login`, { data: { email: "dev@thynkpdf.dev", password: "ThynkDev-2026!" } })).json();
+    const tok = { access_token: await workspaceToken(page, request) };
     const docId = await page.evaluate(() => JSON.parse(sessionStorage.getItem("tp-session-v2")!).lastDocumentId as string);
     const list = await (await request.get(`${process.env.THYNKPDF_API_URL ?? "http://localhost:8000"}/pdf/${docId}/annotations`, { headers: { Authorization: `Bearer ${tok.access_token}` } })).json();
     expect(list.version).toBe(6);
@@ -167,7 +169,7 @@ test.describe("live backend", () => {
   });
 
   test("server: Unicode comment is written in the browser with Noto Sans and saved as a version", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Annotate" }).click();
     await page.getByLabel("Comment text").fill("Привет — Ελλάδα");
     await tool(page, "Text comment"); const b = await layer(page);
@@ -178,7 +180,7 @@ test.describe("live backend", () => {
   });
 
   test("signature on a rotated page", async ({ page }) => {
-    await signInAndUpload(page);
+    await openWorkspaceAndUpload(page);
     await page.getByRole("button", { name: "Rotate page clockwise" }).click();
     await expect(page.getByTestId("version-id")).toHaveText(/^v2 /);
     await page.getByRole("button", { name: "Create signature" }).click();
@@ -191,8 +193,8 @@ test.describe("live backend", () => {
     await expect(page.getByTestId("error")).toHaveCount(0);
   });
 
-  test("signed-in dashboard has no axe violations", async ({ page }) => {
-    await signIn(page);
+  test("dashboard with documents has no axe violations", async ({ page }) => {
+    await openWorkspaceAndUpload(page);  // each browser has its own private workspace, so add a document first
     await page.goto("/documents");
     await expect(page.getByTestId("doc-table")).toBeVisible();
     await page.getByRole("button", { name: "Versions" }).first().click();

@@ -1,4 +1,5 @@
-import io, subprocess, pytest
+import io, os, subprocess, pytest
+os.environ.setdefault("THYNKPDF_AUTH_MODE", "accounts")  # the legacy suite exercises the opt-in accounts API
 from pathlib import Path
 from fastapi.testclient import TestClient
 FIX = Path(__file__).resolve().parents[1] / "fixtures"
