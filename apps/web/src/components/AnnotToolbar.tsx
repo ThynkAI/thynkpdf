@@ -2,29 +2,46 @@
 import { useAnnot, COLORS, STAMPS, type Tool } from "@/lib/annotState";
 import { saveAnnotations, discardAnnotations } from "@/lib/annotActions";
 import { useSession } from "@/lib/session";
+import { TextCursor, Highlighter, Underline, Strikethrough, Pencil, Eraser, StickyNote, Type, MessageSquareText, Square, Circle, Slash, ArrowUpRight, Stamp, type LucideIcon } from "lucide-react";
+import { Fragment } from "react";
 
-const TOOLS: { t: Tool; label: string; icon: string }[] = [
-  { t: "none", label: "Select text", icon: "I" }, { t: "highlight", label: "Highlight (select text)", icon: "▮" }, { t: "underline", label: "Underline (select text)", icon: "U̲" },
-  { t: "strikeout", label: "Strikethrough (select text)", icon: "S̶" }, { t: "ink", label: "Pencil / ink", icon: "✎" }, { t: "eraser", label: "Eraser (click an annotation)", icon: "⌫" },
-  { t: "note", label: "Sticky note", icon: "🗨" }, { t: "freetext", label: "Text comment", icon: "T" }, { t: "callout", label: "Callout (drag from target to box)", icon: "↖T" },
-  { t: "square", label: "Rectangle", icon: "▭" }, { t: "circle", label: "Ellipse", icon: "◯" }, { t: "line", label: "Line", icon: "╱" }, { t: "arrow", label: "Arrow", icon: "➚" },
-  { t: "stamp", label: "Stamp", icon: "▣" },
+// One consistent lucide icon per tool, chosen for what the tool actually does (see AnnotOverlay / annotState).
+const TOOLS: { t: Tool; label: string; Icon: LucideIcon }[] = [
+  { t: "none", label: "Select text", Icon: TextCursor },
+  { t: "highlight", label: "Highlight (select text)", Icon: Highlighter },
+  { t: "underline", label: "Underline (select text)", Icon: Underline },
+  { t: "strikeout", label: "Strikethrough (select text)", Icon: Strikethrough },
+  { t: "ink", label: "Pencil / ink", Icon: Pencil },
+  { t: "eraser", label: "Eraser (click an annotation)", Icon: Eraser },
+  { t: "note", label: "Sticky note", Icon: StickyNote },
+  { t: "freetext", label: "Text comment", Icon: Type },
+  { t: "callout", label: "Callout (drag from target to box)", Icon: MessageSquareText },
+  { t: "square", label: "Rectangle", Icon: Square },
+  { t: "circle", label: "Ellipse", Icon: Circle },
+  { t: "line", label: "Line", Icon: Slash },
+  { t: "arrow", label: "Arrow", Icon: ArrowUpRight },
+  { t: "stamp", label: "Stamp", Icon: Stamp },
 ];
+const GROUP_END = new Set<Tool>(["none", "strikeout", "eraser", "callout", "arrow"]);
 
 export function AnnotToolbar() {
   const a = useAnnot(); const busy = useSession((s) => s.busy);
   const sessionServer = useSession((s) => s.api.kind === "http" && !!s.ref);
   return (
-    <div role="toolbar" aria-label="Annotation tools" className="flex flex-wrap items-center gap-1 border-b border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-800 dark:bg-ink">
-      {TOOLS.map(({ t, label, icon }) => (
-        <button key={t} type="button" title={label} aria-pressed={a.tool === t} onClick={() => a.set({ tool: t })}
-          className={`h-7 min-w-7 rounded px-1.5 ${a.tool === t ? "bg-brand-600 text-white" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}><span aria-hidden="true">{icon}</span><span className="sr-only">{label}</span></button>
-      ))}
-      <span className="mx-1 h-4 w-px bg-neutral-300" />
+    <div role="toolbar" aria-label="Annotation tools" className="flex flex-wrap items-center gap-0.5 border-b border-neutral-200 bg-white px-2 py-1 text-xs dark:border-neutral-800 dark:bg-ink">
+      {TOOLS.map(({ t, label, Icon }) => { const on = a.tool === t; return (
+        <Fragment key={t}>
+          <button type="button" title={label} aria-label={label} aria-pressed={on} data-tool={t} onClick={() => a.set({ tool: t })}
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${on ? "bg-brand-600 text-white shadow-sm ring-1 ring-brand-700 dark:bg-brand-500 dark:ring-brand-300" : "text-neutral-700 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800 dark:hover:text-white"}`}>
+            <Icon aria-hidden strokeWidth={2} className="h-[18px] w-[18px] shrink-0" />
+          </button>
+          {GROUP_END.has(t) && <span aria-hidden className="mx-0.5 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />}
+        </Fragment>); })}
+      <span aria-hidden className="mx-1 h-5 w-px bg-neutral-200 dark:bg-neutral-700" />
       <div role="radiogroup" aria-label="Color" className="flex gap-0.5">
         {COLORS.map((c) => (
           <button key={c.name} role="radio" aria-checked={a.color === c.rgb} aria-label={c.name} onClick={() => a.set({ color: c.rgb })}
-            className={`h-5 w-5 rounded-full border ${a.color === c.rgb ? "ring-2 ring-brand-500 ring-offset-1" : ""}`} style={{ background: `rgb(${c.rgb.map((x) => x * 255).join(",")})` }} />
+            title={c.name} className={`h-5 w-5 rounded-full border border-neutral-300 dark:border-neutral-600 ${a.color === c.rgb ? "ring-2 ring-brand-500 ring-offset-1 dark:ring-offset-ink" : ""}`} style={{ background: `rgb(${c.rgb.map((x) => x * 255).join(",")})` }} />
         ))}
       </div>
       {a.tool === "stamp" && (

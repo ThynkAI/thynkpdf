@@ -21,7 +21,7 @@ export function LeftPanel({ onReorder, reorderDisabledReason }: { onReorder(f: n
         {tabs.map(({ id, label, Icon }) => (
           <button key={id} role="tab" id={`lp-tab-${id}`} aria-controls={`lp-${id}`} aria-selected={tab === id} title={label} onClick={() => setTab(id)}
             className={`flex flex-1 items-center justify-center py-2 ${tab === id ? "border-b-2 border-brand-600 text-brand-700 dark:text-brand-300" : "text-neutral-600 hover:text-neutral-900 dark:text-neutral-400"}`}>
-            <Icon aria-hidden className="h-4 w-4" /><span className="sr-only">{label}</span>
+            <Icon aria-hidden strokeWidth={2} className="h-[18px] w-[18px] shrink-0" /><span className="sr-only">{label}</span>
           </button>
         ))}
       </div>

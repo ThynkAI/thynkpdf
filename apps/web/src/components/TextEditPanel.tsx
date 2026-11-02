@@ -4,6 +4,7 @@ import { useViewerStore } from "@thynkpdf/pdf-viewer";
 import { useSession } from "@/lib/session";
 import { replaceText } from "@/lib/documents";
 import { textEditGate } from "@/lib/gates";
+import { LimitationNotices } from "./LimitationNotices";
 
 /** Find/replace text on the current page via the backend's content-stream rewrite. Shows per-page limitations from /capabilities. */
 export function TextEditPanel() {
@@ -18,12 +19,9 @@ export function TextEditPanel() {
   return (
     <section aria-labelledby="te-h">
       <h2 id="te-h" className="mb-2 font-semibold">Edit text — page {page}</h2>
-      {pageCaps && pageCaps.limitations.length > 0 && (
-        <ul className="mb-2 space-y-1 text-xs text-amber-700 dark:text-amber-400" data-testid="page-limitations">
-          {pageCaps.limitations.map((l, i) => <li key={i}><b>{l.code}</b>{l.font ? ` (${l.font})` : ""}: {l.message}</li>)}
-        </ul>
-      )}
-      {!gate.enabled && <p className="mb-2 text-xs text-neutral-500" data-testid="text-edit-reason">{gate.reason}</p>}
+      {pageCaps && pageCaps.limitations.length > 0 && <div className="mb-2"><LimitationNotices limitations={pageCaps.limitations} testId="page-limitations" /></div>}
+      {/* Document-wide limitations (e.g. signed) are shown once in the Editing section; only page reasons repeat here. */}
+      {!gate.enabled && !(pageCaps && pageCaps.limitations.length > 0) && <p className="mb-2 text-xs text-neutral-500" data-testid="text-edit-reason">{caps && !caps.text_replace && caps.document_limitations.length > 0 ? "Text editing is turned off for this document (see Editing below)." : gate.reason}</p>}
       <form className="space-y-1" onSubmit={async (e) => {
         e.preventDefault(); setResult(null);
         const n = await replaceText(page, find, rep, occ);

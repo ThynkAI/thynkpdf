@@ -5,6 +5,8 @@ import { useSession } from "@/lib/session";
 import { editGate, readOnlyView } from "@/lib/gates";
 import { ensureText, isDesktop } from "@/lib/documents";
 import { TextEditPanel } from "./TextEditPanel";
+import { LimitationNotices } from "./LimitationNotices";
+import { isSigned } from "@/lib/limitations";
 import { SignPanel } from "./SignPanel";
 import { CommentsPanel } from "./CommentsPanel";
 import { FormsPanel } from "./FormsPanel";
@@ -57,11 +59,15 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; a
       </section>
       <section>
         <h2 className="mb-2 font-semibold">Editing</h2>
-        <ul className="space-y-1 text-xs" data-testid="edit-gates">
-          {(["rotate", "reorder", "delete", "duplicate", "insert_blank"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError, readOnly: readOnlyView(s) }); return (
-            <li key={a}><span className={g.enabled ? "text-green-700 dark:text-green-400" : "text-neutral-500"}>{({ rotate: "Rotate pages", reorder: "Reorder pages (drag thumbnails)", delete: "Delete pages", duplicate: "Duplicate pages", insert_blank: "Insert pages" } as const)[a]}: {g.enabled ? "available" : g.reason}</span></li>); })}
-          {s.caps?.document_limitations.map((l) => <li key={l.code} className="text-amber-700">{l.code}: {l.message}</li>)}
-        </ul>
+        {(() => { const lims = s.caps?.document_limitations ?? []; const docWide = lims.length > 0; return (<>
+        <LimitationNotices limitations={lims} testId="doc-limitations" />
+        <ul className="mt-2 space-y-1 text-xs" data-testid="edit-gates">
+          {(["rotate", "reorder", "delete", "duplicate", "insert_blank"] as const).map((a) => { const g = editGate(a, s.ref, s.caps, { capsError: s.capsError, readOnly: readOnlyView(s) });
+            // Document-wide reasons are already shown once in the banner above; items just read "Off".
+            const showReason = !g.enabled && !(docWide && s.caps && !s.caps.page_ops[a]);
+            return (
+            <li key={a} aria-disabled={!g.enabled || undefined} data-enabled={g.enabled}><span className={g.enabled ? "text-green-700 dark:text-green-400" : "text-neutral-400 dark:text-neutral-500"}>{({ rotate: "Rotate pages", reorder: "Reorder pages (drag thumbnails)", delete: "Delete pages", duplicate: "Duplicate pages", insert_blank: "Insert pages" } as const)[a]}: {g.enabled ? "available" : showReason ? g.reason : (isSigned(lims) ? "off (signed)" : "off")}</span></li>); })}
+        </ul></>); })()}
       </section>
       <section>
         <h2 className="mb-2 font-semibold">{desktop ? "Engine" : "Backend"}</h2>
