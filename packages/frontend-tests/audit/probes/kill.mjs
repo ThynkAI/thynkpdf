@@ -1,0 +1,16 @@
+import { chromium } from "@playwright/test";
+import { execSync } from "node:child_process";
+const E="/workspace/thynkpdf-audit/docs/audit/evidence/bc7ee6b/", F="/workspace/thynkpdf-audit/packages/frontend-tests/audit/fixtures/";
+const br=await chromium.launch(); const pg=await (await br.newContext({viewport:{width:1366,height:768}})).newPage(); const out={};
+await pg.goto("http://localhost:3123/"); await pg.waitForTimeout(1500);
+await pg.getByText("Cloud sync (optional)").click(); await pg.getByLabel("Username").fill("dev@thynkpdf.dev"); await pg.getByLabel("Password").fill("ThynkDev-2026!"); await pg.getByRole("button",{name:"Sign in",exact:true}).click();
+await pg.waitForFunction(()=>/^Connected/.test(document.querySelector("[data-testid=backend-status]")?.textContent||""));
+await pg.getByTestId("file-input").setInputFiles(F+"mixed-rotated.pdf"); await pg.waitForFunction(()=>/^v1 /.test(document.querySelector("[data-testid=version-id]")?.textContent||""));
+execSync("kill $(ss -ltnp | grep 127.0.0.1:8123 | grep -o 'pid=[0-9]*' | cut -d= -f2)"); await pg.waitForTimeout(1000);
+const r=pg.getByRole("button",{name:"Rotate page clockwise"}); await r.click(); await r.click().catch(()=>{}); await pg.waitForTimeout(3000);
+out.afterKill={footer:await pg.locator("footer[role=status]").innerText(), ver:await pg.getByTestId("version-id").innerText(), alerts:(await pg.locator("[role=alert]").allInnerTexts()).filter(Boolean), backend:await pg.getByTestId("backend-status").innerText()};
+await pg.screenshot({path:E+"backend-killed-during-rotate.png"});
+execSync("bash -c 'set -a; . /tmp/tpdf/env; set +a; cd /workspace/thynkpdf-audit && (nohup .venv/bin/python scripts/serve_api.py --port 8123 > /tmp/tpdf/api.log 2>&1 &)'"); await pg.waitForTimeout(5000);
+await r.click(); await pg.waitForTimeout(3000);
+out.afterRestart={footer:await pg.locator("footer[role=status]").innerText(), ver:await pg.getByTestId("version-id").innerText(), alerts:(await pg.locator("[role=alert]").allInnerTexts()).filter(Boolean)};
+console.log(JSON.stringify(out,null,1)); await br.close();

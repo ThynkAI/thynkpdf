@@ -1,0 +1,17 @@
+import { chromium } from "@playwright/test";
+const E="/workspace/thynkpdf-audit/docs/audit/evidence/", F="/workspace/thynkpdf-audit/packages/frontend-tests/audit/fixtures/";
+const b=await chromium.connectOverCDP("http://127.0.0.1:9333");
+const pg=b.contexts()[0].pages()[0]; const base=new URL(pg.url()).origin;
+await pg.goto(base+"/"); await pg.getByText("What would you like to do?").waitFor(); await pg.waitForTimeout(1500);
+await pg.getByTestId("file-input").setInputFiles(F+"multifont.pdf");
+await pg.waitForFunction(()=>/^v1/.test(document.querySelector("[data-testid=version-id]")?.textContent||""),null,{timeout:20000});
+const rq=pg.getByRole("button",{name:"Request signatures"}); await rq.scrollIntoViewIfNeeded(); await rq.click();
+await pg.getByLabel("Signer 1 name").fill("Alice"); await pg.getByLabel("Signer 1 email").fill("alice@example.com");
+await pg.getByRole("button",{name:/Create request for/}).click(); await pg.waitForTimeout(3000); console.log("REQ:", (await pg.getByTestId("request-panel").innerText()).slice(0,600)); await pg.getByTestId("request-panel").screenshot({path:E+"desktop-06-request-error.png"});
+console.log("SIGNER LINK:", await pg.getByTestId("signer-link").first().innerText());
+await pg.getByTestId("signer-links").scrollIntoViewIfNeeded(); await pg.screenshot({path:E+"desktop-06-signer-link-127001.png"});
+await pg.goto(base+"/documents/"); await pg.getByRole("button",{name:"Share"}).first().click();
+await pg.getByRole("button",{name:"Create public view-only link"}).click(); await pg.getByTestId("share-link").waitFor();
+console.log("SHARE LINK:", await pg.getByTestId("share-link").innerText());
+await pg.screenshot({path:E+"desktop-07-share-link-127001.png"});
+process.exit(0);
