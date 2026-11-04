@@ -1,0 +1,576 @@
+[
+ {
+  "id": "E1-replace",
+  "status": "PASS",
+  "msg": "Std-14 replace",
+  "count": 1,
+  "pypdf": "Synthetic page 1 Howdy World\nInvoice total 1234.56 CAD\nSecon"
+ },
+ {
+  "id": "E2-delete-not-redaction",
+  "status": "INFO",
+  "msg": "delete_text removes glyphs from the run; earlier version still stored in history by design (versions immutable)",
+  "remaining": "1234.56 CAD"
+ },
+ {
+  "id": "E3-move",
+  "status": "PASS",
+  "msg": "move whole run",
+  "before": [
+   [
+    72.0,
+    79.1,
+    "Synthetic"
+   ],
+   [
+    124.7,
+    79.1,
+    "page"
+   ],
+   [
+    154.7,
+    79.1,
+    "1"
+   ]
+  ],
+  "after": [
+   [
+    72.0,
+    179.1,
+    "Synthetic"
+   ],
+   [
+    124.7,
+    179.1,
+    "page"
+   ],
+   [
+    154.7,
+    179.1,
+    "1"
+   ]
+  ]
+ },
+ {
+  "id": "E4-move-side-effect",
+  "status": "FAIL",
+  "msg": "moving 'Alpha' must not move 'Beta' (next Tj in same BT)",
+  "beta_before": [
+   106.0,
+   79.1,
+   "Beta"
+  ],
+  "beta_after": [
+   72.0,
+   79.1,
+   "Beta"
+  ]
+ },
+ {
+  "id": "E5-replace-accented.pdf",
+  "status": "INFO",
+  "msg": "replace on font class",
+  "code": null
+ },
+ {
+  "id": "E5-replace-embedded_subset.pdf",
+  "status": "INFO",
+  "msg": "replace on font class",
+  "code": "EDIT_NOT_SUPPORTED"
+ },
+ {
+  "id": "E5-replace-cid_cjk.pdf",
+  "status": "INFO",
+  "msg": "replace on font class",
+  "code": "EDIT_NOT_SUPPORTED"
+ },
+ {
+  "id": "E6-insert-unicode-latin1",
+  "status": "INFO",
+  "msg": "insert 'Z\u00fcrich \u00e9'",
+  "code": "OK"
+ },
+ {
+  "id": "E6-insert-unicode-ext",
+  "status": "INFO",
+  "msg": "insert '\u0141\u00f3d\u017a'",
+  "code": "EDIT_UNSUPPORTED_CHARACTERS"
+ },
+ {
+  "id": "E6-insert-cjk",
+  "status": "INFO",
+  "msg": "insert '\u65e5\u672c'",
+  "code": "EDIT_UNSUPPORTED_CHARACTERS"
+ },
+ {
+  "id": "E6-insert-euro",
+  "status": "INFO",
+  "msg": "insert '\u20ac \u2013 \u201c\u201d' (cp1252-only glyphs)",
+  "code": "OK",
+  "rendered": "nd font line\n\u20ac \u2013 \u201c\u201d\n"
+ },
+ {
+  "id": "P0-baseline",
+  "status": "INFO",
+  "msg": "rich doc baseline",
+  "pages": 3,
+  "annots": 6,
+  "outline": 3,
+  "attachments": 1,
+  "acroform_fields": 0,
+  "openaction": true
+ },
+ {
+  "id": "P-rotate",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 3,
+  "annots": 6,
+  "outline": 3,
+  "attachments": 1,
+  "acroform_fields": 0,
+  "openaction": true
+ },
+ {
+  "id": "P-reorder",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 3,
+  "annots": 6,
+  "outline": 0,
+  "attachments": 0,
+  "acroform_fields": 0,
+  "openaction": false
+ },
+ {
+  "id": "P-extract",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 2,
+  "annots": 4,
+  "outline": 0,
+  "attachments": 0,
+  "acroform_fields": 0,
+  "openaction": false
+ },
+ {
+  "id": "P-merge",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 6,
+  "annots": 6,
+  "outline": 0,
+  "attachments": 0,
+  "acroform_fields": 0,
+  "openaction": false
+ },
+ {
+  "id": "P-delete_pages",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 2,
+  "annots": 4,
+  "outline": 3,
+  "attachments": 1,
+  "acroform_fields": 0,
+  "openaction": true
+ },
+ {
+  "id": "P-duplicate",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 4,
+  "annots": 6,
+  "outline": 3,
+  "attachments": 1,
+  "acroform_fields": 0,
+  "openaction": true
+ },
+ {
+  "id": "P-insert_blank",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 4,
+  "annots": 6,
+  "outline": 3,
+  "attachments": 1,
+  "acroform_fields": 0,
+  "openaction": true
+ },
+ {
+  "id": "P-insert_from",
+  "status": "INFO",
+  "msg": "structure after op",
+  "pages": 4,
+  "annots": 6,
+  "outline": 3,
+  "attachments": 1,
+  "acroform_fields": 0,
+  "openaction": true
+ },
+ {
+  "id": "P1-duplicate-annots",
+  "status": "FAIL",
+  "msg": "duplicate page keeps its annotations/links",
+  "before": 6,
+  "after": 6
+ },
+ {
+  "id": "P2-reorder-bookmarks",
+  "status": "FAIL",
+  "msg": "reorder preserves bookmarks + attachments",
+  "pages": 3,
+  "annots": 6,
+  "outline": 0,
+  "attachments": 0,
+  "acroform_fields": 0,
+  "openaction": false
+ },
+ {
+  "id": "P3-merge-acroform",
+  "status": "FAIL",
+  "msg": "merge keeps AcroForm fields usable",
+  "pages": 4,
+  "annots": 3,
+  "outline": 0,
+  "attachments": 0,
+  "acroform_fields": 0,
+  "openaction": false
+ },
+ {
+  "id": "P3b-reorder-acroform",
+  "status": "FAIL",
+  "msg": "reorder (single page) keeps AcroForm",
+  "pages": 1,
+  "annots": 3,
+  "outline": 0,
+  "attachments": 0,
+  "acroform_fields": 0,
+  "openaction": false
+ },
+ {
+  "id": "P4-rotate-relative",
+  "status": "PASS",
+  "msg": "relative rotate 90 on /Rotate 90 page",
+  "rotation": 180
+ },
+ {
+  "id": "P5-mixed-geometry-merge",
+  "status": "INFO",
+  "msg": "page sizes after merge",
+  "sizes": [
+   [
+    612,
+    792
+   ],
+   [
+    595,
+    842
+   ],
+   [
+    792,
+    612
+   ],
+   [
+    300,
+    300
+   ],
+   [
+    612,
+    792
+   ],
+   [
+    842,
+    595
+   ],
+   [
+    612,
+    792
+   ],
+   [
+    300,
+    300
+   ]
+  ]
+ },
+ {
+  "id": "F1-list",
+  "status": "INFO",
+  "msg": "fields",
+  "fields": [
+   [
+    "full_name",
+    "text"
+   ],
+   [
+    "agree",
+    "checkbox"
+   ],
+   [
+    "country",
+    "dropdown"
+   ]
+  ]
+ },
+ {
+  "id": "F2-fill",
+  "status": "PASS",
+  "msg": "fill verified by pypdf",
+  "values": {
+   "full_name": "Jane Synthetic",
+   "agree": "/Yes",
+   "country": "France"
+  }
+ },
+ {
+  "id": "F3-flatten",
+  "status": "PASS",
+  "msg": "flatten keeps value as page content and removes fields",
+  "text_has_value": true,
+  "remaining_fields": 0
+ },
+ {
+  "id": "F4-xxe",
+  "status": "INFO",
+  "msg": "XFA with external entity",
+  "code": "XFA_UNSAFE_XML"
+ },
+ {
+  "id": "F4b-xxe-detect",
+  "status": "INFO",
+  "msg": "detect result",
+  "res": "{'present': True, 'kind': 'hybrid', 'form': 'stream', 'packets': ['template', 'datasets'], 'has_scripts': False, 'script_count': 0, 'needs_rendering': False, 'acroform_widgets': 3, 'xml_safe': False}"
+ },
+ {
+  "id": "F4c-xfa-api",
+  "status": "INFO",
+  "msg": "xfa functions",
+  "fns": [
+   "Array",
+   "CONTAINERS",
+   "DET",
+   "DefusedXmlException",
+   "Dictionary",
+   "EngineError",
+   "MARGIN",
+   "MAX_DEPTH",
+   "MAX_INSTANCES",
+   "MAX_NODES",
+   "MAX_PACKET",
+   "MAX_TOTAL",
+   "Name",
+   "PAGE_H",
+   "PAGE_W",
+   "ParseError",
+   "String",
+   "UI_TYPES",
+   "XDP_NS",
+   "XFA_DATA_NS",
+   "XHTML_NS",
+   "capabilities",
+   "convert_to_acroform",
+   "detect",
+   "detect_pdf",
+   "etree",
+   "export_xml",
+   "fill",
+   "import_xml",
+   "io",
+   "meas",
+   "norm_acro",
+   "open_pdf",
+   "pikepdf",
+   "raw_packets",
+   "re",
+   "read_data",
+   "safe_parse",
+   "strip_usage_rights",
+   "strip_xfa",
+   "sync_datasets_from_acro",
+   "template_schema",
+   "zlib"
+  ]
+ },
+ {
+  "id": "C1-image_heavy.pdf",
+  "status": "INFO",
+  "msg": "(final_size, kept_original, seconds) per preset; raw = pre-guard output sizes",
+  "original": 402074,
+  "low": [
+   321767,
+   false,
+   0.04
+  ],
+  "balanced": [
+   321546,
+   false,
+   0.04
+  ],
+  "high": [
+   322396,
+   false,
+   0.11
+  ],
+  "raw": {
+   "low": 321808,
+   "balanced": 321552,
+   "high": 322402
+  }
+ },
+ {
+  "id": "C1-std_text.pdf",
+  "status": "INFO",
+  "msg": "(final_size, kept_original, seconds) per preset; raw = pre-guard output sizes",
+  "original": 2641,
+  "low": [
+   2338,
+   false,
+   0.0
+  ],
+  "balanced": [
+   1554,
+   false,
+   0.0
+  ],
+  "high": [
+   2641,
+   true,
+   0.0
+  ],
+  "raw": {
+   "low": 2341,
+   "balanced": 1558,
+   "high": 2783
+  }
+ },
+ {
+  "id": "C1-large_2000p.pdf",
+  "status": "INFO",
+  "msg": "(final_size, kept_original, seconds) per preset; raw = pre-guard output sizes",
+  "original": 1587470,
+  "low": [
+   1378704,
+   false,
+   0.31
+  ],
+  "balanced": [
+   893409,
+   false,
+   0.3
+  ],
+  "high": [
+   1316902,
+   false,
+   0.46
+  ],
+  "raw": {
+   "low": 1358761,
+   "balanced": 893376,
+   "high": 1296922
+  }
+ },
+ {
+  "id": "S1-sign-verify",
+  "status": "PASS",
+  "msg": "pyHanko sign + verify (self-signed)",
+  "result": {
+   "intact": true,
+   "trusted": false,
+   "coverage": "ENTIRE_FILE"
+  }
+ },
+ {
+  "id": "S1b-independent",
+  "status": "INFO",
+  "msg": "pypdf sees /Sig field",
+  "sig_fields": [
+   "ThynkSig1"
+  ]
+ },
+ {
+  "id": "S2-detect-signed",
+  "status": "PASS",
+  "msg": "inspect flags signatures"
+ },
+ {
+  "id": "S3-engine-rotate-signed",
+  "status": "INFO",
+  "msg": "engine-level rotate on signed doc (API layer blocks via writable(); engine itself rewrites the file)",
+  "sigs_after": 1,
+  "intact": [
+   false
+  ]
+ },
+ {
+  "id": "S4-extract-signed",
+  "status": "INFO",
+  "msg": "extract from signed doc (API allow_signed=True): signature dropped in output",
+  "sigs_after": 0
+ },
+ {
+  "id": "M-truncated.pdf",
+  "status": "INFO",
+  "msg": "open_pdf/inspect",
+  "code": "OK"
+ },
+ {
+  "id": "M-garbage_after_header.pdf",
+  "status": "INFO",
+  "msg": "open_pdf/inspect",
+  "code": "PDF_MALFORMED"
+ },
+ {
+  "id": "M-no_pages.pdf",
+  "status": "INFO",
+  "msg": "open_pdf/inspect",
+  "code": "PDF_MALFORMED"
+ },
+ {
+  "id": "M-encrypted_userpw.pdf",
+  "status": "INFO",
+  "msg": "open_pdf/inspect",
+  "code": "PDF_ENCRYPTED"
+ },
+ {
+  "id": "M-encrypted_ownerpw_only.pdf",
+  "status": "INFO",
+  "msg": "open_pdf/inspect",
+  "code": "OK"
+ },
+ {
+  "id": "M-scan_image_only.pdf",
+  "status": "INFO",
+  "msg": "open_pdf/inspect",
+  "code": "OK"
+ },
+ {
+  "id": "O1-ocr",
+  "status": "INFO",
+  "msg": "scan capabilities (OCR suggested?)",
+  "safe_alternatives": [
+   "ocr (when text layer absent)",
+   "annotations/comments",
+   "replace page via merge"
+  ],
+  "tesseract": false
+ },
+ {
+  "id": "L1-flate-bomb",
+  "status": "INFO",
+  "msg": "0.5 MiB file inflating to 512 MiB: inspect + compress",
+  "inspect": "OK",
+  "compress": "OK",
+  "seconds": 4.4,
+  "maxrss_mib_before": 189,
+  "maxrss_mib_after": 1225
+ },
+ {
+  "id": "L2-large-timing",
+  "status": "INFO",
+  "msg": "2000-page doc",
+  "inspect_s": 0.47,
+  "merge2x_s": 1.03,
+  "capabilities_s": 0.49,
+  "maxrss_mib": 1225
+ }
+]
