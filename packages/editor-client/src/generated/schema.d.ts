@@ -765,6 +765,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pdf/redact/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply
+         * @description Permanently removes text, vector graphics and image pixels under every mark (and whole pages), then optionally
+         *     removes hidden information. Default output is a NEW document; the original is left untouched.
+         *     output=new_version replaces the current version, but earlier versions keep the original content.
+         */
+        post: operations["apply_pdf_redact_apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/redact/images": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Images
+         * @description Where images are drawn on each page (PDF user space), so whole images can be marked for redaction.
+         */
+        post: operations["images_pdf_redact_images_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pdf/redact/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Search
+         * @description Find text or common patterns (email, phone, SSN/SIN, card numbers, postal codes, dates) and return their boxes
+         *     so they can be reviewed as redaction marks. Nothing is changed.
+         */
+        post: operations["search_pdf_redact_search_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pdf/signatures/certificate": {
         parameters: {
             query?: never;
@@ -992,6 +1055,27 @@ export interface paths {
         get: operations["verify_pdf__doc_id__signatures_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/session/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Local Session
+         * @description No-account identity. desktop: the single local workspace (the per-launch secret is enforced by the desktop guard).
+         *     anonymous: one private workspace per browser key. Idempotent: the same caller always gets the same workspace.
+         */
+        post: operations["local_session_session_local_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2124,6 +2208,11 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** LocalSessionIn */
+        LocalSessionIn: {
+            /** Browser Key */
+            browser_key?: string | null;
+        };
         /** LoginIn */
         LoginIn: {
             /**
@@ -2278,6 +2367,87 @@ export interface components {
             /** Rect */
             rect: number[];
         };
+        /** RedactApplyIn */
+        RedactApplyIn: {
+            /**
+             * Confirm
+             * @description Must be true: redaction permanently removes content
+             * @default false
+             */
+            confirm?: boolean;
+            /** Document Id */
+            document_id: string;
+            /** Expected Version */
+            expected_version: number;
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Fill
+             * @default black
+             */
+            fill?: ("black" | "none") | number[];
+            /** Marks */
+            marks?: components["schemas"]["RedactMark"][];
+            /**
+             * Output
+             * @default new_document
+             * @enum {string}
+             */
+            output?: "new_document" | "new_version";
+            sanitize?: components["schemas"]["SanitizeOpts"] | null;
+        };
+        /** RedactImagesIn */
+        RedactImagesIn: {
+            /** Document Id */
+            document_id: string;
+            /** Pages */
+            pages?: number[] | null;
+            /** Version */
+            version?: number | null;
+        };
+        /** RedactMark */
+        RedactMark: {
+            /** Page */
+            page: number;
+            /**
+             * Rect
+             * @description [x0, y0, x1, y1] in PDF user space (points, origin bottom-left)
+             */
+            rect?: number[] | null;
+            /**
+             * Whole Page
+             * @default false
+             */
+            whole_page?: boolean;
+        };
+        /** RedactSearchIn */
+        RedactSearchIn: {
+            /**
+             * Case Sensitive
+             * @default false
+             */
+            case_sensitive?: boolean;
+            /** Document Id */
+            document_id: string;
+            /** Pages */
+            pages?: number[] | null;
+            /** Patterns */
+            patterns?: ("email" | "phone" | "ssn" | "sin" | "credit_card" | "postal_code" | "date")[];
+            /** Query */
+            query?: string | null;
+            /**
+             * Regex
+             * @default false
+             */
+            regex?: boolean;
+            /** Version */
+            version?: number | null;
+            /**
+             * Whole Word
+             * @default false
+             */
+            whole_word?: boolean;
+        };
         /** RefreshIn */
         RefreshIn: {
             /** Refresh Token */
@@ -2387,6 +2557,42 @@ export interface components {
             expected_version: number;
             /** Pages */
             pages?: number[] | null;
+        };
+        /**
+         * SanitizeOpts
+         * @description 'Remove hidden information'. Every option defaults to on.
+         */
+        SanitizeOpts: {
+            /**
+             * Attachments
+             * @default true
+             */
+            attachments?: boolean;
+            /**
+             * Comments
+             * @default true
+             */
+            comments?: boolean;
+            /**
+             * Forms
+             * @default true
+             */
+            forms?: boolean;
+            /**
+             * Hidden Text
+             * @default true
+             */
+            hidden_text?: boolean;
+            /**
+             * Javascript
+             * @default true
+             */
+            javascript?: boolean;
+            /**
+             * Metadata
+             * @default true
+             */
+            metadata?: boolean;
         };
         /** ShareIn */
         ShareIn: {
@@ -7634,6 +7840,294 @@ export interface operations {
             };
         };
     };
+    apply_pdf_redact_apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedactApplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VersionResult"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    images_pdf_redact_images_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedactImagesIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    search_pdf_redact_search_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedactSearchIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     cert_pdf_signatures_certificate_get: {
         parameters: {
             query?: never;
@@ -8803,6 +9297,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VerifyOut"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Content Too Large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unsupported Media Type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    local_session_session_local_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["LocalSessionIn"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenOut"];
                 };
             };
             /** @description Bad Request */

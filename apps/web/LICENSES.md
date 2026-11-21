@@ -25,3 +25,8 @@ Test-only (packages/frontend-tests, not shipped): @axe-core/playwright (MPL-2.0)
 - **@pdf-lib/fontkit**: MIT. Used to embed the Noto Sans font in browser-written annotations.
 
 - lucide-react (ISC): icon set used throughout the UI. https://lucide.dev
+
+Redaction and image support (no new dependencies): the browser side uses pdf-lib (MIT) for placing images and building
+PDFs from images, and PDF.js (Apache-2.0) for page export. The engine side uses pikepdf/qpdf (MPL-2.0 / Apache-2.0),
+Pillow (HPND) and reportlab's standard-font metrics and Adobe Glyph List data (BSD). PyMuPDF/MuPDF (AGPL-3.0) is
+deliberately **not** used.

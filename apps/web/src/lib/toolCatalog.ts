@@ -1,7 +1,7 @@
-import { FilePenLine, Combine, Minimize2, PenTool, ClipboardList, MessageSquareText, Sparkles, FolderOpen, type LucideIcon } from "lucide-react";
+import { FilePenLine, Combine, Minimize2, PenTool, ClipboardList, MessageSquareText, Sparkles, FolderOpen, SquareSlash, ImagePlus, Images, ImageDown, type LucideIcon } from "lucide-react";
 import type { ToolParam } from "./tools";
 
-/** The eight THYNKPDF tools, matching ?tool= ids and the desktop launcher tiles. Icons: lucide (ISC). */
+/** The THYNKPDF tools, matching ?tool= ids and the desktop launcher tiles. Icons: lucide (ISC). */
 export const TOOL_CATALOG: { id: ToolParam; label: string; blurb: string; Icon: LucideIcon; hue: string }[] = [
   { id: "edit", label: "Edit text", blurb: "Find and replace text in place", Icon: FilePenLine, hue: "bg-ink dark:bg-neutral-800" },
   { id: "merge-split", label: "Merge & split", blurb: "Reorder, combine, extract pages", Icon: Combine, hue: "bg-ink dark:bg-neutral-800" },
@@ -9,6 +9,10 @@ export const TOOL_CATALOG: { id: ToolParam; label: string; blurb: string; Icon: 
   { id: "sign", label: "Sign", blurb: "Sign, or send for signing", Icon: PenTool, hue: "bg-ink dark:bg-neutral-800" },
   { id: "forms", label: "Forms", blurb: "Fill, create and flatten fields", Icon: ClipboardList, hue: "bg-ink dark:bg-neutral-800" },
   { id: "comment", label: "Comment", blurb: "Highlight, draw, add notes", Icon: MessageSquareText, hue: "bg-ink dark:bg-neutral-800" },
+  { id: "redact", label: "Redact", blurb: "Permanently remove text, images, pages", Icon: SquareSlash, hue: "bg-ink dark:bg-neutral-800" },
+  { id: "add-image", label: "Add image", blurb: "Place, resize and rotate images", Icon: ImagePlus, hue: "bg-ink dark:bg-neutral-800" },
+  { id: "image-to-pdf", label: "Images to PDF", blurb: "Turn photos and scans into a PDF", Icon: Images, hue: "bg-ink dark:bg-neutral-800" },
+  { id: "export-images", label: "Export images", blurb: "Save pages as PNG or JPEG", Icon: ImageDown, hue: "bg-ink dark:bg-neutral-800" },
   { id: "ai", label: "Ask AI", blurb: "Questions about this document", Icon: Sparkles, hue: "bg-ink dark:bg-neutral-800" },
   { id: "documents", label: "Documents", blurb: "Your files, folders, versions", Icon: FolderOpen, hue: "bg-ink dark:bg-neutral-800" },
 ];

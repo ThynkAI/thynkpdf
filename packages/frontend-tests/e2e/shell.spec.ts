@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { LOCAL_FIXTURE } from "./helpers";
 
-const TILES = ["edit", "merge-split", "compress", "sign", "forms", "comment", "ai", "documents"];
+const TILES = ["edit", "merge-split", "compress", "sign", "forms", "comment", "ai", "redact", "add-image", "image-to-pdf", "export-images", "documents"];
 const axe = async (page: Page) => (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()).violations.map((v) => `${v.id}: ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`);
 /** Visual sanity: nothing scrolls sideways and the given regions don't overlap. */
 async function noOverlap(page: Page, ids: string[]) {
@@ -15,7 +15,7 @@ async function noOverlap(page: Page, ids: string[]) {
   }
 }
 
-test("home: 8 tool tiles matching ?tool= ids, accessible, screenshot", async ({ page }, info) => {
+test("home: 12 tool tiles matching ?tool= ids, accessible, screenshot", async ({ page }, info) => {
   await page.goto("/");
   for (const t of TILES) await expect(page.getByTestId(`home-tile-${t}`)).toBeVisible();
   expect(await axe(page)).toEqual([]);

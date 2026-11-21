@@ -1,4 +1,4 @@
-import type { ListQuery, DocumentPage, DocPatch, Folder, Share, ShareIn, AnnotationIn, AnnotationsOut, FormsOut, FieldSpec, SignatureAsset, Placement, CreateSignatureRequest, CreatedSignatureRequest, SignatureRequest, SignatureEvents, SignSession, SignerPlacement, AuditEntry, AiAnswer, VerifyOut, Capabilities, EditOp, PdfMetadata, VersionInfo, EditorApi, TokenResponse, UploadResponse, DocumentRef, VersionResult, DocumentInfo, RotateRequest, RotateAngle } from "./types";
+import type { ListQuery, DocumentPage, DocPatch, Folder, Share, ShareIn, AnnotationIn, AnnotationsOut, FormsOut, FieldSpec, SignatureAsset, Placement, CreateSignatureRequest, CreatedSignatureRequest, SignatureRequest, SignatureEvents, SignSession, SignerPlacement, AuditEntry, AiAnswer, VerifyOut, Capabilities, EditOp, PdfMetadata, VersionInfo, EditorApi, TokenResponse, UploadResponse, DocumentRef, VersionResult, DocumentInfo, RotateRequest, RotateAngle, RedactSearchIn, RedactSearchOut, RedactImage, RedactApplyIn } from "./types";
 
 export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string, public details?: Record<string, unknown>) { super(message); }
@@ -129,6 +129,10 @@ export class HttpEditorApi implements EditorApi {
   private send<T>(method: string, path: string, body?: unknown) {
     return this.req<T>(path, body === undefined ? { method } : { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   }
+  // redaction: content under marks is removed by the engine (not covered); apply needs confirm=true
+  redactSearch(document_id: string, q: RedactSearchIn) { return this.send<RedactSearchOut>("POST", "/pdf/redact/search", { document_id, ...q }); }
+  redactImages(document_id: string, version?: number) { return this.send<{ images: RedactImage[] }>("POST", "/pdf/redact/images", { document_id, ...(version ? { version } : {}) }); }
+  redactApply(ref: DocumentRef, b: RedactApplyIn) { return this.send<VersionResult>("POST", "/pdf/redact/apply", { ...this.v(ref), ...b, confirm: true }); }
   deletePages(ref: DocumentRef, pages: number[]) { return this.send<VersionResult>("POST", "/pdf/pages/delete", { ...this.v(ref), pages }); }
   duplicatePages(ref: DocumentRef, pages: number[], position: "after_each" | number = "after_each") { return this.send<VersionResult>("POST", "/pdf/pages/duplicate", { ...this.v(ref), pages, position }); }
   insertBlank(ref: DocumentRef, after_page: number, count = 1) { return this.send<VersionResult>("POST", "/pdf/pages/insert-blank", { ...this.v(ref), after_page, count }); }

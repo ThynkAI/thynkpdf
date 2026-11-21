@@ -2589,6 +2589,25 @@
     "title": "Limitation",
     "type": "object"
    },
+   "LocalSessionIn": {
+    "properties": {
+     "browser_key": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "minLength": 32,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Browser Key"
+     }
+    },
+    "title": "LocalSessionIn",
+    "type": "object"
+   },
    "LoginIn": {
     "properties": {
      "email": {
@@ -2977,6 +2996,243 @@
     "title": "Placement",
     "type": "object"
    },
+   "RedactApplyIn": {
+    "properties": {
+     "confirm": {
+      "default": false,
+      "description": "Must be true: redaction permanently removes content",
+      "title": "Confirm",
+      "type": "boolean"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "expected_version": {
+      "minimum": 1.0,
+      "title": "Expected Version",
+      "type": "integer"
+     },
+     "filename": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Filename"
+     },
+     "fill": {
+      "anyOf": [
+       {
+        "enum": [
+         "black",
+         "none"
+        ],
+        "type": "string"
+       },
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       }
+      ],
+      "default": "black",
+      "title": "Fill"
+     },
+     "marks": {
+      "items": {
+       "$ref": "#/components/schemas/RedactMark"
+      },
+      "maxItems": 5000,
+      "title": "Marks",
+      "type": "array"
+     },
+     "output": {
+      "default": "new_document",
+      "enum": [
+       "new_document",
+       "new_version"
+      ],
+      "title": "Output",
+      "type": "string"
+     },
+     "sanitize": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/SanitizeOpts"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     }
+    },
+    "required": [
+     "document_id",
+     "expected_version"
+    ],
+    "title": "RedactApplyIn",
+    "type": "object"
+   },
+   "RedactImagesIn": {
+    "properties": {
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "pages": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pages"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     }
+    },
+    "required": [
+     "document_id"
+    ],
+    "title": "RedactImagesIn",
+    "type": "object"
+   },
+   "RedactMark": {
+    "properties": {
+     "page": {
+      "minimum": 1.0,
+      "title": "Page",
+      "type": "integer"
+     },
+     "rect": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "maxItems": 4,
+        "minItems": 4,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "[x0, y0, x1, y1] in PDF user space (points, origin bottom-left)",
+      "title": "Rect"
+     },
+     "whole_page": {
+      "default": false,
+      "title": "Whole Page",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "page"
+    ],
+    "title": "RedactMark",
+    "type": "object"
+   },
+   "RedactSearchIn": {
+    "properties": {
+     "case_sensitive": {
+      "default": false,
+      "title": "Case Sensitive",
+      "type": "boolean"
+     },
+     "document_id": {
+      "title": "Document Id",
+      "type": "string"
+     },
+     "pages": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pages"
+     },
+     "patterns": {
+      "items": {
+       "enum": [
+        "email",
+        "phone",
+        "ssn",
+        "sin",
+        "credit_card",
+        "postal_code",
+        "date"
+       ],
+       "type": "string"
+      },
+      "title": "Patterns",
+      "type": "array"
+     },
+     "query": {
+      "anyOf": [
+       {
+        "maxLength": 300,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Query"
+     },
+     "regex": {
+      "default": false,
+      "title": "Regex",
+      "type": "boolean"
+     },
+     "version": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Version"
+     },
+     "whole_word": {
+      "default": false,
+      "title": "Whole Word",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "document_id"
+    ],
+    "title": "RedactSearchIn",
+    "type": "object"
+   },
    "RefreshIn": {
     "properties": {
      "refresh_token": {
@@ -3299,6 +3555,43 @@
      "angle"
     ],
     "title": "RotateIn",
+    "type": "object"
+   },
+   "SanitizeOpts": {
+    "description": "'Remove hidden information'. Every option defaults to on.",
+    "properties": {
+     "attachments": {
+      "default": true,
+      "title": "Attachments",
+      "type": "boolean"
+     },
+     "comments": {
+      "default": true,
+      "title": "Comments",
+      "type": "boolean"
+     },
+     "forms": {
+      "default": true,
+      "title": "Forms",
+      "type": "boolean"
+     },
+     "hidden_text": {
+      "default": true,
+      "title": "Hidden Text",
+      "type": "boolean"
+     },
+     "javascript": {
+      "default": true,
+      "title": "Javascript",
+      "type": "boolean"
+     },
+     "metadata": {
+      "default": true,
+      "title": "Metadata",
+      "type": "boolean"
+     }
+    },
+    "title": "SanitizeOpts",
     "type": "object"
    },
    "ShareIn": {
@@ -10908,6 +11201,353 @@
     ]
    }
   },
+  "/pdf/redact/apply": {
+   "post": {
+    "description": "Permanently removes text, vector graphics and image pixels under every mark (and whole pages), then optionally\nremoves hidden information. Default output is a NEW document; the original is left untouched.\noutput=new_version replaces the current version, but earlier versions keep the original content.",
+    "operationId": "apply_pdf_redact_apply_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RedactApplyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/VersionResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Apply",
+    "tags": [
+     "redaction"
+    ]
+   }
+  },
+  "/pdf/redact/images": {
+   "post": {
+    "description": "Where images are drawn on each page (PDF user space), so whole images can be marked for redaction.",
+    "operationId": "images_pdf_redact_images_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RedactImagesIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Images",
+    "tags": [
+     "redaction"
+    ]
+   }
+  },
+  "/pdf/redact/search": {
+   "post": {
+    "description": "Find text or common patterns (email, phone, SSN/SIN, card numbers, postal codes, dates) and return their boxes\nso they can be reviewed as redaction marks. Nothing is changed.",
+    "operationId": "search_pdf_redact_search_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RedactSearchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "summary": "Search",
+    "tags": [
+     "redaction"
+    ]
+   }
+  },
   "/pdf/signatures/certificate": {
    "get": {
     "description": "Public certificate info for the server signing identity. The private key is never returned.",
@@ -12560,6 +13200,125 @@
     "summary": "Verify",
     "tags": [
      "signatures"
+    ]
+   }
+  },
+  "/session/local": {
+   "post": {
+    "description": "No-account identity. desktop: the single local workspace (the per-launch secret is enforced by the desktop guard).\nanonymous: one private workspace per browser key. Idempotent: the same caller always gets the same workspace.",
+    "operationId": "local_session_session_local_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/LocalSessionIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "B"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/TokenOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "400": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Bad Request"
+     },
+     "401": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unauthorized"
+     },
+     "403": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Forbidden"
+     },
+     "404": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Not Found"
+     },
+     "409": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Conflict"
+     },
+     "413": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Content Too Large"
+     },
+     "415": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unsupported Media Type"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ErrorResponse"
+        }
+       }
+      },
+      "description": "Unprocessable Content"
+     }
+    },
+    "summary": "Local Session",
+    "tags": [
+     "auth"
     ]
    }
   },
