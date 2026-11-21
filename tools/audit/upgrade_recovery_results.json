@@ -1,0 +1,84 @@
+{
+ "upgrade_login": 200,
+ "upgrade_versions": [
+  200,
+  [
+   "upload",
+   "rotate"
+  ]
+ ],
+ "upgrade_download": [
+  200,
+  2344
+ ],
+ "alembic_version_present": false,
+ "alembic_upgrade_on_desktop_db": {
+  "rc": 1,
+  "tail": [
+   "(Background on this error at: https://sqlalche.me/e/21/e3q8)"
+  ]
+ },
+ "alembic_fresh_rc": 0,
+ "schema_diff_alembic_vs_desktop": {
+  "only_alembic": [],
+  "only_desktop": [],
+  "col_diffs": {}
+ },
+ "missing_object_download": [
+  500,
+  {
+   "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Internal error",
+    "details": {}
+   }
+  }
+ ],
+ "missing_object_rotate": [
+  500,
+  {
+   "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Internal error",
+    "details": {}
+   }
+  }
+ ],
+ "missing_object_list": 200,
+ "readonly_storage_upload": [
+  500,
+  {
+   "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Internal error",
+    "details": {}
+   }
+  }
+ ],
+ "readonly_storage_rotate": [
+  500,
+  {
+   "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Internal error",
+    "details": {}
+   }
+  }
+ ],
+ "after_readonly_current_version": 2,
+ "after_sigkill": {
+  "db_rows_without_object": 0,
+  "orphan_or_tmp_files": 0,
+  "tmp_files": 0,
+  "integrity_check": "ok",
+  "journal_mode": "delete"
+ },
+ "after_sigkill_list": [
+  200,
+  2
+ ],
+ "corrupt_db": [
+  "failed_to_start",
+  "sidecar exited 1: "
+ ]
+}
