@@ -1,0 +1,16 @@
+import { chromium } from "@playwright/test";
+const F="/workspace/thynkpdf-audit/packages/frontend-tests/audit/fixtures/", E="/workspace/thynkpdf-audit/docs/audit/evidence/bc7ee6b/";
+const br=await chromium.launch(); const ctx=await br.newContext({viewport:{width:1366,height:768},acceptDownloads:true}); const pg=await ctx.newPage();
+await pg.goto("http://localhost:3123/"); await pg.waitForTimeout(1500);
+await pg.getByTestId("file-input").setInputFiles(F+"acroform-all.pdf"); await pg.waitForTimeout(1500);
+await pg.getByRole("button",{name:"Rotate page clockwise"}).click(); await pg.waitForTimeout(1500);
+await pg.getByRole("button",{name:"Annotate"}).click(); await pg.waitForTimeout(800); const bar=pg.getByTestId("annot-save-bar"); console.log("savebar:", await bar.innerText().catch(()=>"none"));
+await pg.screenshot({path:E+"local-rotate-annotate-open.png"});
+const btns=await bar.getByRole("button").allInnerTexts().catch(()=>[]); console.log("buttons",btns);
+const dlP=pg.waitForEvent("download",{timeout:15000}).catch(()=>null);
+const save=bar.getByRole("button").filter({hasText:/save|download/i}).first(); if(await save.count()) await save.click();
+await pg.waitForTimeout(1500);
+const link=pg.getByTestId("download-annotated"); if(await link.count()) await link.click();
+const dl=await dlP; if(dl){ await dl.saveAs("/tmp/local-rotated.pdf"); console.log("download name:", dl.suggestedFilename()); } else console.log("no download");
+console.log("status:", await pg.locator("footer[role=status]").innerText());
+await br.close();
