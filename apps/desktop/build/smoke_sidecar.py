@@ -4,7 +4,7 @@ Starts the BUILT sidecar the way the Electron shell does (random per-launch key 
 * the packaged route set equals the source app's route set (catches feature modules missing from the bundle);
 * key, Host and Origin enforcement; accounts disabled; the local workspace is provisioned without a login;
 * annotations, forms (add fields + fill), signature placement and page ops (rotate, duplicate, delete) return 2xx
-  and produce PDFs that pypdf can read;
+  and produce PDFs that pypdf can read; redaction (search + apply) removes the text from the file;
 * restart on the same data dir keeps the documents (idempotent provisioning, migrations a no-op);
 * data dir 0700 and DB 0600 on POSIX.
 """
@@ -95,6 +95,15 @@ def main():
         r = pypdf.PdfReader(io.BytesIO(out))
         assert len(r.pages) == 3 and r.get_fields()["full_name"].get("/V") == "Smoke Test", "edited PDF content wrong"
         assert any(a.get_object()["/Subtype"] == "/Text" for a in r.pages[0].get("/Annots", [])), "annotation missing"
+        # redaction runs offline in the packaged engine: search -> apply (new version) -> text is gone from the file
+        txt = lambda b: "".join(pg.extract_text() or "" for pg in pypdf.PdfReader(io.BytesIO(b)).pages)
+        word = next(w for w in txt(out).split() if len(w) >= 5)
+        hits = ok(*call(url, "/pdf/redact/search", body={"document_id": doc, "query": word}, **A), "redact search")["matches"]
+        assert hits, f"redact search found nothing for {word!r}"
+        op("/pdf/redact/apply", {"marks": [{"page": h["page"], "rect": r} for h in hits for r in h["rects"]], "output": "new_version", "confirm": True, "sanitize": {"metadata": True}})
+        st, red = call(url, f"/documents/{doc}/download", raw=True, **A); ok(st, None, "download redacted")
+        assert word not in txt(red), f"{word!r} still extractable after redaction"
+        print(f"redaction ok: removed {word!r} ({len(hits)} matches)")
         # BD-06: remote features are local-only on desktop
         assert call(url, f"/documents/{doc}/shares", body={"email": None}, **A)[1]["error"]["code"] == "DESKTOP_LOCAL_ONLY"
         print(f"features ok: doc v{v}")

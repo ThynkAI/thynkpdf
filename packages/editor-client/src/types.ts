@@ -68,3 +68,13 @@ export interface EditorApi {
   setTokens(t: TokenResponse | null): void;
   onTokensChanged?: (t: TokenResponse | null) => void;
 }
+
+// ---- Redaction (POST /pdf/redact/*) ----
+export type RedactPattern = "email" | "phone" | "ssn" | "sin" | "credit_card" | "postal_code" | "date";
+export interface RedactSearchIn { query?: string; regex?: boolean; case_sensitive?: boolean; whole_word?: boolean; patterns?: RedactPattern[]; pages?: number[]; version?: number }
+export interface RedactMatch { page: number; text: string; kind: string; rects: [number, number, number, number][] }
+export interface RedactSearchOut { document_id: string; version: number; matches: RedactMatch[]; truncated: boolean; count: number }
+export interface RedactImage { page: number; rect: [number, number, number, number]; width: number | null; height: number | null; inline: boolean }
+export interface RedactMarkIn { page: number; rect?: [number, number, number, number]; whole_page?: boolean }
+export interface SanitizeOptions { metadata?: boolean; javascript?: boolean; attachments?: boolean; comments?: boolean; forms?: boolean; hidden_text?: boolean }
+export interface RedactApplyIn { marks: RedactMarkIn[]; fill?: "black" | "none"; sanitize?: SanitizeOptions | null; output?: "new_document" | "new_version"; filename?: string }

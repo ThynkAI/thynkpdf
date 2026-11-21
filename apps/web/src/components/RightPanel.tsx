@@ -12,9 +12,11 @@ import { CommentsPanel } from "./CommentsPanel";
 import { FormsPanel } from "./FormsPanel";
 import { AiPanel } from "./AiPanel";
 import { ToolsPane } from "./shell/ToolsPane";
+import { RedactPanel } from "./RedactPanel";
+import { ImagePanel } from "./ImagePanel";
 import type { ToolParam } from "@/lib/tools";
 
-export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; activeTool?: ToolParam | null; onTool?: (t: ToolParam) => void; onSettings?: () => void }>(function RightPanel({ onClose, activeTool = null, onTool, onSettings }, searchRef) {
+export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; activeTool?: ToolParam | null; onTool?: (t: ToolParam) => void; onSettings?: () => void; onImagesToPdf?: () => void }>(function RightPanel({ onClose, activeTool = null, onTool, onSettings, onImagesToPdf }, searchRef) {
   const { query, setQuery, matches, activeMatch, nextMatch, pagesText, goToPage, fileName, pageSizes } = useViewerStore();
   const [q, setQ] = useState(query);
   const s = useSession();
@@ -45,7 +47,9 @@ export const RightPanel = forwardRef<HTMLInputElement, { onClose?: () => void; a
         </ul>
       </section>
       <CommentsPanel />
+      <RedactPanel />
       <TextEditPanel />
+      <ImagePanel onImagesToPdf={onImagesToPdf} />
       <SignPanel />
       <FormsPanel />
       <AiPanel onSettings={onSettings} />

@@ -28,8 +28,8 @@ def test_route_count_includes_all_features():
     from thynkpdf_api.main import create_app
     from thynkpdf_api import features
     paths = {r.path for r in create_app("sqlite://", "/tmp/x-obj").routes}
-    assert len(features.MODULES) == 7
-    for p in ["/session/local", "/documents/{doc_id}/annotations", "/signature-requests", "/documents/{doc_id}/shares"]:
+    assert len(features.MODULES) == 8
+    for p in ["/session/local", "/pdf/redact/apply", "/documents/{doc_id}/annotations", "/signature-requests", "/documents/{doc_id}/shares"]:
         assert any(x.startswith(p.split("{")[0]) for x in paths), p
 
 

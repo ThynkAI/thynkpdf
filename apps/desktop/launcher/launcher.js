@@ -7,6 +7,10 @@ const TILES = [
   ["forms", "📝", "Forms", "Fill, create and flatten form fields"],
   ["annotate", "💬", "Comment", "Highlight, notes, drawings, stamps"],
   ["ai", "✨", "AI Ask", "Ask questions and summarize, with page citations"],
+  ["redact", "⬛", "Redact", "Permanently remove text, images and pages"],
+  ["add-image", "🖼️", "Add image", "Place, resize and rotate images on a page"],
+  ["image-to-pdf", "🗂️", "Images to PDF", "Turn photos and scans into one PDF"],
+  ["export-images", "📤", "Export images", "Save pages as PNG or JPG"],
   ["documents", "📁", "Documents", "Folders, tags, trash and sharing"],
 ];
 document.getElementById("tiles").innerHTML = TILES.map(([id, ic, t, d]) =>

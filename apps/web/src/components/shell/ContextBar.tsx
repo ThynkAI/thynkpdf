@@ -10,6 +10,9 @@ const HINT: Partial<Record<ToolParam, string>> = {
   sign: "Create a signature, place it on the page, then apply. Or request signatures from others.",
   forms: "Fill existing fields, add new ones, or flatten the form.",
   ai: "Ask a question; answers cite the pages they come from.",
+  redact: "Mark areas, text, images or pages; Apply permanently removes them.",
+  "add-image": "Place an image, then move, resize or rotate it and save it into the PDF.",
+  "export-images": "Render pages to PNG or JPEG.",
 };
 /** Contextual sub-toolbar for the active tool (Comment uses the full annotation toolbar instead). */
 export function ContextBar({ tool, onDone, children }: { tool: ToolParam; onDone(): void; children?: React.ReactNode }) {
